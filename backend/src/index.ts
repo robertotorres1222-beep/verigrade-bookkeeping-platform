@@ -21,6 +21,19 @@ import reportRoutes from './routes/reports';
 import aiRoutes from './routes/ai';
 import bankRoutes from './routes/bank';
 import contactRoutes from './routes/contact';
+import paymentRoutes from './routes/payments';
+import demoRoutes from './routes/demo';
+import bankingRoutes from './routes/banking';
+import advisorRoutes from './routes/advisors';
+import taxRoutes from './routes/tax';
+import stripeRoutes from './routes/stripe';
+import payrollRoutes from './routes/payroll';
+import creditCardRoutes from './routes/creditCards';
+import billPaymentRoutes from './routes/billPayments';
+import inventoryRoutes from './routes/inventory';
+import timeTrackingRoutes from './routes/timeTracking';
+import projectsRoutes from './routes/projects';
+import mileageRoutes from './routes/mileage';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler';
@@ -113,6 +126,19 @@ app.use(`/api/${API_VERSION}/reports`, reportRoutes);
 app.use(`/api/${API_VERSION}/ai`, aiRoutes);
 app.use(`/api/${API_VERSION}/bank`, bankRoutes);
 app.use(`/api/${API_VERSION}/contact`, contactRoutes);
+app.use(`/api/${API_VERSION}/payments`, paymentRoutes);
+app.use(`/api/${API_VERSION}/demo`, demoRoutes);
+app.use(`/api/${API_VERSION}/banking`, bankingRoutes);
+app.use(`/api/${API_VERSION}/advisors`, advisorRoutes);
+app.use(`/api/${API_VERSION}/tax`, taxRoutes);
+app.use(`/api/${API_VERSION}/stripe`, stripeRoutes);
+app.use(`/api/${API_VERSION}/payroll`, payrollRoutes);
+app.use(`/api/${API_VERSION}/credit-cards`, creditCardRoutes);
+app.use(`/api/${API_VERSION}/bill-payments`, billPaymentRoutes);
+app.use(`/api/${API_VERSION}/inventory`, inventoryRoutes);
+app.use(`/api/${API_VERSION}/time-tracking`, timeTrackingRoutes);
+app.use(`/api/${API_VERSION}/projects`, projectsRoutes);
+app.use(`/api/${API_VERSION}/mileage`, mileageRoutes);
 
 // WebSocket connection handling
 io.on('connection', (socket) => {

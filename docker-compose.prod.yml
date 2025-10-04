@@ -3,88 +3,95 @@ version: '3.8'
 services:
   # PostgreSQL Database
   postgres:
-    image: postgres:15-alpine
-    container_name: verigrade-postgres-prod
+    image: postgres:15
     environment:
-      POSTGRES_DB: verigrade_prod
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: verigrade_db
+      POSTGRES_USER: verigrade_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
     networks:
       - verigrade-network
-    restart: unless-stopped
 
-  # Redis Cache
+  # Redis for caching and sessions
   redis:
     image: redis:7-alpine
-    container_name: verigrade-redis-prod
+    ports:
+      - "6379:6379"
     volumes:
       - redis_data:/data
+    restart: unless-stopped
     networks:
       - verigrade-network
-    restart: unless-stopped
 
   # Backend API
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: verigrade-backend-prod
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/verigrade_prod
+      - PORT=3001
+      - DATABASE_URL=postgresql://verigrade_user:${DB_PASSWORD}@postgres:5432/verigrade_db
       - REDIS_URL=redis://redis:6379
       - JWT_SECRET=${JWT_SECRET}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - PLAID_CLIENT_ID=${PLAID_CLIENT_ID}
-      - PLAID_SECRET=${PLAID_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
-      - SMTP_HOST=${SMTP_HOST}
-      - SMTP_USER=${SMTP_USER}
-      - SMTP_PASS=${SMTP_PASS}
+      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - EMAIL_SERVICE=${EMAIL_SERVICE}
+      - GMAIL_USER=${GMAIL_USER}
+      - GMAIL_APP_PASSWORD=${GMAIL_APP_PASSWORD}
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
+      - FROM_EMAIL=${FROM_EMAIL}
+      - FRONTEND_URL=${FRONTEND_URL}
+    ports:
+      - "3001:3001"
     depends_on:
       - postgres
       - redis
+    restart: unless-stopped
     networks:
       - verigrade-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    volumes:
+      - ./backend/uploads:/app/uploads
 
-  # Frontend React App
+  # Frontend
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: verigrade-frontend-prod
     environment:
-      - REACT_APP_API_URL=https://api.verigrade.com
+      - REACT_APP_API_URL=${REACT_APP_API_URL}
+      - REACT_APP_STRIPE_PUBLISHABLE_KEY=${REACT_APP_STRIPE_PUBLISHABLE_KEY}
+    ports:
+      - "3000:80"
     depends_on:
       - backend
+    restart: unless-stopped
     networks:
       - verigrade-network
-    restart: unless-stopped
 
   # Nginx Reverse Proxy
   nginx:
     image: nginx:alpine
-    container_name: verigrade-nginx-prod
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx.prod.conf:/etc/nginx/nginx.conf
+      - ./nginx.conf:/etc/nginx/nginx.conf
       - ./ssl:/etc/nginx/ssl
     depends_on:
       - frontend
       - backend
+    restart: unless-stopped
     networks:
       - verigrade-network
-    restart: unless-stopped
 
 volumes:
   postgres_data:

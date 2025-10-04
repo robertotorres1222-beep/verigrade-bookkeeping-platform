@@ -1,4 +1,5 @@
-FROM node:18-alpine AS builder
+# Backend Dockerfile
+FROM node:18-alpine
 
 # Set working directory
 WORKDIR /app
@@ -7,7 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci --only=production
 
 # Copy source code
 COPY . .
@@ -18,34 +19,15 @@ RUN npx prisma generate
 # Build the application
 RUN npm run build
 
-# Production stage
-FROM node:18-alpine AS production
-
-# Create app directory
-WORKDIR /app
-
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nodejs -u 1001
-
-# Copy built application
-COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
-COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
-COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
-
-# Create logs directory
-RUN mkdir -p logs && chown nodejs:nodejs logs
-
-# Switch to non-root user
-USER nodejs
+# Create uploads directory
+RUN mkdir -p uploads
 
 # Expose port
 EXPOSE 3001
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3001/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+  CMD curl -f http://localhost:3001/api/v1/health || exit 1
 
 # Start the application
-CMD ["node", "dist/index.js"]
+CMD ["npm", "start"]

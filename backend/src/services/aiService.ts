@@ -61,7 +61,7 @@ Please categorize this transaction and return a JSON response with:
 Return only valid JSON, no other text.
 `;
 
-    const response = await openai.chat.completions.create({
+    const response = await openai!.chat.completions.create({
       model: 'gpt-4',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
@@ -173,7 +173,7 @@ Focus on:
 Return only valid JSON array, no other text.
 `;
 
-    const response = await openai.chat.completions.create({
+    const response = await openai!.chat.completions.create({
       model: 'gpt-4',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.4,
@@ -251,7 +251,7 @@ Be helpful and provide actionable information when possible.
 Return only valid JSON, no other text.
 `;
 
-    const response = await openai.chat.completions.create({
+    const response = await openai!.chat.completions.create({
       model: 'gpt-4',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
@@ -327,7 +327,7 @@ Return a JSON array of anomalies:
 Return only valid JSON array, no other text.
 `;
 
-    const response = await openai.chat.completions.create({
+    const response = await openai!.chat.completions.create({
       model: 'gpt-4',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.2,
@@ -406,7 +406,7 @@ Provide a JSON response with:
 Return only valid JSON, no other text.
 `;
 
-    const response = await openai.chat.completions.create({
+    const response = await openai!.chat.completions.create({
       model: 'gpt-4',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
@@ -438,8 +438,8 @@ Return only valid JSON, no other text.
 // Helper function for fallback categorization when AI is not available
 const getFallbackCategorization = (
   description: string,
-  amount: number,
-  vendor?: string
+  _amount: number,
+  _vendor?: string
 ): CategorizationResult => {
   const desc = description.toLowerCase();
   

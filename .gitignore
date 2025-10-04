@@ -128,3 +128,4 @@ public/uploads/
 # Test files
 test-results/
 playwright-report/
+.vercel

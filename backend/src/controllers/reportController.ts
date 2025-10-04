@@ -3,7 +3,14 @@ import { prisma } from '../index';
 import { CustomError } from '../middleware/errorHandler';
 import { logger } from '../utils/logger';
 import { generatePDF } from '../services/reportService';
-import { ReportType } from '@prisma/client';
+// ReportType enum
+enum ReportType {
+  INCOME_STATEMENT = 'INCOME_STATEMENT',
+  BALANCE_SHEET = 'BALANCE_SHEET',
+  CASH_FLOW = 'CASH_FLOW',
+  AGING_REPORT = 'AGING_REPORT',
+  PROFIT_LOSS = 'PROFIT_LOSS'
+}
 
 interface GenerateReportRequest extends Request {
   body: {

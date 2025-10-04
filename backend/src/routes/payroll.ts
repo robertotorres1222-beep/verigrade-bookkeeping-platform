@@ -270,7 +270,7 @@ router.post('/run',
       const totalNetPay = 12000;
 
       // Process each employee
-      const payrollResults = [];
+      const payrollResults: any[] = [];
       for (const _employeeId of employeeIds || ['emp_1', 'emp_2', 'emp_3']) {
         const grossPay = Math.random() * 3000 + 2000; // Random pay between 2000-5000
         const taxes = grossPay * 0.2; // 20% tax

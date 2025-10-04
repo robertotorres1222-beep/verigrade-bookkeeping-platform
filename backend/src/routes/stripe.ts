@@ -281,7 +281,7 @@ router.post('/banking-payment',
       });
 
       // Create payment intent (only if there's a setup fee)
-      let paymentIntent = null;
+      let paymentIntent: any = null;
       if (setupFee > 0) {
         paymentIntent = await stripeService.createPaymentIntent({
           amount: Math.round(setupFee * 100), // Convert to cents

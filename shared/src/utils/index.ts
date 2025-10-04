@@ -147,7 +147,7 @@ export const deepMerge = <T extends Record<string, any>>(target: T, source: Part
     if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
       result[key] = deepMerge(target[key] || {}, source[key] as any);
     } else {
-      result[key] = source[key] as T[Extract<keyof T, string>];
+      result[key] = source[key] as any;
     }
   }
   
@@ -241,30 +241,37 @@ export const rgbToHex = (r: number, g: number, b: number): string => {
   return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
 };
 
-// Local Storage Utilities
+// Local Storage Utilities (Browser only)
 export const setStorageItem = (key: string, value: any): void => {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch (error) {
-    console.error('Error saving to localStorage:', error);
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+    }
   }
 };
 
 export const getStorageItem = <T>(key: string, defaultValue?: T): T | null => {
-  try {
-    const item = localStorage.getItem(key);
-    return item ? JSON.parse(item) : defaultValue || null;
-  } catch (error) {
-    console.error('Error reading from localStorage:', error);
-    return defaultValue || null;
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      const item = localStorage.getItem(key);
+      return item ? JSON.parse(item) : defaultValue || null;
+    } catch (error) {
+      console.error('Error reading from localStorage:', error);
+      return defaultValue || null;
+    }
   }
+  return defaultValue || null;
 };
 
 export const removeStorageItem = (key: string): void => {
-  try {
-    localStorage.removeItem(key);
-  } catch (error) {
-    console.error('Error removing from localStorage:', error);
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      localStorage.removeItem(key);
+    } catch (error) {
+      console.error('Error removing from localStorage:', error);
+    }
   }
 };
 

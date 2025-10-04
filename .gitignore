@@ -9,8 +9,7 @@ pnpm-debug.log*
 # Production builds
 build/
 dist/
-*/build/
-*/dist/
+# Note: frontend/build/ is needed for Vercel deployment
 
 # Environment variables
 .env

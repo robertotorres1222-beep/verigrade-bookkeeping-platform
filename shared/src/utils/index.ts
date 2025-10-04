@@ -145,7 +145,7 @@ export const deepMerge = <T extends Record<string, any>>(target: T, source: Part
   
   for (const key in source) {
     if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
-      result[key] = deepMerge(target[key] || {}, source[key] as any);
+      result[key] = deepMerge((target[key] as any) || {}, source[key] as any);
     } else {
       result[key] = source[key] as any;
     }
@@ -241,39 +241,8 @@ export const rgbToHex = (r: number, g: number, b: number): string => {
   return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
 };
 
-// Local Storage Utilities (Browser only)
-export const setStorageItem = (key: string, value: any): void => {
-  if (typeof window !== 'undefined' && window.localStorage) {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch (error) {
-      console.error('Error saving to localStorage:', error);
-    }
-  }
-};
-
-export const getStorageItem = <T>(key: string, defaultValue?: T): T | null => {
-  if (typeof window !== 'undefined' && window.localStorage) {
-    try {
-      const item = localStorage.getItem(key);
-      return item ? JSON.parse(item) : defaultValue || null;
-    } catch (error) {
-      console.error('Error reading from localStorage:', error);
-      return defaultValue || null;
-    }
-  }
-  return defaultValue || null;
-};
-
-export const removeStorageItem = (key: string): void => {
-  if (typeof window !== 'undefined' && window.localStorage) {
-    try {
-      localStorage.removeItem(key);
-    } catch (error) {
-      console.error('Error removing from localStorage:', error);
-    }
-  }
-};
+// Local Storage Utilities (Browser only - removed for Node.js compatibility)
+// Note: These utilities should be implemented in the frontend package only
 
 // Error Handling
 export const getErrorMessage = (error: any): string => {

@@ -98,7 +98,7 @@ export const createInvoice = async (req: CreateInvoiceRequest, res: Response): P
   });
 
   // Get customer details if provided
-  let customer = null;
+  let customer: any = null;
   if (customerId) {
     customer = await prisma.customer.findUnique({
       where: { id: customerId },

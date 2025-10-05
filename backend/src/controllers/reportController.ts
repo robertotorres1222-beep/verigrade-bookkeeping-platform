@@ -43,7 +43,7 @@ export const generateReport = async (req: GenerateReportRequest, res: Response):
       organizationId,
       userId,
       name,
-      type,
+      type: type as any,
       parameters,
       status: 'GENERATING',
     },

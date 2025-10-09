@@ -1,98 +1,82 @@
 const fs = require('fs');
 const path = require('path');
 
-// Files to fix
-const filesToFix = [
-  'src/routes/creditCards.ts',
-  'src/routes/inventory.ts',
-  'src/routes/mileage.ts',
-  'src/routes/payroll.ts',
-  'src/routes/projects.ts',
-  'src/routes/timeTracking.ts'
+// List of files to fix
+const files = [
+  'src/controllers/invoiceController.ts',
+  'src/controllers/expenseController.ts',
+  'src/controllers/customerController.ts',
+  'src/controllers/dashboardController.ts',
+  'src/controllers/fileController.ts',
+  'src/controllers/reportController.ts',
+  'src/routes/invoiceRoutes.ts',
+  'src/routes/expenseRoutes.ts',
+  'src/routes/customerRoutes.ts',
+  'src/routes/dashboardRoutes.ts',
+  'src/routes/fileRoutes.ts',
+  'src/routes/reportRoutes.ts'
 ];
 
-// Fix patterns
-const fixes = [
-  // Fix unused variables by prefixing with underscore
-  { pattern: /const userId = req\.user!\.id;/g, replacement: 'const _userId = req.user!.id;' },
-  { pattern: /const organizationId = req\.user!\.organizationId;/g, replacement: 'const _organizationId = req.user!.organizationId;' },
-  { pattern: /const employeeId = req\.user!\.id;/g, replacement: 'const _employeeId = req.user!.id;' },
+// Fix each file
+files.forEach(file => {
+  const filePath = path.join(__dirname, file);
   
-  // Fix unused destructured variables
-  { pattern: /const \{ page = 1, limit = 50, startDate, endDate \} = req\.query;/g, replacement: 'const { page = 1, limit = 50, startDate: _startDate, endDate: _endDate } = req.query;' },
-  { pattern: /const \{ reportType = 'summary', year = new Date\(\)\.getFullYear\(\) \} = req\.query;/g, replacement: 'const { reportType: _reportType = \'summary\', year: _year = new Date().getFullYear() } = req.query;' },
-  { pattern: /const \{ startDate, endDate, userId, reportType = 'summary' \} = req\.query;/g, replacement: 'const { startDate: _startDate, endDate: _endDate, userId: _userId, reportType: _reportType = \'summary\' } = req.query;' },
-  { pattern: /const \{ reportType = 'summary', startDate, endDate \} = req\.query;/g, replacement: 'const { reportType: _reportType = \'summary\', startDate: _startDate, endDate: _endDate } = req.query;' },
-  { pattern: /const \{ year = new Date\(\)\.getFullYear\(\), month \} = req\.query;/g, replacement: 'const { year: _year = new Date().getFullYear(), month: _month } = req.query;' },
-  { pattern: /const \{ period = '30d' \} = req\.query;/g, replacement: 'const { period: _period = \'30d\' } = req.query;' },
-  { pattern: /const \{ startDate, endDate \} = req\.query;/g, replacement: 'const { startDate: _startDate, endDate: _endDate } = req.query;' },
-  { pattern: /const \{ reportType = 'summary', startDate, endDate, projectId, clientId \} = req\.query;/g, replacement: 'const { reportType: _reportType = \'summary\', startDate: _startDate, endDate: _endDate, projectId: _projectId, clientId: _clientId } = req.query;' },
-  
-  // Fix unused imports
-  { pattern: /import \{ body, param, query \} from 'express-validator';/g, replacement: 'import { body, query } from \'express-validator\';' },
-  { pattern: /import \{ body, param \} from 'express-validator';/g, replacement: 'import { body } from \'express-validator\';' },
-  
-  // Fix unused interfaces
-  { pattern: /interface ProjectBudget \{[\s\S]*?\n\}/g, replacement: '// interface ProjectBudget removed - unused' },
-  { pattern: /interface ProjectTask \{[\s\S]*?\n\}/g, replacement: '// interface ProjectTask removed - unused' },
-  { pattern: /interface Client \{[\s\S]*?\n\}/g, replacement: '// interface Client removed - unused' },
-  
-  // Fix unused variables in loops
-  { pattern: /for \(const employeeId of employeeIds\) \{/g, replacement: 'for (const _employeeId of employeeIds) {' },
-  { pattern: /for \(const employeeId of employeeIds \|\| \['emp_1', 'emp_2', 'emp_3'\]\) \{/g, replacement: 'for (const _employeeId of employeeIds || [\'emp_1\', \'emp_2\', \'emp_3\']) {' },
-  
-  // Fix unused variables in functions
-  { pattern: /const movement: InventoryMovement = \{/g, replacement: 'const _movement: InventoryMovement = {' },
-  
-  // Fix email template issues
-  { pattern: /template: 'inventoryLowStock',/g, replacement: 'template: \'billApprovalRequired\',' },
-  { pattern: /template: 'mileageApprovalRequired',/g, replacement: 'template: \'billApprovalRequired\',' },
-  { pattern: /template: 'projectCompleted',/g, replacement: 'template: \'billApprovalRequired\',' },
-  { pattern: /template: 'projectMilestone',/g, replacement: 'template: \'billApprovalRequired\',' },
-  { pattern: /template: 'timesheetSubmitted',/g, replacement: 'template: \'billApprovalRequired\',' },
-  
-  // Fix type issues with endTime
-  { pattern: /endTime: endTime \? new Date\(endTime\)\.toISOString\(\) : undefined,/g, replacement: 'endTime: endTime ? new Date(endTime).toISOString() : new Date().toISOString(),' },
-];
-
-// Fix unused prisma import
-const prismaFix = { pattern: /import \{ prisma \} from '\.\.\/index';/g, replacement: '// import { prisma } from \'../index\'; // Commented out - not used in mock implementation' };
-
-console.log('🔧 Fixing TypeScript errors...');
-
-filesToFix.forEach(filePath => {
-  const fullPath = path.join(__dirname, filePath);
-  
-  if (!fs.existsSync(fullPath)) {
-    console.log(`⚠️  File not found: ${filePath}`);
-    return;
-  }
-  
-  let content = fs.readFileSync(fullPath, 'utf8');
-  let hasChanges = false;
-  
-  // Apply all fixes
-  fixes.forEach(fix => {
-    const newContent = content.replace(fix.pattern, fix.replacement);
-    if (newContent !== content) {
-      content = newContent;
-      hasChanges = true;
-    }
-  });
-  
-  // Apply prisma fix
-  const newContent = content.replace(prismaFix.pattern, prismaFix.replacement);
-  if (newContent !== content) {
-    content = newContent;
-    hasChanges = true;
-  }
-  
-  if (hasChanges) {
-    fs.writeFileSync(fullPath, content);
-    console.log(`✅ Fixed: ${filePath}`);
-  } else {
-    console.log(`⏭️  No changes needed: ${filePath}`);
+  if (fs.existsSync(filePath)) {
+    let content = fs.readFileSync(filePath, 'utf8');
+    
+    // Replace AuthenticatedRequest import
+    content = content.replace(
+      /import { AuthenticatedRequest } from ['"]\.\.\/middleware\/auth['"];?/g,
+      "import { AuthenticatedRequest } from '../types/auth';"
+    );
+    
+    // Fix function signatures
+    content = content.replace(
+      /export const \w+ = async \(req: Request & \{ user: AuthenticatedUser \}, res: Response\) => \{/g,
+      (match) => match.replace('Request & { user: AuthenticatedUser }', 'AuthenticatedRequest')
+    );
+    
+    // Fix metadata assignments
+    content = content.replace(
+      /metadata: notes \? \{ notes \} : null/g,
+      'metadata: notes ? { notes } : undefined'
+    );
+    
+    content = content.replace(
+      /address: address \? \{[\s\S]*?\} : null/g,
+      'address: address ? {\n          street: address,\n          city,\n          state,\n          zipCode,\n          country,\n        } : undefined'
+    );
+    
+    // Fix return statements in catch blocks
+    content = content.replace(
+      /} catch \(error\) \{\s*logger\.error\([^;]*\);\s*res\.status\(500\)\.json\(\{\s*success: false,\s*message: [^}]*\},\s*\);\s*\}/g,
+      '} catch (error) {\n    logger.error(\'Error:\', error);\n    res.status(500).json({\n      success: false,\n      message: \'Internal server error\',\n    });\n  }'
+    );
+    
+    // Fix arithmetic operations with Decimal types
+    content = content.replace(
+      /const totalRevenue = revenue\._sum\.totalAmount \|\| 0;/g,
+      'const totalRevenue = Number(revenue._sum.totalAmount) || 0;'
+    );
+    
+    content = content.replace(
+      /const totalExpenses = expenses\._sum\.amount \|\| 0;/g,
+      'const totalExpenses = Number(expenses._sum.amount) || 0;'
+    );
+    
+    content = content.replace(
+      /const profit = \(totalRevenue\._sum\.totalAmount \|\| 0\) - \(totalExpenses\._sum\.amount \|\| 0\);/g,
+      'const profit = (Number(totalRevenue._sum.totalAmount) || 0) - (Number(totalExpenses._sum.amount) || 0);'
+    );
+    
+    content = content.replace(
+      /const profitMargin = revenue\._sum\.totalAmount > 0 \? \(profit \/ revenue\._sum\.totalAmount\) \* 100 : 0;/g,
+      'const profitMargin = Number(revenue._sum.totalAmount) > 0 ? (profit / Number(revenue._sum.totalAmount)) * 100 : 0;'
+    );
+    
+    fs.writeFileSync(filePath, content);
+    console.log(`Fixed ${file}`);
   }
 });
 
-console.log('🎉 TypeScript error fixes completed!');
+console.log('TypeScript errors fixed!');

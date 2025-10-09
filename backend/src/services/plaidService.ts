@@ -1,390 +1,288 @@
-import { Configuration, PlaidApi, PlaidEnvironments, LinkTokenCreateRequest, CountryCode, Products, TransactionsGetRequest } from 'plaid';
-import { prisma } from '../index';
-import { logger } from '../utils/logger';
+import { Configuration, PlaidApi, PlaidEnvironments } from 'plaid'
+import { prisma } from '../config/database'
 
 const configuration = new Configuration({
-  basePath: PlaidEnvironments[process.env['PLAID_ENVIRONMENT'] as keyof typeof PlaidEnvironments] || PlaidEnvironments['sandbox'] || '',
+  basePath: PlaidEnvironments[process.env.PLAID_ENV as keyof typeof PlaidEnvironments] || PlaidEnvironments.sandbox,
   baseOptions: {
     headers: {
-      'PLAID-CLIENT-ID': process.env['PLAID_CLIENT_ID'] || '',
-      'PLAID-SECRET': process.env['PLAID_SECRET'] || '',
+      'PLAID-CLIENT-ID': process.env.PLAID_CLIENT_ID,
+      'PLAID-SECRET': process.env.PLAID_SECRET,
     },
   },
-});
+})
 
-const plaidClient = new PlaidApi(configuration);
+const client = new PlaidApi(configuration)
 
-export interface BankAccountInfo {
-  accountId: string;
-  name: string;
-  type: string;
-  subtype: string;
-  mask: string;
-  balances: {
-    available: number | null;
-    current: number | null;
-    limit: number | null;
-  };
+export interface BankAccount {
+  id: string
+  name: string
+  type: string
+  balance: number
+  accountNumber: string
+  routingNumber?: string
 }
 
-export interface TransactionInfo {
-  transactionId: string;
-  accountId: string;
-  amount: number;
-  date: string;
-  name: string;
-  merchantName?: string;
-  category: string[];
-  categoryId?: string;
-  pending: boolean;
-  accountOwner?: string;
+export interface Transaction {
+  id: string
+  amount: number
+  date: string
+  description: string
+  category: string[]
+  accountId: string
 }
 
-// Create link token for Plaid Link
-export const createLinkToken = async (userId: string): Promise<string> => {
-  try {
-    const request: LinkTokenCreateRequest = {
-      user: {
-        client_user_id: userId,
-      },
-      client_name: 'VeriGrade',
-      products: [Products.Transactions, Products.Auth],
-      country_codes: [CountryCode.Us],
-      language: 'en',
-    };
-
-    const response = await plaidClient.linkTokenCreate(request);
-    return response.data.link_token;
-  } catch (error) {
-    logger.error('Failed to create link token:', error);
-    throw new Error('Failed to create link token');
-  }
-};
-
-// Exchange public token for access token
-export const exchangePublicToken = async (
-  publicToken: string,
-  organizationId: string
-): Promise<string> => {
-  try {
-    const response = await plaidClient.itemPublicTokenExchange({
-      public_token: publicToken,
-    });
-
-    const accessToken = response.data.access_token;
-    const itemId = response.data.item_id;
-
-    // Store access token in database
-    await prisma.bankAccount.create({
-      data: {
-        organizationId,
-        name: 'Connected Bank Account',
-        type: 'CHECKING',
-        plaidAccountId: 'main',
-        plaidItemId: itemId,
-        balance: 0,
-        isActive: true,
-      },
-    });
-
-    // Store access token securely (in production, use encryption)
-    // For now, we'll store it in a secure configuration table
-    await prisma.systemConfig.upsert({
-      where: { key: `plaid_access_token_${itemId}` },
-      update: { value: accessToken },
-      create: { key: `plaid_access_token_${itemId}`, value: accessToken },
-    });
-
-    logger.info(`Plaid access token exchanged for item ${itemId}`);
-    return accessToken;
-  } catch (error) {
-    logger.error('Failed to exchange public token:', error);
-    throw new Error('Failed to exchange public token');
-  }
-};
-
-// Get accounts for a connected item
-export const getAccounts = async (organizationId: string): Promise<BankAccountInfo[]> => {
-  try {
-    // Get all bank accounts for the organization
-    const bankAccounts = await prisma.bankAccount.findMany({
-      where: {
-        organizationId,
-        plaidItemId: { not: null },
-        isActive: true,
-      },
-    });
-
-    const accounts: BankAccountInfo[] = [];
-
-    for (const bankAccount of bankAccounts) {
-      if (!bankAccount.plaidItemId) continue;
-
-      // Get access token
-      const tokenConfig = await prisma.systemConfig.findUnique({
-        where: { key: `plaid_access_token_${bankAccount.plaidItemId}` },
-      });
-
-      if (!tokenConfig) continue;
-
-      try {
-        const response = await plaidClient.accountsGet({
-          access_token: tokenConfig.value as string,
-        });
-
-        const plaidAccounts = response.data.accounts.map(account => ({
-          accountId: account.account_id,
-          name: account.name,
-          type: account.type || 'unknown',
-          subtype: account.subtype || 'unknown',
-          mask: account.mask || '',
-          balances: {
-            available: account.balances.available,
-            current: account.balances.current,
-            limit: account.balances.limit,
+export const plaidService = {
+  async createLinkToken(userId: string, organizationId: string) {
+    try {
+      const response = await client.linkTokenCreate({
+        user: {
+          client_user_id: userId,
+        },
+        client_name: 'VeriGrade',
+        products: ['transactions', 'accounts'],
+        country_codes: ['US'],
+        language: 'en',
+        webhook: `${process.env.BACKEND_URL}/api/plaid/webhook`,
+        account_filters: {
+          depository: {
+            account_subtypes: ['checking', 'savings']
           },
-        }));
+          credit: {
+            account_subtypes: ['credit card']
+          }
+        }
+      })
 
-        accounts.push(...plaidAccounts);
-      } catch (error) {
-        logger.error(`Failed to get accounts for item ${bankAccount.plaidItemId}:`, error);
-        // Continue with other accounts
+      return response.data
+    } catch (error) {
+      console.error('Plaid link token creation error:', error)
+      throw new Error('Failed to create link token')
+    }
+  },
+
+  async exchangePublicToken(publicToken: string, userId: string, organizationId: string) {
+    try {
+      const response = await client.itemPublicTokenExchange({
+        public_token: publicToken
+      })
+
+      const accessToken = response.data.access_token
+      const itemId = response.data.item_id
+
+      // Store access token
+      await prisma.integration.create({
+        data: {
+          organizationId,
+          userId,
+          type: 'PLAID',
+          credentials: {
+            accessToken,
+            itemId
+          },
+          status: 'CONNECTED',
+          settings: {},
+          isActive: true
+        }
+      })
+
+      // Fetch and store accounts
+      await this.fetchAndStoreAccounts(accessToken, organizationId)
+
+      return { accessToken, itemId }
+    } catch (error) {
+      console.error('Plaid token exchange error:', error)
+      throw new Error('Failed to exchange public token')
+    }
+  },
+
+  async fetchAndStoreAccounts(accessToken: string, organizationId: string) {
+    try {
+      const response = await client.accountsGet({
+        access_token: accessToken
+      })
+
+      const accounts = response.data.accounts
+
+      for (const account of accounts) {
+        // Check if account already exists
+        const existingAccount = await prisma.bankAccount.findFirst({
+          where: {
+            organizationId,
+            plaidAccountId: account.account_id
+          }
+        })
+
+        if (!existingAccount) {
+          await prisma.bankAccount.create({
+            data: {
+              organizationId,
+              name: account.name,
+              type: this.mapPlaidAccountType(account.type),
+              accountNumber: account.mask || '',
+              balance: account.balances.current || 0,
+              currency: 'USD',
+              plaidAccountId: account.account_id,
+              isActive: true
+            }
+          })
+        }
       }
+
+      return accounts
+    } catch (error) {
+      console.error('Plaid accounts fetch error:', error)
+      throw new Error('Failed to fetch accounts')
     }
+  },
 
-    return accounts;
-  } catch (error) {
-    logger.error('Failed to get accounts:', error);
-    throw new Error('Failed to get accounts');
-  }
-};
+  async fetchTransactions(accessToken: string, organizationId: string, startDate?: Date, endDate?: Date) {
+    try {
+      const start = startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
+      const end = endDate || new Date()
 
-// Get transactions for a connected account
-export const getTransactions = async (
-  organizationId: string,
-  startDate: string,
-  endDate: string,
-  accountIds?: string[]
-): Promise<TransactionInfo[]> => {
-  try {
-    // Get all bank accounts for the organization
-    const bankAccounts = await prisma.bankAccount.findMany({
-      where: {
-        organizationId,
-        plaidItemId: { not: null },
-        isActive: true,
-      },
-    });
+      const response = await client.transactionsGet({
+        access_token: accessToken,
+        start_date: start,
+        end_date: end,
+        count: 500
+      })
 
-    const allTransactions: TransactionInfo[] = [];
+      const transactions = response.data.transactions
 
-    for (const bankAccount of bankAccounts) {
-      if (!bankAccount.plaidItemId) continue;
-
-      // Get access token
-      const tokenConfig = await prisma.systemConfig.findUnique({
-        where: { key: `plaid_access_token_${bankAccount.plaidItemId}` },
-      });
-
-      if (!tokenConfig) continue;
-
-      try {
-        const request: TransactionsGetRequest = {
-          access_token: tokenConfig.value as string,
-          start_date: startDate,
-          end_date: endDate,
-          ...(accountIds && { account_ids: accountIds }),
-        };
-
-        const response = await plaidClient.transactionsGet(request);
-        
-        const transactions = response.data.transactions.map(transaction => ({
-          transactionId: transaction.transaction_id,
-          accountId: transaction.account_id,
-          amount: transaction.amount,
-          date: transaction.date,
-          name: transaction.name || '',
-          merchantName: transaction.merchant_name || '',
-          category: transaction.category || [],
-          categoryId: transaction.category_id || '',
-          pending: transaction.pending,
-          accountOwner: transaction.account_owner || '',
-        }));
-
-        allTransactions.push(...transactions);
-      } catch (error) {
-        logger.error(`Failed to get transactions for item ${bankAccount.plaidItemId}:`, error);
-        // Continue with other accounts
-      }
-    }
-
-    return allTransactions;
-  } catch (error) {
-    logger.error('Failed to get transactions:', error);
-    throw new Error('Failed to get transactions');
-  }
-};
-
-// Sync transactions to database
-export const syncTransactions = async (organizationId: string): Promise<number> => {
-  try {
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - 30); // Last 30 days
-    const endDate = new Date();
-
-    const startDateStr = startDate.toISOString().split('T')[0];
-    const endDateStr = endDate.toISOString().split('T')[0];
-    
-    if (!startDateStr || !endDateStr) {
-      throw new Error('Failed to format dates');
-    }
-
-    const transactions = await getTransactions(
-      organizationId,
-      startDateStr,
-      endDateStr
-    );
-
-    let syncedCount = 0;
-
-    for (const transaction of transactions) {
-      try {
+      // Store transactions in database
+      for (const transaction of transactions) {
         // Check if transaction already exists
         const existingTransaction = await prisma.transaction.findFirst({
           where: {
             organizationId,
-            metadata: {
-              path: ['plaidTransactionId'],
-              equals: transaction.transactionId,
-            },
-          },
-        });
+            reference: transaction.transaction_id
+          }
+        })
 
-        if (existingTransaction) {
-          continue; // Skip existing transactions
+        if (!existingTransaction) {
+          // Get bank account
+          const bankAccount = await prisma.bankAccount.findFirst({
+            where: {
+              organizationId,
+              plaidAccountId: transaction.account_id
+            }
+          })
+
+          await prisma.transaction.create({
+            data: {
+              organizationId,
+              userId: (await prisma.organization.findUnique({
+                where: { id: organizationId },
+                select: { ownerId: true }
+              }))?.ownerId || '',
+              type: this.mapPlaidTransactionType(transaction.amount),
+              amount: Math.abs(transaction.amount),
+              description: transaction.name || transaction.merchant_name || 'Unknown',
+              reference: transaction.transaction_id,
+              category: transaction.category?.[0] || 'Uncategorized',
+              subcategory: transaction.category?.[1] || 'General',
+              date: new Date(transaction.date),
+              bankAccountId: bankAccount?.id,
+              metadata: {
+                plaidTransactionId: transaction.transaction_id,
+                merchantName: transaction.merchant_name,
+                category: transaction.category,
+                location: transaction.location
+              }
+            }
+          })
         }
-
-        // Create transaction in database
-        await prisma.transaction.create({
-          data: {
-            organizationId,
-            userId: '', // Will be set by the system
-            type: transaction.amount > 0 ? 'INCOME' : 'EXPENSE',
-            amount: Math.abs(transaction.amount),
-            description: transaction.name,
-            date: new Date(transaction.date),
-            metadata: {
-              plaidTransactionId: transaction.transactionId,
-              plaidAccountId: transaction.accountId,
-              merchantName: transaction.merchantName,
-              category: transaction.category,
-              categoryId: transaction.categoryId,
-              pending: transaction.pending,
-            },
-            isReconciled: !transaction.pending,
-          },
-        });
-
-        syncedCount++;
-      } catch (error) {
-        logger.error(`Failed to sync transaction ${transaction.transactionId}:`, error);
-        // Continue with other transactions
       }
+
+      return transactions
+    } catch (error) {
+      console.error('Plaid transactions fetch error:', error)
+      throw new Error('Failed to fetch transactions')
     }
+  },
 
-    // Update last sync time for all bank accounts
-    await prisma.bankAccount.updateMany({
-      where: {
-        organizationId,
-        plaidItemId: { not: null },
-      },
-      data: {
-        lastSyncAt: new Date(),
-      },
-    });
+  async syncTransactions(organizationId: string) {
+    try {
+      // Get active Plaid integration
+      const integration = await prisma.integration.findFirst({
+        where: {
+          organizationId,
+          type: 'PLAID',
+          isActive: true
+        }
+      })
 
-    logger.info(`Synced ${syncedCount} transactions for organization ${organizationId}`);
-    return syncedCount;
-  } catch (error) {
-    logger.error('Failed to sync transactions:', error);
-    throw new Error('Failed to sync transactions');
-  }
-};
+      if (!integration) {
+        throw new Error('No active Plaid integration found')
+      }
 
-// Remove bank connection
-export const removeBankConnection = async (itemId: string, organizationId: string): Promise<void> => {
-  try {
-    // Get access token
-    const tokenConfig = await prisma.systemConfig.findUnique({
-      where: { key: `plaid_access_token_${itemId}` },
-    });
+      const credentials = integration.credentials as any
+      const accessToken = credentials.accessToken
 
-    if (tokenConfig) {
+      // Fetch latest transactions
+      await this.fetchAndStoreAccounts(accessToken, organizationId)
+      await this.fetchTransactions(accessToken, organizationId)
+
+      // Update last sync time
+      await prisma.integration.update({
+        where: { id: integration.id },
+        data: { lastSyncAt: new Date() }
+      })
+
+      return { success: true, syncedAt: new Date() }
+    } catch (error) {
+      console.error('Plaid sync error:', error)
+      throw new Error('Failed to sync transactions')
+    }
+  },
+
+  async removeIntegration(organizationId: string) {
+    try {
+      const integration = await prisma.integration.findFirst({
+        where: {
+          organizationId,
+          type: 'PLAID',
+          isActive: true
+        }
+      })
+
+      if (!integration) {
+        throw new Error('No active Plaid integration found')
+      }
+
+      const credentials = integration.credentials as any
+      const accessToken = credentials.accessToken
+
       // Remove item from Plaid
-      await plaidClient.itemRemove({
-        access_token: tokenConfig.value as string,
-      });
+      await client.itemRemove({
+        access_token: accessToken
+      })
 
-      // Remove access token from database
-      await prisma.systemConfig.delete({
-        where: { key: `plaid_access_token_${itemId}` },
-      });
+      // Deactivate integration
+      await prisma.integration.update({
+        where: { id: integration.id },
+        data: { isActive: false, status: 'DISCONNECTED' }
+      })
+
+      return { success: true }
+    } catch (error) {
+      console.error('Plaid integration removal error:', error)
+      throw new Error('Failed to remove integration')
     }
+  },
 
-    // Mark bank accounts as inactive
-    await prisma.bankAccount.updateMany({
-      where: {
-        organizationId,
-        plaidItemId: itemId,
-      },
-      data: {
-        isActive: false,
-      },
-    });
+  mapPlaidAccountType(plaidType: string): string {
+    const typeMap: { [key: string]: string } = {
+      'depository': 'CHECKING',
+      'credit': 'CREDIT_CARD',
+      'loan': 'LOAN',
+      'investment': 'INVESTMENT',
+      'other': 'OTHER'
+    }
+    return typeMap[plaidType] || 'OTHER'
+  },
 
-    logger.info(`Removed bank connection for item ${itemId}`);
-  } catch (error) {
-    logger.error('Failed to remove bank connection:', error);
-    throw new Error('Failed to remove bank connection');
+  mapPlaidTransactionType(amount: number): string {
+    return amount >= 0 ? 'INCOME' : 'EXPENSE'
   }
-};
-
-// Get account balance
-export const getAccountBalance = async (accountId: string, organizationId: string): Promise<number> => {
-  try {
-    const bankAccount = await prisma.bankAccount.findFirst({
-      where: {
-        organizationId,
-        plaidAccountId: accountId,
-        isActive: true,
-      },
-    });
-
-    if (!bankAccount?.plaidItemId) {
-      throw new Error('Bank account not found');
-    }
-
-    // Get access token
-    const tokenConfig = await prisma.systemConfig.findUnique({
-      where: { key: `plaid_access_token_${bankAccount.plaidItemId}` },
-    });
-
-    if (!tokenConfig) {
-      throw new Error('Access token not found');
-    }
-
-    const response = await plaidClient.accountsGet({
-      access_token: tokenConfig.value as string,
-    });
-
-    const account = response.data.accounts.find(acc => acc.account_id === accountId);
-    if (!account) {
-      throw new Error('Account not found');
-    }
-
-    return account.balances.current || 0;
-  } catch (error) {
-    logger.error('Failed to get account balance:', error);
-    throw new Error('Failed to get account balance');
-  }
-};
+}

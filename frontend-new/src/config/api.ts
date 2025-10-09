@@ -4,9 +4,13 @@ const isLocalhost = typeof window !== 'undefined' && window.location.hostname ==
 
 // Backend URL configuration
 const getBackendURL = () => {
-  // If we're in production and not on localhost, use the deployed backend
+  // Use environment variable if available
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  // If we're in production and not on localhost, use the deployed backend via proxy
   if (isProduction && !isLocalhost) {
-    return 'https://backend-cgy2b0vha-robertotos-projects.vercel.app';
+    return '';  // Empty string means use relative URLs, which will be proxied
   }
   // Otherwise use localhost for development
   return 'http://localhost:3001';

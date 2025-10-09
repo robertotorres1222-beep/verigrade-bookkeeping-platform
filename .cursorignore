@@ -1,0 +1,26 @@
+# Exclude node_modules directories
+**/node_modules/
+**/dist/
+**/build/
+**/coverage/
+
+# Exclude log files
+**/*.log
+**/logs/
+
+# Exclude generated files
+**/generated/
+**/temp/
+**/.next/
+**/.nuxt/
+
+# Exclude large binary files
+**/*.map
+**/*.d.ts.map
+**/*.js.map
+
+# Exclude package manager files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+

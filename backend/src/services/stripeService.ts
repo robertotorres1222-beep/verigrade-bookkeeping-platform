@@ -1,372 +1,373 @@
-import Stripe from 'stripe';
-import { logger } from '../utils/logger';
+import Stripe from 'stripe'
+import { prisma } from '../config/database'
 
-// Initialize Stripe with your secret key
-const stripe = new Stripe(process.env['STRIPE_SECRET_KEY'] || '', {
-  apiVersion: '2023-10-16',
-});
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2023-10-16'
+})
 
-export interface CreateCustomerData {
-  email: string;
-  name: string;
-  phone?: string;
-  address?: {
-    line1: string;
-    line2?: string;
-    city: string;
-    state: string;
-    postal_code: string;
-    country: string;
-  };
-  metadata?: Record<string, string>;
+export interface SubscriptionPlan {
+  id: string
+  name: string
+  description: string
+  price: number
+  interval: 'month' | 'year'
+  features: string[]
+  maxTransactions: number
+  maxUsers: number
+  maxOrganizations: number
 }
 
-export interface CreateSubscriptionData {
-  customerId: string;
-  priceId: string;
-  paymentMethodId: string;
-  trialPeriodDays?: number;
-  metadata?: Record<string, string>;
-}
-
-export interface CreatePaymentIntentData {
-  amount: number;
-  currency: string;
-  customerId?: string;
-  paymentMethodId?: string;
-  description: string;
-  metadata?: Record<string, string>;
-  automaticPaymentMethods?: {
-    enabled: boolean;
-  };
-}
-
-export interface CreateSetupIntentData {
-  customerId: string;
-  paymentMethodId: string;
-  usage: 'off_session' | 'on_session';
-  metadata?: Record<string, string>;
-}
-
-class StripeService {
-  // Create a new customer
-  async createCustomer(data: CreateCustomerData): Promise<Stripe.Customer> {
-    try {
-      const customerData: any = {
-        email: data.email,
-        name: data.name,
-        metadata: data.metadata || {},
-      };
-      
-      if (data.phone) {
-        customerData.phone = data.phone;
-      }
-      
-      if (data.address) {
-        customerData.address = data.address;
-      }
-      
-      const customer = await stripe.customers.create(customerData);
-
-      logger.info(`Stripe customer created: ${customer.id}`);
-      return customer;
-    } catch (error) {
-      logger.error('Error creating Stripe customer:', error);
-      throw new Error('Failed to create customer');
-    }
+export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
+  {
+    id: 'starter',
+    name: 'Starter',
+    description: 'Perfect for small businesses just getting started',
+    price: 29,
+    interval: 'month',
+    features: [
+      'Up to 100 transactions per month',
+      '1 user account',
+      'Basic reporting',
+      'Email support',
+      'Bank connection (1 account)'
+    ],
+    maxTransactions: 100,
+    maxUsers: 1,
+    maxOrganizations: 1
+  },
+  {
+    id: 'professional',
+    name: 'Professional',
+    description: 'Ideal for growing businesses with more complex needs',
+    price: 79,
+    interval: 'month',
+    features: [
+      'Up to 1,000 transactions per month',
+      'Up to 5 user accounts',
+      'Advanced reporting & analytics',
+      'Priority support',
+      'Multiple bank connections',
+      'AI-powered categorization',
+      'Custom categories'
+    ],
+    maxTransactions: 1000,
+    maxUsers: 5,
+    maxOrganizations: 1
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise',
+    description: 'For large businesses with advanced requirements',
+    price: 199,
+    interval: 'month',
+    features: [
+      'Unlimited transactions',
+      'Unlimited users',
+      'Advanced analytics & insights',
+      '24/7 phone support',
+      'Unlimited bank connections',
+      'Advanced AI features',
+      'Custom integrations',
+      'Dedicated account manager',
+      'White-label options'
+    ],
+    maxTransactions: -1, // Unlimited
+    maxUsers: -1, // Unlimited
+    maxOrganizations: -1 // Unlimited
   }
+]
 
-  // Retrieve customer by ID
-  async getCustomer(customerId: string): Promise<Stripe.Customer> {
+export const stripeService = {
+  async createCustomer(userId: string, email: string, name?: string) {
     try {
-      const customer = await stripe.customers.retrieve(customerId);
-      return customer as Stripe.Customer;
-    } catch (error) {
-      logger.error('Error retrieving Stripe customer:', error);
-      throw new Error('Failed to retrieve customer');
-    }
-  }
-
-  // Update customer
-  async updateCustomer(customerId: string, data: Partial<CreateCustomerData>): Promise<Stripe.Customer> {
-    try {
-      const updateData: any = {};
-      
-      if (data.email) updateData.email = data.email;
-      if (data.name) updateData.name = data.name;
-      if (data.phone) updateData.phone = data.phone;
-      if (data.address) updateData.address = data.address;
-      if (data.metadata) updateData.metadata = data.metadata;
-      
-      const customer = await stripe.customers.update(customerId, updateData);
-
-      logger.info(`Stripe customer updated: ${customer.id}`);
-      return customer;
-    } catch (error) {
-      logger.error('Error updating Stripe customer:', error);
-      throw new Error('Failed to update customer');
-    }
-  }
-
-  // Create subscription
-  async createSubscription(data: CreateSubscriptionData): Promise<Stripe.Subscription> {
-    try {
-      const subscriptionData: any = {
-        customer: data.customerId,
-        items: [{ price: data.priceId }],
-        default_payment_method: data.paymentMethodId,
-        metadata: data.metadata || {},
-        expand: ['latest_invoice.payment_intent'],
-      };
-      
-      if (data.trialPeriodDays) {
-        subscriptionData.trial_period_days = data.trialPeriodDays;
-      }
-      
-      const subscription = await stripe.subscriptions.create(subscriptionData);
-
-      logger.info(`Stripe subscription created: ${subscription.id}`);
-      return subscription;
-    } catch (error) {
-      logger.error('Error creating Stripe subscription:', error);
-      throw new Error('Failed to create subscription');
-    }
-  }
-
-  // Retrieve subscription
-  async getSubscription(subscriptionId: string): Promise<Stripe.Subscription> {
-    try {
-      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-      return subscription;
-    } catch (error) {
-      logger.error('Error retrieving Stripe subscription:', error);
-      throw new Error('Failed to retrieve subscription');
-    }
-  }
-
-  // Cancel subscription
-  async cancelSubscription(subscriptionId: string, immediately = false): Promise<Stripe.Subscription> {
-    try {
-      const subscription = await stripe.subscriptions.update(subscriptionId, {
-        cancel_at_period_end: !immediately,
-      });
-
-      if (immediately) {
-        await stripe.subscriptions.cancel(subscriptionId);
-      }
-
-      logger.info(`Stripe subscription cancelled: ${subscriptionId}`);
-      return subscription;
-    } catch (error) {
-      logger.error('Error cancelling Stripe subscription:', error);
-      throw new Error('Failed to cancel subscription');
-    }
-  }
-
-  // Create payment intent
-  async createPaymentIntent(data: CreatePaymentIntentData): Promise<Stripe.PaymentIntent> {
-    try {
-      const paymentIntentData: any = {
-        amount: data.amount,
-        currency: data.currency,
-        description: data.description,
-        metadata: data.metadata || {},
-        automatic_payment_methods: data.automaticPaymentMethods || { enabled: true },
-        confirmation_method: 'manual',
-        confirm: true,
-      };
-      
-      if (data.customerId) {
-        paymentIntentData.customer = data.customerId;
-      }
-      
-      if (data.paymentMethodId) {
-        paymentIntentData.payment_method = data.paymentMethodId;
-      }
-      
-      const paymentIntent = await stripe.paymentIntents.create(paymentIntentData);
-
-      logger.info(`Stripe payment intent created: ${paymentIntent.id}`);
-      return paymentIntent;
-    } catch (error) {
-      logger.error('Error creating Stripe payment intent:', error);
-      throw new Error('Failed to create payment intent');
-    }
-  }
-
-  // Retrieve payment intent
-  async getPaymentIntent(paymentIntentId: string): Promise<Stripe.PaymentIntent> {
-    try {
-      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-      return paymentIntent;
-    } catch (error) {
-      logger.error('Error retrieving Stripe payment intent:', error);
-      throw new Error('Failed to retrieve payment intent');
-    }
-  }
-
-  // Create setup intent for saving payment methods
-  async createSetupIntent(data: CreateSetupIntentData): Promise<Stripe.SetupIntent> {
-    try {
-      const setupIntent = await stripe.setupIntents.create({
-        customer: data.customerId,
-        payment_method: data.paymentMethodId,
-        usage: data.usage,
-        metadata: data.metadata || {},
-      });
-
-      logger.info(`Stripe setup intent created: ${setupIntent.id}`);
-      return setupIntent;
-    } catch (error) {
-      logger.error('Error creating Stripe setup intent:', error);
-      throw new Error('Failed to create setup intent');
-    }
-  }
-
-  // List customer's payment methods
-  async getCustomerPaymentMethods(customerId: string, type: 'card' | 'us_bank_account' = 'card'): Promise<Stripe.PaymentMethod[]> {
-    try {
-      const paymentMethods = await stripe.paymentMethods.list({
-        customer: customerId,
-        type,
-      });
-
-      return paymentMethods.data;
-    } catch (error) {
-      logger.error('Error retrieving customer payment methods:', error);
-      throw new Error('Failed to retrieve payment methods');
-    }
-  }
-
-  // Create price for subscription
-  async createPrice(
-    productId: string,
-    unitAmount: number,
-    currency: string = 'usd',
-    interval: 'month' | 'year' = 'month',
-    nickname?: string
-  ): Promise<Stripe.Price> {
-    try {
-      const priceData: any = {
-        product: productId,
-        unit_amount: unitAmount,
-        currency,
-        recurring: {
-          interval,
-        },
-      };
-      
-      if (nickname) {
-        priceData.nickname = nickname;
-      }
-      
-      const price = await stripe.prices.create(priceData);
-
-      logger.info(`Stripe price created: ${price.id}`);
-      return price;
-    } catch (error) {
-      logger.error('Error creating Stripe price:', error);
-      throw new Error('Failed to create price');
-    }
-  }
-
-  // Create product
-  async createProduct(name: string, description?: string, metadata?: Record<string, string>): Promise<Stripe.Product> {
-    try {
-      const productData: any = {
+      const customer = await stripe.customers.create({
+        email,
         name,
-        metadata: metadata || {},
-      };
-      
-      if (description) {
-        productData.description = description;
-      }
-      
-      const product = await stripe.products.create(productData);
+        metadata: {
+          userId
+        }
+      })
 
-      logger.info(`Stripe product created: ${product.id}`);
-      return product;
+      // Update user with Stripe customer ID
+      await prisma.user.update({
+        where: { id: userId },
+        data: { stripeCustomerId: customer.id }
+      })
+
+      return customer
     } catch (error) {
-      logger.error('Error creating Stripe product:', error);
-      throw new Error('Failed to create product');
+      console.error('Stripe customer creation error:', error)
+      throw new Error('Failed to create customer')
     }
-  }
+  },
 
-  // Handle webhook events
-  async handleWebhook(payload: string | Buffer, signature: string): Promise<Stripe.Event> {
+  async createCheckoutSession(userId: string, planId: string, organizationId: string) {
     try {
-      const webhookSecret = process.env['STRIPE_WEBHOOK_SECRET'];
-      if (!webhookSecret) {
-        throw new Error('Stripe webhook secret not configured');
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        include: {
+          organizationMemberships: {
+            where: { isActive: true },
+            include: { organization: true }
+          }
+        }
+      })
+
+      if (!user) {
+        throw new Error('User not found')
       }
 
-      const event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
-      logger.info(`Stripe webhook received: ${event.type}`);
-      return event;
-    } catch (error) {
-      logger.error('Error handling Stripe webhook:', error);
-      throw new Error('Failed to handle webhook');
-    }
-  }
+      const plan = SUBSCRIPTION_PLANS.find(p => p.id === planId)
+      if (!plan) {
+        throw new Error('Invalid plan')
+      }
 
-  // Create checkout session
-  async createCheckoutSession(
-    customerId: string,
-    priceId: string,
-    successUrl: string,
-    cancelUrl: string,
-    metadata?: Record<string, string>
-  ): Promise<Stripe.Checkout.Session> {
-    try {
+      let customerId = user.stripeCustomerId
+
+      // Create customer if doesn't exist
+      if (!customerId) {
+        const customer = await this.createCustomer(userId, user.email, `${user.firstName} ${user.lastName}`)
+        customerId = customer.id
+      }
+
+      // Create Stripe price if it doesn't exist
+      const price = await this.getOrCreatePrice(plan)
+
       const session = await stripe.checkout.sessions.create({
         customer: customerId,
         payment_method_types: ['card'],
         line_items: [
           {
-            price: priceId,
+            price: price.id,
             quantity: 1,
           },
         ],
         mode: 'subscription',
-        success_url: successUrl,
-        cancel_url: cancelUrl,
-        metadata: metadata || {},
-      });
+        success_url: `${process.env.FRONTEND_URL}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.FRONTEND_URL}/pricing`,
+        metadata: {
+          userId,
+          organizationId,
+          planId
+        },
+        subscription_data: {
+          metadata: {
+            userId,
+            organizationId,
+            planId
+          }
+        }
+      })
 
-      logger.info(`Stripe checkout session created: ${session.id}`);
-      return session;
+      return session
     } catch (error) {
-      logger.error('Error creating Stripe checkout session:', error);
-      throw new Error('Failed to create checkout session');
+      console.error('Stripe checkout session creation error:', error)
+      throw new Error('Failed to create checkout session')
     }
-  }
+  },
 
-  // Create payment link
-  async createPaymentLink(priceId: string, metadata?: Record<string, string>): Promise<Stripe.PaymentLink> {
+  async getOrCreatePrice(plan: SubscriptionPlan) {
     try {
-      const paymentLink = await stripe.paymentLinks.create({
-        line_items: [
-          {
-            price: priceId,
-            quantity: 1,
-          },
-        ],
-        metadata: metadata || {},
-      });
+      // Try to find existing price
+      const prices = await stripe.prices.list({
+        product: plan.id,
+        active: true
+      })
 
-      logger.info(`Stripe payment link created: ${paymentLink.id}`);
-      return paymentLink;
+      if (prices.data.length > 0) {
+        return prices.data[0]
+      }
+
+      // Create product if it doesn't exist
+      const product = await stripe.products.create({
+        id: plan.id,
+        name: plan.name,
+        description: plan.description,
+        metadata: {
+          maxTransactions: plan.maxTransactions.toString(),
+          maxUsers: plan.maxUsers.toString(),
+          maxOrganizations: plan.maxOrganizations.toString()
+        }
+      })
+
+      // Create price
+      const price = await stripe.prices.create({
+        product: product.id,
+        unit_amount: plan.price * 100, // Convert to cents
+        currency: 'usd',
+        recurring: {
+          interval: plan.interval
+        },
+        metadata: {
+          planId: plan.id
+        }
+      })
+
+      return price
     } catch (error) {
-      logger.error('Error creating Stripe payment link:', error);
-      throw new Error('Failed to create payment link');
+      console.error('Stripe price creation error:', error)
+      throw new Error('Failed to create price')
     }
-  }
+  },
 
-  // Get Stripe instance for direct access
-  getStripeInstance(): Stripe {
-    return stripe;
+  async handleWebhook(event: Stripe.Event) {
+    try {
+      switch (event.type) {
+        case 'checkout.session.completed':
+          await this.handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session)
+          break
+        case 'customer.subscription.created':
+          await this.handleSubscriptionCreated(event.data.object as Stripe.Subscription)
+          break
+        case 'customer.subscription.updated':
+          await this.handleSubscriptionUpdated(event.data.object as Stripe.Subscription)
+          break
+        case 'customer.subscription.deleted':
+          await this.handleSubscriptionDeleted(event.data.object as Stripe.Subscription)
+          break
+        case 'invoice.payment_succeeded':
+          await this.handlePaymentSucceeded(event.data.object as Stripe.Invoice)
+          break
+        case 'invoice.payment_failed':
+          await this.handlePaymentFailed(event.data.object as Stripe.Invoice)
+          break
+        default:
+          console.log(`Unhandled event type: ${event.type}`)
+      }
+    } catch (error) {
+      console.error('Stripe webhook handling error:', error)
+      throw error
+    }
+  },
+
+  async handleCheckoutCompleted(session: Stripe.Checkout.Session) {
+    const { userId, organizationId, planId } = session.metadata!
+
+    // Create subscription record
+    await prisma.subscription.create({
+      data: {
+        userId,
+        stripeSubscriptionId: session.subscription as string,
+        stripeCustomerId: session.customer as string,
+        status: 'active',
+        currentPeriodStart: new Date(),
+        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
+      }
+    })
+
+    console.log(`Subscription created for user ${userId}, organization ${organizationId}, plan ${planId}`)
+  },
+
+  async handleSubscriptionCreated(subscription: Stripe.Subscription) {
+    const { userId, organizationId, planId } = subscription.metadata
+
+    await prisma.subscription.create({
+      data: {
+        userId,
+        stripeSubscriptionId: subscription.id,
+        stripeCustomerId: subscription.customer as string,
+        status: subscription.status,
+        currentPeriodStart: new Date(subscription.current_period_start * 1000),
+        currentPeriodEnd: new Date(subscription.current_period_end * 1000)
+      }
+    })
+  },
+
+  async handleSubscriptionUpdated(subscription: Stripe.Subscription) {
+    await prisma.subscription.update({
+      where: { stripeSubscriptionId: subscription.id },
+      data: {
+        status: subscription.status,
+        currentPeriodStart: new Date(subscription.current_period_start * 1000),
+        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+        cancelAtPeriodEnd: subscription.cancel_at_period_end
+      }
+    })
+  },
+
+  async handleSubscriptionDeleted(subscription: Stripe.Subscription) {
+    await prisma.subscription.update({
+      where: { stripeSubscriptionId: subscription.id },
+      data: { status: 'cancelled' }
+    })
+  },
+
+  async handlePaymentSucceeded(invoice: Stripe.Invoice) {
+    const subscription = await prisma.subscription.findUnique({
+      where: { stripeSubscriptionId: invoice.subscription as string }
+    })
+
+    if (subscription) {
+      // Update subscription status
+      await prisma.subscription.update({
+        where: { id: subscription.id },
+        data: { status: 'active' }
+      })
+    }
+  },
+
+  async handlePaymentFailed(invoice: Stripe.Invoice) {
+    const subscription = await prisma.subscription.findUnique({
+      where: { stripeSubscriptionId: invoice.subscription as string }
+    })
+
+    if (subscription) {
+      // Update subscription status
+      await prisma.subscription.update({
+        where: { id: subscription.id },
+        data: { status: 'past_due' }
+      })
+    }
+  },
+
+  async getSubscription(userId: string) {
+    return await prisma.subscription.findFirst({
+      where: { userId },
+      orderBy: { createdAt: 'desc' }
+    })
+  },
+
+  async cancelSubscription(subscriptionId: string) {
+    try {
+      const subscription = await prisma.subscription.findUnique({
+        where: { stripeSubscriptionId: subscriptionId }
+      })
+
+      if (!subscription) {
+        throw new Error('Subscription not found')
+      }
+
+      // Cancel in Stripe
+      await stripe.subscriptions.update(subscriptionId, {
+        cancel_at_period_end: true
+      })
+
+      // Update in database
+      await prisma.subscription.update({
+        where: { id: subscription.id },
+        data: { cancelAtPeriodEnd: true }
+      })
+
+      return { success: true }
+    } catch (error) {
+      console.error('Subscription cancellation error:', error)
+      throw new Error('Failed to cancel subscription')
+    }
+  },
+
+  async createPortalSession(customerId: string, returnUrl: string) {
+    try {
+      const session = await stripe.billingPortal.sessions.create({
+        customer: customerId,
+        return_url: returnUrl
+      })
+
+      return session
+    } catch (error) {
+      console.error('Portal session creation error:', error)
+      throw new Error('Failed to create portal session')
+    }
   }
 }
 
-export const stripeService = new StripeService();
-export default stripeService;
+

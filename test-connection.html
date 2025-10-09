@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VeriGrade Backend Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .status-box {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .success {
+            color: #10b981;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .error {
+            color: #ef4444;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .loading {
+            color: #3b82f6;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        pre {
+            background: #1f2937;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="status-box">
+        <h1>🔍 VeriGrade Backend Connection Test</h1>
+        <div id="status" class="loading">Testing connection...</div>
+        <div id="details"></div>
+        <button onclick="testConnection()">Test Again</button>
+    </div>
+
+    <script>
+        async function testConnection() {
+            const statusEl = document.getElementById('status');
+            const detailsEl = document.getElementById('details');
+            
+            statusEl.className = 'loading';
+            statusEl.textContent = 'Testing connection...';
+            detailsEl.innerHTML = '';
+
+            try {
+                // Test backend health endpoint
+                const response = await fetch('http://localhost:3001/health');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    statusEl.className = 'success';
+                    statusEl.textContent = '✅ Backend is running perfectly!';
+                    detailsEl.innerHTML = `
+                        <h3>Response Details:</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                        <p><strong>Status Code:</strong> ${response.status}</p>
+                        <p><strong>Backend URL:</strong> http://localhost:3001</p>
+                        <p><strong>Environment:</strong> ${data.environment || 'N/A'}</p>
+                    `;
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                statusEl.className = 'error';
+                statusEl.textContent = '❌ Cannot connect to backend';
+                detailsEl.innerHTML = `
+                    <h3>Error Details:</h3>
+                    <pre>${error.message}</pre>
+                    <h3>Troubleshooting:</h3>
+                    <ul>
+                        <li>Make sure backend is running: <code>node backend/ai-features-server.js</code></li>
+                        <li>Check if port 3001 is available</li>
+                        <li>Verify CORS settings allow localhost:3000</li>
+                    </ul>
+                `;
+            }
+        }
+
+        // Test on page load
+        testConnection();
+    </script>
+</body>
+</html>
+

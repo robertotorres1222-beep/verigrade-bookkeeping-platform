@@ -107,3 +107,6 @@ export const optionalAuth = async (req: Request, res: Response, next: NextFuncti
     next();
   }
 };
+
+// Alias for backward compatibility
+export const authenticateToken = authenticate;

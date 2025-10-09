@@ -1,0 +1,77 @@
+{
+  "name": "VeriGrade n8n Integration",
+  "description": "Workflow automation for VeriGrade bookkeeping platform",
+  "version": "1.0.0",
+  "workflows": [
+    {
+      "name": "Invoice Processing Workflow",
+      "description": "Automatically process invoices from emails",
+      "trigger": "email",
+      "steps": [
+        "Receive email with invoice",
+        "Extract invoice data using AI",
+        "Create invoice in VeriGrade",
+        "Send confirmation to customer"
+      ]
+    },
+    {
+      "name": "Bank Reconciliation Workflow", 
+      "description": "Automatically reconcile bank transactions",
+      "trigger": "webhook",
+      "steps": [
+        "Receive bank transaction data",
+        "Match with existing invoices",
+        "Update reconciliation status",
+        "Generate reconciliation report"
+      ]
+    },
+    {
+      "name": "Customer Onboarding Workflow",
+      "description": "Automate new customer setup",
+      "trigger": "form",
+      "steps": [
+        "Receive customer registration form",
+        "Create customer in VeriGrade",
+        "Set up invoice templates",
+        "Send welcome email",
+        "Schedule follow-up tasks"
+      ]
+    },
+    {
+      "name": "Monthly Reporting Workflow",
+      "description": "Generate and send monthly reports",
+      "trigger": "schedule",
+      "steps": [
+        "Collect monthly data from VeriGrade",
+        "Generate financial reports",
+        "Send reports to clients",
+        "Archive reports",
+        "Schedule next month's report"
+      ]
+    }
+  ],
+  "integrations": {
+    "verigrade_backend": {
+      "base_url": "http://localhost:3001",
+      "endpoints": {
+        "invoices": "/api/invoices",
+        "customers": "/api/customers",
+        "expenses": "/api/expenses",
+        "dashboard": "/api/dashboard/overview",
+        "auth": "/api/auth/login"
+      }
+    },
+    "perplexity_mcp": {
+      "base_url": "http://localhost:3001",
+      "endpoints": {
+        "search": "/api/perplexity/search",
+        "reason": "/api/perplexity/reason",
+        "research": "/api/perplexity/deep-research"
+      }
+    }
+  }
+}
+
+
+
+

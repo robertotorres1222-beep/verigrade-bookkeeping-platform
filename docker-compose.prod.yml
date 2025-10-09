@@ -3,83 +3,108 @@ version: '3.8'
 services:
   # PostgreSQL Database
   postgres:
-    image: postgres:15
+    image: postgres:15-alpine
+    container_name: verigrade-postgres
     environment:
-      POSTGRES_DB: verigrade_db
+      POSTGRES_DB: verigrade_production
       POSTGRES_USER: verigrade_user
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./backend/prisma/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
     restart: unless-stopped
-    networks:
-      - verigrade-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U verigrade_user -d verigrade_production"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  # Redis for caching and sessions
+  # Redis for caching and rate limiting
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
+    container_name: verigrade-redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
     volumes:
       - redis_data:/data
+    ports:
+      - "6379:6379"
     restart: unless-stopped
-    networks:
-      - verigrade-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # Backend API
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.prod
+    container_name: verigrade-backend
     environment:
-      - NODE_ENV=production
-      - PORT=3001
-      - DATABASE_URL=postgresql://verigrade_user:${DB_PASSWORD}@postgres:5432/verigrade_db
-      - REDIS_URL=redis://redis:6379
-      - JWT_SECRET=${JWT_SECRET}
-      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
-      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
-      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
-      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - EMAIL_SERVICE=${EMAIL_SERVICE}
-      - GMAIL_USER=${GMAIL_USER}
-      - GMAIL_APP_PASSWORD=${GMAIL_APP_PASSWORD}
-      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
-      - FROM_EMAIL=${FROM_EMAIL}
-      - FRONTEND_URL=${FRONTEND_URL}
+      NODE_ENV: production
+      DATABASE_URL: postgresql://verigrade_user:${POSTGRES_PASSWORD}@postgres:5432/verigrade_production
+      DIRECT_URL: postgresql://verigrade_user:${POSTGRES_PASSWORD}@postgres:5432/verigrade_production
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      JWT_SECRET: ${JWT_SECRET}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      PLAID_CLIENT_ID: ${PLAID_CLIENT_ID}
+      PLAID_SECRET: ${PLAID_SECRET}
+      PLAID_ENV: ${PLAID_ENV}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      POSTHOG_KEY: ${POSTHOG_KEY}
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY}
+      GITHUB_TOKEN: ${GITHUB_TOKEN}
+      N8N_API_KEY: ${N8N_API_KEY}
+      FRONTEND_URL: ${FRONTEND_URL}
+      BACKEND_URL: ${BACKEND_URL}
     ports:
       - "3001:3001"
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped
-    networks:
-      - verigrade-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     volumes:
-      - ./backend/uploads:/app/uploads
+      - ./backend/logs:/app/logs
 
-  # Frontend
+  # Frontend Application
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: ./frontend-new
+      dockerfile: Dockerfile.prod
+    container_name: verigrade-frontend
     environment:
-      - REACT_APP_API_URL=${REACT_APP_API_URL}
-      - REACT_APP_STRIPE_PUBLISHABLE_KEY=${REACT_APP_STRIPE_PUBLISHABLE_KEY}
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: ${BACKEND_URL}
+      NEXT_PUBLIC_POSTHOG_KEY: ${POSTHOG_KEY}
+      NEXT_PUBLIC_POSTHOG_HOST: ${POSTHOG_HOST}
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
     ports:
-      - "3000:80"
+      - "3000:3000"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     restart: unless-stopped
-    networks:
-      - verigrade-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # Nginx Reverse Proxy
   nginx:
     image: nginx:alpine
+    container_name: verigrade-nginx
     ports:
       - "80:80"
       - "443:443"
@@ -90,13 +115,18 @@ services:
       - frontend
       - backend
     restart: unless-stopped
-    networks:
-      - verigrade-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
   postgres_data:
+    driver: local
   redis_data:
+    driver: local
 
 networks:
-  verigrade-network:
-    driver: bridge
+  default:
+    name: verigrade-network

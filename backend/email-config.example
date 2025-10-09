@@ -1,0 +1,45 @@
+# Email Configuration for VeriGrade Bookkeeping Platform
+# Copy these settings to your .env file
+
+# SMTP Configuration (for sending emails)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+
+# Alternative email configuration
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASSWORD=your-app-password
+
+# Email Addresses
+FROM_EMAIL=noreply@verigradebookkeeping.com
+CONTACT_EMAIL=hello@verigradebookkeeping.com
+SUPPORT_EMAIL=support@verigradebookkeeping.com
+SECURITY_EMAIL=security@verigradebookkeeping.com
+SALES_EMAIL=sales@verigradebookkeeping.com
+BILLING_EMAIL=billing@verigradebookkeeping.com
+
+# Gmail App Password Setup Instructions:
+# 1. Enable 2-Factor Authentication on your Google account
+# 2. Go to Google Account settings > Security > App passwords
+# 3. Generate an app password for "Mail"
+# 4. Use that password (not your regular password) in SMTP_PASS
+
+# Other Email Services:
+# - Outlook/Hotmail: smtp-mail.outlook.com:587
+# - Yahoo: smtp.mail.yahoo.com:587
+# - Custom SMTP: Use your provider's SMTP settings
+
+# For Production:
+# Consider using services like:
+# - SendGrid (recommended)
+# - Mailgun
+# - Amazon SES
+# - Postmark
+
+# SendGrid Example:
+# SMTP_HOST=smtp.sendgrid.net
+# SMTP_PORT=587
+# SMTP_USER=apikey
+# SMTP_PASS=your-sendgrid-api-key
+

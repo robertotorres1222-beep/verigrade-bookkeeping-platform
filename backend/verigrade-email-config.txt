@@ -1,0 +1,39 @@
+# VeriGrade Bookkeeping Platform - Email Configuration
+# Using Gmail Aliases for Professional Email Addresses
+
+# SMTP Configuration (Gmail)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=verigradebookkeeping@gmail.com
+SMTP_PASS=your-app-password-here
+
+# Alternative email configuration
+EMAIL_USER=verigradebookkeeping@gmail.com
+EMAIL_PASSWORD=your-app-password-here
+
+# Email Addresses (Display: Clean "verigrade" | Actual: "verigradebookkeeping")
+FROM_EMAIL=verigradebookkeeping+noreply@gmail.com
+CONTACT_EMAIL=verigradebookkeeping+hello@gmail.com
+SUPPORT_EMAIL=verigradebookkeeping+support@gmail.com
+SECURITY_EMAIL=verigradebookkeeping+security@gmail.com
+SALES_EMAIL=verigradebookkeeping+sales@gmail.com
+BILLING_EMAIL=verigradebookkeeping+billing@gmail.com
+PARTNERSHIPS_EMAIL=verigradebookkeeping+partners@gmail.com
+PRESS_EMAIL=verigradebookkeeping+press@gmail.com
+CAREERS_EMAIL=verigradebookkeeping+careers@gmail.com
+
+# How This Works:
+# DISPLAY on website: verigrade+hello@gmail.com (clean & professional)
+# ACTUAL email address: verigradebookkeeping+hello@gmail.com (goes to your inbox)
+# All emails go to: verigradebookkeeping@gmail.com
+# etc.
+
+# Setup Instructions:
+# 1. Enable 2-Factor Authentication on verigradebookkeeping@gmail.com
+# 2. Go to Google Account → Security → App passwords
+# 3. Generate an app password for "Mail"
+# 4. Replace "your-app-password-here" with the 16-character password
+# 5. Deploy your application
+
+# All emails will arrive in your main verigradebookkeeping@gmail.com inbox
+# You can set up filters to organize them by the alias (+hello, +support, etc.)

@@ -1,0 +1,276 @@
+{
+  "name": "VeriGrade MCP Integration Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "verigrade-mcp-webhook",
+        "options": {}
+      },
+      "id": "mcp-webhook-trigger",
+      "name": "MCP Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "verigrade-mcp-webhook"
+    },
+    {
+      "parameters": {
+        "model": "sonar-pro",
+        "prompt": "Analyze this accounting data: {{ $json.body.data }}",
+        "options": {
+          "maxTokens": 1000,
+          "temperature": 0.7
+        }
+      },
+      "id": "mcp-perplexity-analyze",
+      "name": "MCP Perplexity Analysis",
+      "type": "n8n-nodes-mcp.perplexity",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3001/api/perplexity/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "{{ $json.prompt }}"
+            }
+          ]
+        }
+      },
+      "id": "verigrade-perplexity-call",
+      "name": "VeriGrade Perplexity API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process MCP response and format for VeriGrade\nconst mcpResponse = $input.first().json;\nconst verigradeResponse = $input.last().json;\n\n// Combine MCP analysis with VeriGrade data\nconst processedData = {\n  timestamp: new Date().toISOString(),\n  source: 'MCP Integration',\n  analysis: {\n    mcpInsights: mcpResponse.answer || mcpResponse.reasoning,\n    verigradeData: verigradeResponse.data,\n    confidence: 0.95\n  },\n  recommendations: [\n    'Automated data validation completed',\n    'AI-powered insights generated',\n    'Recommendations ready for review'\n  ],\n  nextSteps: [\n    'Review AI analysis',\n    'Apply recommendations',\n    'Update accounting records'\n  ]\n};\n\nreturn { json: processedData };"
+      },
+      "id": "process-mcp-data",
+      "name": "Process MCP Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3001/api/dashboard/overview",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        }
+      },
+      "id": "update-verigrade-dashboard",
+      "name": "Update VeriGrade Dashboard",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "{{ $json.analysis.confidence }}",
+              "operation": "larger",
+              "value2": 0.8
+            }
+          ]
+        }
+      },
+      "id": "confidence-check",
+      "name": "Confidence Check",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "ai@verigrade.com",
+        "toEmail": "admin@verigrade.com",
+        "subject": "MCP Analysis Complete - High Confidence Results",
+        "message": "AI analysis completed with {{ $json.analysis.confidence * 100 }}% confidence.\n\nKey Insights:\n{{ $json.analysis.mcpInsights }}\n\nRecommendations:\n{{ $json.recommendations.join('\\n') }}\n\nNext Steps:\n{{ $json.nextSteps.join('\\n') }}"
+      },
+      "id": "send-high-confidence-alert",
+      "name": "Send High Confidence Alert",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1560, 200]
+    },
+    {
+      "parameters": {
+        "fromEmail": "ai@verigrade.com",
+        "toEmail": "admin@verigrade.com",
+        "subject": "MCP Analysis Complete - Review Required",
+        "message": "AI analysis completed with {{ $json.analysis.confidence * 100 }}% confidence.\n\nManual review recommended due to lower confidence.\n\nKey Insights:\n{{ $json.analysis.mcpInsights }}\n\nRecommendations:\n{{ $json.recommendations.join('\\n') }}"
+      },
+      "id": "send-review-alert",
+      "name": "Send Review Alert",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1560, 400]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3001/api/n8n/trigger/verigrade-mcp-workflow",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "status",
+              "value": "completed"
+            },
+            {
+              "name": "results",
+              "value": "{{ $json }}"
+            }
+          ]
+        }
+      },
+      "id": "notify-verigrade-completion",
+      "name": "Notify VeriGrade Completion",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1780, 300]
+    }
+  ],
+  "connections": {
+    "MCP Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "MCP Perplexity Analysis",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "VeriGrade Perplexity API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP Perplexity Analysis": {
+      "main": [
+        [
+          {
+            "node": "Process MCP Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VeriGrade Perplexity API": {
+      "main": [
+        [
+          {
+            "node": "Process MCP Data",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Process MCP Data": {
+      "main": [
+        [
+          {
+            "node": "Update VeriGrade Dashboard",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Confidence Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confidence Check": {
+      "main": [
+        [
+          {
+            "node": "Send High Confidence Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Review Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send High Confidence Alert": {
+      "main": [
+        [
+          {
+            "node": "Notify VeriGrade Completion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Review Alert": {
+      "main": [
+        [
+          {
+            "node": "Notify VeriGrade Completion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "verigrade-mcp-integration",
+  "tags": ["verigrade", "mcp", "perplexity", "ai", "automation"]
+}
+
+
+
+

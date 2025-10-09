@@ -164,3 +164,5 @@ export const generatePageSEO = (page: string, customData?: Partial<SEOHeadProps>
     ...customData
   }
 }
+
+

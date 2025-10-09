@@ -1,373 +1,251 @@
-import { Request, Response } from 'express';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { v4 as uuidv4 } from 'uuid';
-import { prisma } from '../index';
-import { CustomError } from '../middleware/errorHandler';
-import { logger } from '../utils/logger';
-import { sendEmail } from '../services/emailService';
+import { Request, Response } from 'express'
+import { AuthenticatedRequest } from '../middleware/jwtAuth'
+import * as authService from '../services/authService'
+import { auditService } from '../services/auditService'
+import { prisma } from '../config/database'
+import bcrypt from 'bcryptjs'
 
-interface RegisterRequest extends Request {
-  body: {
-    email: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-    organizationName: string;
-  };
-}
+export const authController = {
+  async register(req: Request, res: Response) {
+    try {
+      const { email, password, firstName, lastName, company, phone } = req.body
 
-interface LoginRequest extends Request {
-  body: {
-    email: string;
-    password: string;
-  };
-}
-
-// Generate JWT tokens
-const generateTokens = (userId: string) => {
-  const accessToken = jwt.sign(
-    { id: userId },
-    process.env['JWT_SECRET']!,
-    { expiresIn: process.env['JWT_EXPIRES_IN'] || '7d' } as jwt.SignOptions
-  );
-
-  const refreshToken = jwt.sign(
-    { id: userId },
-    process.env['REFRESH_TOKEN_SECRET']!,
-    { expiresIn: process.env['REFRESH_TOKEN_EXPIRES_IN'] || '30d' } as jwt.SignOptions
-  );
-
-  return { accessToken, refreshToken };
-};
-
-// Register new user
-export const register = async (req: RegisterRequest, res: Response): Promise<void> => {
-  const { email, password, firstName, lastName, organizationName } = req.body;
-
-  // Check if user already exists
-  const existingUser = await prisma.user.findUnique({
-    where: { email }
-  });
-
-  if (existingUser) {
-    throw new CustomError('User already exists with this email', 409);
-  }
-
-  // Hash password
-    const saltRounds = parseInt(process.env['BCRYPT_ROUNDS'] || '12');
-  const passwordHash = await bcrypt.hash(password, saltRounds);
-
-  // Create user and organization in a transaction
-  const result = await prisma.$transaction(async (tx) => {
-    // Create organization
-    const organization = await tx.organization.create({
-      data: {
-        name: organizationName,
-        slug: organizationName.toLowerCase().replace(/[^a-z0-9]/g, '-'),
-        owner: {
-          create: {
-            email,
-            firstName,
-            lastName,
-            passwordHash,
-          }
-        }
-      },
-      include: {
-        owner: true
+      // Validate required fields
+      if (!email || !password || !firstName || !lastName) {
+        return res.status(400).json({
+          error: 'Missing required fields: email, password, firstName, lastName'
+        })
       }
-    });
 
-    // Add owner as organization member
-    await tx.organizationMember.create({
-      data: {
-        organizationId: organization.id,
-        userId: organization.owner.id,
-        role: 'OWNER',
-        joinedAt: new Date()
+      // Validate password strength
+      if (password.length < 8) {
+        return res.status(400).json({
+          error: 'Password must be at least 8 characters long'
+        })
       }
-    });
 
-    return { user: organization.owner, organization };
-  });
-
-  // Generate tokens
-  const { accessToken, refreshToken } = generateTokens(result.user.id);
-
-  // Store refresh token
-  await prisma.session.create({
-    data: {
-      userId: result.user.id,
-      token: refreshToken,
-      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
-    }
-  });
-
-  // Send verification email
-  try {
-    await sendEmail({
-      to: email,
-      subject: 'Welcome to VeriGrade - Verify Your Email',
-      template: 'welcome',
-      data: {
+      const result = await authService.registerUser({
+        email,
+        password,
         firstName,
         lastName,
-        organizationName,
-        verificationUrl: `${process.env['FRONTEND_URL']}/verify-email?token=${uuidv4()}`
-      }
-    });
-  } catch (error) {
-    logger.error('Failed to send welcome email:', error);
-  }
+        company,
+        phone
+      })
 
-  logger.info(`New user registered: ${email}`);
+      // Log registration
+      await auditService.logAction({
+        userId: result.user.id,
+        action: 'USER_REGISTERED',
+        resource: 'User',
+        resourceId: result.user.id,
+        changes: { email, firstName, lastName }
+      })
 
-  res.status(201).json({
-    success: true,
-    message: 'User registered successfully',
-    data: {
-      user: {
-        id: result.user.id,
-        email: result.user.email,
-        firstName: result.user.firstName,
-        lastName: result.user.lastName,
-        organizationId: result.organization.id,
-        role: 'OWNER'
-      },
-      accessToken,
-      refreshToken
+      return res.status(201).json({
+        message: 'User registered successfully. Please check your email to verify your account.',
+        user: result.user,
+        organization: result.organization
+      })
+    } catch (error: any) {
+      console.error('Registration error:', error)
+      res.status(400).json({ error: error.message })
     }
-  });
-};
+  },
 
-// Login user
-export const login = async (req: LoginRequest, res: Response): Promise<void> => {
-  const { email, password } = req.body;
+  async login(req: Request, res: Response) {
+    try {
+      const { email, password } = req.body
 
-  // Find user with organization membership
-  const user = await prisma.user.findUnique({
-    where: { email },
-    include: {
-      organizationMemberships: {
-        where: { isActive: true },
+      if (!email || !password) {
+        return res.status(400).json({
+          error: 'Email and password are required'
+        })
+      }
+
+      const result = await authService.loginUser({ email, password })
+
+      // Log login
+      await auditService.logAction({
+        userId: result.user.id,
+        action: 'USER_LOGIN',
+        resource: 'User',
+        resourceId: result.user.id,
+        ipAddress: req.ip || undefined,
+        userAgent: req.get('User-Agent') || undefined
+      })
+
+      return res.json({
+        message: 'Login successful',
+        token: result.token,
+        user: result.user,
+        organization: result.organization
+      })
+    } catch (error: any) {
+      console.error('Login error:', error)
+      res.status(401).json({ error: error.message })
+    }
+  },
+
+  async logout(req: AuthenticatedRequest, res: Response) {
+    try {
+      const token = req.headers.authorization?.split(' ')[1]
+      
+      if (token) {
+        await authService.logoutUser(token)
+      }
+
+      // Log logout
+      if (req.user) {
+        await auditService.logAction({
+          userId: req.user.id,
+          action: 'USER_LOGOUT',
+          resource: 'User',
+          resourceId: req.user.id,
+          ipAddress: req.ip,
+          userAgent: req.get('User-Agent')
+        })
+      }
+
+      return res.json({ message: 'Logout successful' })
+    } catch (error: any) {
+      console.error('Logout error:', error)
+      res.status(500).json({ error: 'Logout failed' })
+    }
+  },
+
+  async verifyEmail(req: Request, res: Response) {
+    try {
+      const { token } = req.body
+
+      if (!token) {
+        return res.status(400).json({ error: 'Verification token is required' })
+      }
+
+      await authService.verifyEmail(token)
+
+      return res.json({ message: 'Email verified successfully' })
+    } catch (error: any) {
+      console.error('Email verification error:', error)
+      res.status(400).json({ error: error.message })
+    }
+  },
+
+  async refreshToken(req: Request, res: Response) {
+    try {
+      const token = req.headers.authorization?.split(' ')[1]
+
+      if (!token) {
+        return res.status(401).json({ error: 'Token is required' })
+      }
+
+      const result = await authService.refreshToken(token)
+
+      return res.json({
+        message: 'Token refreshed successfully',
+        token: result.token
+      })
+    } catch (error: any) {
+      console.error('Token refresh error:', error)
+      res.status(401).json({ error: error.message })
+    }
+  },
+
+  async me(req: AuthenticatedRequest, res: Response) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Not authenticated' })
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.id },
         include: {
-          organization: {
-            select: {
-              id: true,
-              name: true,
-              isActive: true
-            }
-          }
-        }
-      }
-    }
-  });
-
-  if (!user || !user.isActive) {
-    throw new CustomError('Invalid credentials', 401);
-  }
-
-  // Check password
-  const isValidPassword = await bcrypt.compare(password, user.passwordHash);
-  if (!isValidPassword) {
-    throw new CustomError('Invalid credentials', 401);
-  }
-
-  // Update last login
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { lastLoginAt: new Date() }
-  });
-
-  // Generate tokens
-  const { accessToken, refreshToken } = generateTokens(user.id);
-
-  // Store refresh token
-  await prisma.session.create({
-    data: {
-      userId: user.id,
-      token: refreshToken,
-      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
-    }
-  });
-
-  logger.info(`User logged in: ${email}`);
-
-  res.json({
-    success: true,
-    message: 'Login successful',
-    data: {
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        organizationId: user.organizationMemberships[0]?.organizationId,
-        role: user.organizationMemberships[0]?.role,
-        organization: user.organizationMemberships[0]?.organization
-      },
-      accessToken,
-      refreshToken
-    }
-  });
-};
-
-// Logout user
-export const logout = async (req: Request, res: Response): Promise<void> => {
-  const token = req.header('Authorization')?.replace('Bearer ', '') || req.cookies['refreshToken'];
-
-  if (token) {
-    // Remove session
-    await prisma.session.deleteMany({
-      where: { token }
-    });
-  }
-
-  logger.info(`User logged out: ${req.user?.email}`);
-
-  res.json({
-    success: true,
-    message: 'Logout successful'
-  });
-};
-
-// Refresh token
-export const refreshToken = async (req: Request, res: Response): Promise<void> => {
-  const { refreshToken } = req.body;
-
-  if (!refreshToken) {
-    throw new CustomError('Refresh token required', 400);
-  }
-
-  // Verify refresh token
-  const decoded = jwt.verify(refreshToken, process.env['REFRESH_TOKEN_SECRET']!) as any;
-
-  // Check if session exists
-  const session = await prisma.session.findFirst({
-    where: {
-      token: refreshToken,
-      userId: decoded.id,
-      expiresAt: { gt: new Date() }
-    },
-    include: {
-      user: {
-        select: {
-          id: true,
-          email: true,
-          isActive: true,
           organizationMemberships: {
             where: { isActive: true },
-            select: {
-              organizationId: true,
-              role: true,
-              organization: {
-                select: {
-                  id: true,
-                  name: true,
-                  isActive: true
-                }
-              }
-            }
+            include: { organization: true }
           }
         }
+      })
+
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' })
       }
-    }
-  });
 
-  if (!session || !session.user.isActive) {
-    throw new CustomError('Invalid refresh token', 401);
+      const membership = user.organizationMemberships[0]
+
+      return res.json({
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          isActive: user.isActive,
+          emailVerified: user.emailVerified,
+          lastLoginAt: user.lastLoginAt,
+          createdAt: user.createdAt
+        },
+        organization: membership?.organization,
+        role: membership?.role
+      })
+    } catch (error: any) {
+      console.error('Get user profile error:', error)
+      res.status(500).json({ error: 'Failed to get user profile' })
+    }
+  },
+
+  async changePassword(req: AuthenticatedRequest, res: Response) {
+    try {
+      const { currentPassword, newPassword } = req.body
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({
+          error: 'Current password and new password are required'
+        })
+      }
+
+      if (newPassword.length < 8) {
+        return res.status(400).json({
+          error: 'New password must be at least 8 characters long'
+        })
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { id: req.user!.id }
+      })
+
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' })
+      }
+
+      // Verify current password
+      const isValidPassword = await bcrypt.compare(currentPassword, user.passwordHash)
+      if (!isValidPassword) {
+        return res.status(400).json({ error: 'Current password is incorrect' })
+      }
+
+      // Hash new password
+      const passwordHash = await bcrypt.hash(newPassword, 12)
+
+      // Update password
+      await prisma.user.update({
+        where: { id: req.user!.id },
+        data: { passwordHash }
+      })
+
+      // Log password change
+      await auditService.logAction({
+        userId: req.user!.id,
+        action: 'PASSWORD_CHANGED',
+        resource: 'User',
+        resourceId: req.user!.id,
+        ipAddress: req.ip || undefined,
+        userAgent: req.get('User-Agent') || undefined
+      })
+
+      return res.json({ message: 'Password changed successfully' })
+    } catch (error: any) {
+      console.error('Change password error:', error)
+      res.status(500).json({ error: 'Failed to change password' })
+    }
   }
-
-  // Generate new tokens
-  const { accessToken, refreshToken: newRefreshToken } = generateTokens(session.user.id);
-
-  // Update session
-  await prisma.session.update({
-    where: { id: session.id },
-    data: {
-      token: newRefreshToken,
-      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-    }
-  });
-
-  res.json({
-    success: true,
-    data: {
-      accessToken,
-      refreshToken: newRefreshToken
-    }
-  });
-};
-
-// Verify email
-export const verifyEmail = async (req: Request, res: Response): Promise<void> => {
-  const { token: _token } = req.params;
-
-  // TODO: Implement email verification logic
-  // For now, just return success
-  res.json({
-    success: true,
-    message: 'Email verified successfully'
-  });
-};
-
-// Forgot password
-export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
-  const { email } = req.body;
-
-  const user = await prisma.user.findUnique({
-    where: { email }
-  });
-
-  if (!user) {
-    // Don't reveal if user exists
-    res.json({
-      success: true,
-      message: 'If an account with that email exists, a password reset link has been sent'
-    });
-    return;
-  }
-
-  // Generate reset token
-  const resetToken = uuidv4();
-  logger.info('Reset token generated for user:', { email, resetToken });
-  
-  // TODO: Store reset token in database with expiration
-  // TODO: Send reset email
-
-  res.json({
-    success: true,
-    message: 'If an account with that email exists, a password reset link has been sent'
-  });
-};
-
-// Reset password
-export const resetPassword = async (req: Request, res: Response): Promise<void> => {
-  const { token: _token, password: _password } = req.body;
-
-  // TODO: Implement password reset logic
-  // For now, just return success
-  res.json({
-    success: true,
-    message: 'Password reset successfully'
-  });
-};
-
-// Enable two-factor authentication
-export const enableTwoFactor = async (_req: Request, res: Response): Promise<void> => {
-  // TODO: Implement 2FA setup
-  res.json({
-    success: true,
-    message: 'Two-factor authentication enabled'
-  });
-};
-
-// Verify two-factor authentication
-export const verifyTwoFactor = async (_req: Request, res: Response): Promise<void> => {
-  // TODO: Implement 2FA verification
-  res.json({
-    success: true,
-    message: 'Two-factor authentication verified'
-  });
-};
+}

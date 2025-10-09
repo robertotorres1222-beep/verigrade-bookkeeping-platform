@@ -1,0 +1,242 @@
+{
+  "name": "VeriGrade Invoice Processing",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "invoice-webhook",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Invoice Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "invoice-webhook"
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3001/api/perplexity/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "Extract invoice data from: {{ $json.body }}"
+            }
+          ]
+        }
+      },
+      "id": "ai-extraction",
+      "name": "AI Data Extraction",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3001/api/invoices",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "customerName",
+              "value": "{{ $json.data.customerName }}"
+            },
+            {
+              "name": "amount",
+              "value": "{{ $json.data.amount }}"
+            },
+            {
+              "name": "dueDate",
+              "value": "{{ $json.data.dueDate }}"
+            },
+            {
+              "name": "description",
+              "value": "{{ $json.data.description }}"
+            }
+          ]
+        }
+      },
+      "id": "create-invoice",
+      "name": "Create Invoice in VeriGrade",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3001/api/customers",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "{{ $json.data.customerName }}"
+            },
+            {
+              "name": "email",
+              "value": "{{ $json.data.customerEmail }}"
+            }
+          ]
+        }
+      },
+      "id": "create-customer",
+      "name": "Create Customer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [680, 500]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "{{ $json.status }}",
+              "operation": "equal",
+              "value2": "success"
+            }
+          ]
+        }
+      },
+      "id": "check-success",
+      "name": "Check Success",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@verigrade.com",
+        "toEmail": "{{ $json.data.customerEmail }}",
+        "subject": "Invoice Created - {{ $json.data.invoiceNumber }}",
+        "message": "Your invoice has been successfully created. Amount: ${{ $json.data.amount }}. Due Date: {{ $json.data.dueDate }}"
+      },
+      "id": "send-confirmation",
+      "name": "Send Confirmation Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1120, 200]
+    },
+    {
+      "parameters": {
+        "fromEmail": "alerts@verigrade.com",
+        "toEmail": "admin@verigrade.com",
+        "subject": "Invoice Processing Error",
+        "message": "Failed to process invoice: {{ $json.error }}"
+      },
+      "id": "send-error",
+      "name": "Send Error Alert",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1120, 400]
+    }
+  ],
+  "connections": {
+    "Invoice Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Data Extraction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Data Extraction": {
+      "main": [
+        [
+          {
+            "node": "Create Invoice in VeriGrade",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create Customer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Invoice in VeriGrade": {
+      "main": [
+        [
+          {
+            "node": "Check Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Success": {
+      "main": [
+        [
+          {
+            "node": "Send Confirmation Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Error Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "verigrade-invoice-workflow",
+  "tags": ["verigrade", "invoice", "automation"]
+}
+
+
+
+

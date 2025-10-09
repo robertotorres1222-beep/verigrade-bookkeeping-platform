@@ -12,20 +12,20 @@ const transporter = nodemailer.createTransport({
   port: 587,
   secure: false,
   auth: {
-    user: process.env.SMTP_USER || 'veragradebookkeeping@gmail.com',
-    pass: process.env.SMTP_PASS || 'aaou miyq zdik uanp'
+    user: 'verigradebookkeeping@gmail.com',
+    pass: 'jxxy spfm ejyk nxxh'
   }
 });
 
 console.log('🔧 Email Configuration:');
 console.log(`📧 SMTP Host: smtp.gmail.com:587`);
-console.log(`👤 SMTP User: ${process.env.SMTP_USER || 'veragradebookkeeping@gmail.com'}`);
-console.log(`🔐 SMTP Pass: ${process.env.SMTP_PASS ? '***configured***' : 'NOT SET'}`);
-console.log(`📨 From Email: ${process.env.FROM_EMAIL || 'noreply@verigrade.com'}\n`);
+console.log(`👤 SMTP User: verigradebookkeeping@gmail.com`);
+console.log(`🔐 SMTP Pass: ***configured***`);
+console.log(`📨 From Email: verigradebookkeeping+noreply@gmail.com\n`);
 
 // Test email sending
 const testEmail = {
-  from: process.env.FROM_EMAIL || 'noreply@verigrade.com',
+  from: 'verigradebookkeeping+noreply@gmail.com',
   to: 'test@example.com',
   subject: 'VeriGrade Email Service Test',
   html: `

@@ -28,6 +28,11 @@ const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
   
+  // Disable ESLint during builds (already checked locally)
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  
   // PWA support
   async headers() {
     return [

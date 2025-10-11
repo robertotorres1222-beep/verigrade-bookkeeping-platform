@@ -8,9 +8,10 @@ const getBackendURL = () => {
   if (process.env.NEXT_PUBLIC_API_URL) {
     return process.env.NEXT_PUBLIC_API_URL;
   }
-  // If we're in production and not on localhost, use the deployed backend via proxy
+  // If we're in production and not on localhost, return empty for demo mode
+  // (Backend needs to be deployed separately or use demo data)
   if (isProduction && !isLocalhost) {
-    return '';  // Empty string means use relative URLs, which will be proxied
+    return '';  // Empty string = demo mode without backend
   }
   // Otherwise use localhost for development
   return 'http://localhost:3001';

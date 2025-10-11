@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deploy VeriGrade - 3 Simple Steps</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .step {
+            background: #f8fafc;
+            border-left: 5px solid #3b82f6;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        
+        .step-number {
+            display: inline-block;
+            background: #3b82f6;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 40px;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        
+        .step h2 {
+            display: inline-block;
+            color: #1e293b;
+            vertical-align: middle;
+        }
+        
+        .env-var {
+            background: #1e293b;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            font-size: 0.95em;
+        }
+        
+        .button {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 15px 40px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1em;
+            margin: 15px 10px 15px 0;
+            transition: all 0.3s;
+        }
+        
+        .button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .button-large {
+            font-size: 1.3em;
+            padding: 20px 50px;
+            display: block;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .alert {
+            background: #fef3c7;
+            border-left: 5px solid #f59e0b;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .success {
+            background: #d1fae5;
+            border-left: 5px solid #10b981;
+        }
+        
+        .countdown {
+            font-size: 3em;
+            text-align: center;
+            color: #667eea;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        
+        ul {
+            margin: 15px 0;
+            padding-left: 25px;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>🚀 Deploy VeriGrade in 3 Steps</h1>
+            <p style="text-align: center; color: #64748b; font-size: 1.2em; margin-bottom: 30px;">
+                Your code is ready! Just follow these simple steps.
+            </p>
+
+            <div class="step">
+                <h2><span class="step-number">1</span> Add Environment Variables</h2>
+                <p style="margin: 15px 0 15px 55px; color: #64748b;">
+                    Click the button below, then add these 3 variables:
+                </p>
+                
+                <div class="env-var">
+DATABASE_URL = postgresql://user:pass@host:5432/dbname
+JWT_SECRET = any_random_string_at_least_32_characters
+NODE_ENV = production</div>
+                
+                <div style="margin-left: 55px;">
+                    <a href="https://vercel.com/robertotos-projects/verigrade-bookkeeping-platform/settings/environment-variables" 
+                       class="button" target="_blank" onclick="step1Done()">
+                        Add Variables in Vercel →
+                    </a>
+                </div>
+            </div>
+
+            <div class="step">
+                <h2><span class="step-number">2</span> Redeploy</h2>
+                <p style="margin: 15px 0 15px 55px; color: #64748b;">
+                    After adding variables, click this button to redeploy:
+                </p>
+                <div style="margin-left: 55px;">
+                    <a href="https://vercel.com/robertotos-projects/verigrade-bookkeeping-platform" 
+                       class="button" target="_blank" onclick="step2Done()">
+                        Go to Deployments →
+                    </a>
+                    <p style="margin-top: 10px; color: #64748b;">
+                        Then click "..." menu → "Redeploy" on the latest deployment
+                    </p>
+                </div>
+            </div>
+
+            <div class="step">
+                <h2><span class="step-number">3</span> Make Public</h2>
+                <p style="margin: 15px 0 15px 55px; color: #64748b;">
+                    Disable deployment protection to make your site public:
+                </p>
+                <div style="margin-left: 55px;">
+                    <a href="https://vercel.com/robertotos-projects/verigrade-bookkeeping-platform/settings/deployment-protection" 
+                       class="button" target="_blank" onclick="step3Done()">
+                        Configure Protection →
+                    </a>
+                    <p style="margin-top: 10px; color: #64748b;">
+                        Select "Disabled" and click "Save"
+                    </p>
+                </div>
+            </div>
+
+            <div class="alert success" id="completion-message" style="display: none;">
+                <h3 style="color: #059669; margin-bottom: 10px;">🎉 Deployment Complete!</h3>
+                <p>Your site is now live at:</p>
+                <div style="margin: 15px 0;">
+                    <a href="https://verigrade-bookkeeping-platform.vercel.app" 
+                       class="button-large button" target="_blank" id="live-site-link">
+                        🌐 Open Your Live Site
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
+            <h2 style="color: white; margin-bottom: 20px;">✅ Or Use Automatic Deployment</h2>
+            <p style="margin-bottom: 20px; font-size: 1.1em;">
+                Run this PowerShell script to deploy automatically:
+            </p>
+            <div class="env-var">
+.\auto-deploy.ps1</div>
+            <p style="margin-top: 15px; opacity: 0.9;">
+                The script will install Vercel CLI, log you in, and deploy automatically!
+            </p>
+        </div>
+
+        <div class="card">
+            <h2 style="margin-bottom: 20px;">🔗 Quick Links</h2>
+            <a href="https://vercel.com/robertotos-projects/verigrade-bookkeeping-platform" 
+               class="button" target="_blank">
+                Vercel Dashboard
+            </a>
+            <a href="https://github.com/robertotorres1222-beep/verigrade-bookkeeping-platform" 
+               class="button" target="_blank">
+                GitHub Repository
+            </a>
+            <a href="https://verigrade-bookkeeping-platform.vercel.app/api/health" 
+               class="button" target="_blank">
+                Test Health Endpoint
+            </a>
+        </div>
+    </div>
+
+    <script>
+        let stepsCompleted = 0;
+
+        function step1Done() {
+            stepsCompleted = Math.max(stepsCompleted, 1);
+            checkCompletion();
+        }
+
+        function step2Done() {
+            stepsCompleted = Math.max(stepsCompleted, 2);
+            checkCompletion();
+        }
+
+        function step3Done() {
+            stepsCompleted = Math.max(stepsCompleted, 3);
+            checkCompletion();
+        }
+
+        function checkCompletion() {
+            if (stepsCompleted === 3) {
+                setTimeout(() => {
+                    document.getElementById('completion-message').style.display = 'block';
+                    document.getElementById('completion-message').scrollIntoView({ behavior: 'smooth' });
+                }, 2000);
+            }
+        }
+
+        // Auto-check deployment status
+        setTimeout(() => {
+            fetch('https://verigrade-bookkeeping-platform.vercel.app/api/health')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('completion-message').style.display = 'block';
+                        const liveLink = document.getElementById('live-site-link');
+                        liveLink.textContent = '🎉 Your Site is LIVE! Click to Open';
+                        liveLink.style.animation = 'pulse 1s infinite';
+                    }
+                })
+                .catch(() => {
+                    // Not deployed yet
+                });
+        }, 3000);
+    </script>
+</body>
+</html>
+
+

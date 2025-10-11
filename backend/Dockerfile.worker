@@ -63,3 +63,5 @@ USER worker
 CMD ["node", "dist/queue/categorizerWorker.js"]
 
 
+
+

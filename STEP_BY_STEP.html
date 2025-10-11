@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VeriGrade - Final Setup Steps</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: white;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        .header {
+            text-align: center;
+            padding: 40px 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            margin-bottom: 30px;
+        }
+        .header h1 { font-size: 3em; margin-bottom: 10px; }
+        .step {
+            background: white;
+            color: #1e293b;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .step-number {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 50px;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        .step h2 { display: inline-block; vertical-align: middle; margin-bottom: 20px; }
+        .code-box {
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            border-left: 4px solid #667eea;
+        }
+        .button {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            margin: 10px 10px 10px 0;
+            transition: all 0.3s;
+        }
+        .button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .success { background: #10b981; color: white; padding: 20px; border-radius: 12px; margin: 20px 0; }
+        .warning { background: #fef3c7; color: #92400e; padding: 20px; border-radius: 12px; margin: 20px 0; border-left: 5px solid #f59e0b; }
+        .copy-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-left: 10px;
+        }
+        .copy-btn:hover { background: #2563eb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 3 Steps to Complete</h1>
+            <p style="font-size: 1.3em; margin-top: 10px;">Your site is built! Just add these variables...</p>
+        </div>
+
+        <div class="success">
+            <h3 style="margin-bottom: 10px;">✅ Build Complete!</h3>
+            <p>58/58 pages generated successfully</p>
+            <p>Your site: <a href="https://verigrade-bookkeeping-platform-6umsigs33-robertotos-projects.vercel.app" style="color: white; text-decoration: underline;">verigrade-bookkeeping-platform-6umsigs33-robertotos-projects.vercel.app</a></p>
+        </div>
+
+        <div class="step">
+            <span class="step-number">1</span>
+            <h2>Add Environment Variables</h2>
+            <p style="margin: 20px 0;">Go to Vercel and add these 3 variables:</p>
+            
+            <h3 style="margin-top: 20px;">Variable 1: JWT_SECRET</h3>
+            <div class="code-box">
+                <strong>Name:</strong> JWT_SECRET<br>
+                <strong>Value:</strong> <span id="jwt">+%l6MigZRpJr2ocYHKQO75F1fB$qVXb?d39=e_IszPS&A80-</span>
+                <button class="copy-btn" onclick="copyText('jwt')">Copy</button><br>
+                <strong>Environment:</strong> Production
+            </div>
+
+            <h3 style="margin-top: 20px;">Variable 2: NODE_ENV</h3>
+            <div class="code-box">
+                <strong>Name:</strong> NODE_ENV<br>
+                <strong>Value:</strong> <span id="nodeenv">production</span>
+                <button class="copy-btn" onclick="copyText('nodeenv')">Copy</button><br>
+                <strong>Environment:</strong> Production
+            </div>
+
+            <h3 style="margin-top: 20px;">Variable 3: DATABASE_URL</h3>
+            <div class="warning">
+                <strong>Choose one option:</strong><br><br>
+                <strong>Option A (Easiest):</strong> Use Vercel Postgres<br>
+                → Go to Storage tab → Create Database → Choose Postgres<br>
+                → It auto-adds DATABASE_URL!<br><br>
+                <strong>Option B:</strong> Use Supabase (free)<br>
+                → Sign up at supabase.com → Create project → Copy connection string
+            </div>
+
+            <a href="https://vercel.com/robertotos-projects/verigrade-bookkeeping-platform/settings/environment-variables" 
+               class="button" target="_blank">
+               Open Vercel Settings →
+            </a>
+        </div>
+
+        <div class="step">
+            <span class="step-number">2</span>
+            <h2>Redeploy Your Site</h2>
+            <p style="margin: 20px 0;">After adding the variables:</p>
+            <ol style="margin-left: 20px; line-height: 2;">
+                <li>Go to the Deployments tab</li>
+                <li>Click the "..." menu on the latest deployment</li>
+                <li>Click "Redeploy"</li>
+                <li>Wait 2-3 minutes</li>
+            </ol>
+            <a href="https://vercel.com/robertotos-projects/verigrade-bookkeeping-platform/deployments" 
+               class="button" target="_blank">
+               Go to Deployments →
+            </a>
+        </div>
+
+        <div class="step">
+            <span class="step-number">3</span>
+            <h2>Test Your Site</h2>
+            <p style="margin: 20px 0;">Once redeployed, test these URLs:</p>
+            <a href="https://verigrade-bookkeeping-platform-6umsigs33-robertotos-projects.vercel.app" 
+               class="button" target="_blank">
+               Open Live Site →
+            </a>
+            <a href="https://verigrade-bookkeeping-platform-6umsigs33-robertotos-projects.vercel.app/api/health" 
+               class="button" target="_blank">
+               Test Health Check →
+            </a>
+        </div>
+
+        <div class="success" style="text-align: center; font-size: 1.2em;">
+            <h2 style="margin-bottom: 15px;">🎉 That's It!</h2>
+            <p>Total time: 5 minutes</p>
+            <p style="margin-top: 10px;">Your bookkeeping platform will be 100% functional!</p>
+        </div>
+    </div>
+
+    <script>
+        function copyText(id) {
+            const text = document.getElementById(id).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ Copied to clipboard!');
+            });
+        }
+    </script>
+</body>
+</html>
+

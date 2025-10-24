@@ -285,3 +285,4 @@ Write-Host "Documentation: https://your-backend.railway.app/api/docs" -Foregroun
 Write-Host "`n🎯 Your platform is ready to compete with QuickBooks and Xero using Supabase!" -ForegroundColor Green
 
 
+

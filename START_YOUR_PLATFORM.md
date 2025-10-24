@@ -181,3 +181,4 @@ npx expo build:ios
 **Just follow the steps above to start your platform!** 🚀
 
 
+

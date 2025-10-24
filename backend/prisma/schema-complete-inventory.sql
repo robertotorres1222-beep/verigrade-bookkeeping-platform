@@ -361,3 +361,4 @@ CREATE TRIGGER trigger_log_inventory_movement
 
 
 
+

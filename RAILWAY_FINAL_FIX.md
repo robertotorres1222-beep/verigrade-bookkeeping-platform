@@ -58,3 +58,4 @@ Railway is trying to run `node production-start.js` from the root directory, but
 3. **Is the health check working now?**
 
 **This should fix the application startup issue!** 🚀
+

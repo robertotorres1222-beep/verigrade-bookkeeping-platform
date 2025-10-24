@@ -42,3 +42,4 @@
 6. **Railway** - Limited free tier
 7. **DigitalOcean App Platform** - $5/month but very reliable
 
+

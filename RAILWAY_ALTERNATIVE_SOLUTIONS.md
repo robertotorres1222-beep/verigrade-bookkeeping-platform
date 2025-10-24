@@ -64,3 +64,4 @@ JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
 3. **Or try Railway CLI commands?**
 
 **Render.com should work immediately without caching issues!** 🚀
+

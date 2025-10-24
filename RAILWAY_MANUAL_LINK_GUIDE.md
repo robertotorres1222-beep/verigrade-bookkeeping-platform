@@ -66,3 +66,4 @@ If CLI doesn't work, use the web dashboard:
 3. **Any errors in the logs?**
 
 **The configuration files are ready - just need to link and deploy!** 🚀
+

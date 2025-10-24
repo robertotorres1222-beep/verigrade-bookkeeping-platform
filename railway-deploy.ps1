@@ -24,3 +24,4 @@ Write-Host "PORT=3000" -ForegroundColor White
 Write-Host "JWT_SECRET=your-super-secret-jwt-key-change-this-in-production" -ForegroundColor White
 
 Write-Host "🎉 Ready to deploy!" -ForegroundColor Green
+

@@ -59,3 +59,4 @@ cmd = "cd backend && node production-start.js"
 3. **Is the application running now?**
 
 **This should fix the Dockerfile/npm ci issues!** 🎉
+

@@ -48,3 +48,4 @@ Write-Host "2. Configure Supabase database connection" -ForegroundColor White
 Write-Host "3. Update frontend API URL in Vercel" -ForegroundColor White
 
 
+

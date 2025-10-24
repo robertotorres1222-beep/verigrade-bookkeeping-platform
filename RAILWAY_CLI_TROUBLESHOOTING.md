@@ -105,3 +105,4 @@ If CLI continues to fail:
 3. **What happens when you run `railway projects`?**
 
 **I'll help you fix the specific issue!** 🔧
+

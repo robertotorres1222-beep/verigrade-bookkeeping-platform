@@ -54,3 +54,4 @@ Once the application starts properly, you should see:
 - ✅ Backend running successfully
 
 **The deployment is live - just need to fix the application startup!** 🔧
+

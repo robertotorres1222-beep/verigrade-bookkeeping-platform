@@ -51,3 +51,4 @@ If Railway still uses Dockerfile:
 2. Verify no Dockerfile exists in root directory
 3. Try deleting and recreating the service
 4. Check Railway logs for build process details
+

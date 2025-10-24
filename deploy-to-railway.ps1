@@ -16,3 +16,4 @@ Write-Host "✅ Deployment initiated!" -ForegroundColor Green
 Write-Host "📊 Check your Railway dashboard for deployment status" -ForegroundColor Cyan
 Write-Host "🌐 Your backend will be available at: https://verigrade-backend-production.up.railway.app" -ForegroundColor Cyan
 
+

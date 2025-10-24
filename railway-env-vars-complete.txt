@@ -1,0 +1,22 @@
+# Railway Environment Variables for VeriGrade Backend
+# Copy these variables to your Railway project
+
+# Supabase Configuration
+SUPABASE_URL=https://krdwxeeaxldgnhymukyb.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtyZHd4ZWVheGxkZ25oeW11a3liIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1NTUwOTYsImV4cCI6MjA3NTEzMTA5Nn0.yYj9Fvi4THZC0KBk_EdoUMLm27C_rs3B8c2PeOX6EXI
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtyZHd4ZWVheGxkZ25oeW11a3liIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1OTU1NTA5NiwiZXhwIjoyMDc1MTMxMDk2fQ.6_mFjsYtT6KxVdbC-6PevKmUJ3MTDwh3hlj8lbGEvOY
+DATABASE_URL=postgresql://postgres:[YOUR_PASSWORD]@db.krdwxeeaxldgnhymukyb.supabase.co:5432/postgres
+
+# JWT Configuration
+JWT_SECRET=verigrade-super-secret-jwt-key-2025
+
+# Optional Email Configuration
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+FROM_EMAIL=noreply@verigrade.com
+
+# Stripe Configuration (Optional)
+STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_SECRET_KEY=sk_test_...

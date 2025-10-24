@@ -1,106 +1,67 @@
 const express = require('express');
 const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Security middleware
-app.use(helmet());
-
-// CORS configuration
-app.use(cors({
-  origin: process.env.FRONTEND_URL || '*',
-  credentials: true
-}));
-
-// Logging
-app.use(morgan('combined'));
-
-// Body parsing
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({
-    status: 'success',
-    message: 'VeriGrade Backend API is running',
+    status: 'healthy',
     timestamp: new Date().toISOString(),
-    version: '1.0.0',
+    uptime: process.uptime(),
     environment: process.env.NODE_ENV || 'development',
-    port: PORT
+    service: 'VeriGrade Backend API'
   });
 });
 
-// API status endpoint
+// API routes
 app.get('/', (req, res) => {
-  res.status(200).json({
-    status: 'success',
-    message: 'VeriGrade Bookkeeping Platform API',
+  res.json({
+    message: 'VeriGrade Backend API',
     version: '1.0.0',
+    status: 'running',
+    timestamp: new Date().toISOString(),
     endpoints: {
       health: '/health',
-      api: '/api/v1',
-      docs: '/api/docs'
-    },
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
-  });
-});
-
-// Basic API routes
-app.get('/api/v1/status', (req, res) => {
-  res.json({
-    status: 'success',
-    message: 'API is operational',
-    timestamp: new Date().toISOString(),
-    version: '1.0.0'
-  });
-});
-
-// Test endpoint
-app.get('/api/v1/test', (req, res) => {
-  res.json({
-    status: 'success',
-    message: 'Backend is working perfectly!',
-    timestamp: new Date().toISOString(),
-    data: {
-      server: 'VeriGrade Backend',
-      status: 'online',
-      uptime: process.uptime()
+      api: '/api'
     }
   });
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(500).json({
-    status: 'error',
-    message: 'Internal server error',
+// API endpoints
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    service: 'VeriGrade Backend',
     timestamp: new Date().toISOString()
   });
 });
 
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({
-    status: 'error',
-    message: 'Endpoint not found',
-    path: req.originalUrl,
-    timestamp: new Date().toISOString()
-  });
-});
+// Serve backend files if they exist
+app.use('/backend', express.static(path.join(__dirname, 'backend')));
 
 // Start server
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, () => {
   console.log(`🚀 VeriGrade Backend API running on port ${PORT}`);
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
-  console.log(`🌐 API Status: http://localhost:${PORT}/`);
-  console.log(`🧪 Test endpoint: http://localhost:${PORT}/api/v1/test`);
+  console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`📁 Backend files served from: ${path.join(__dirname, 'backend')}`);
 });
 
-module.exports = app;
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('🛑 SIGTERM received, shutting down gracefully');
+  process.exit(0);
+});
 
+process.on('SIGINT', () => {
+  console.log('🛑 SIGINT received, shutting down gracefully');
+  process.exit(0);
+});

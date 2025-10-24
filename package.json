@@ -1,54 +1,16 @@
 {
-  "name": "verigrade-bookkeeping-platform",
+  "name": "verigrade-backend",
   "version": "1.0.0",
-  "description": "AI-powered SaaS bookkeeping platform with MCP integration",
-  "private": true,
-  "workspaces": [
-    "frontend-new",
-    "backend",
-    "shared"
-  ],
+  "description": "VeriGrade Backend API",
+  "main": "index.js",
   "scripts": {
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:simple": "concurrently \"npm run dev:backend:simple\" \"npm run dev:frontend\"",
-    "dev:turbo": "concurrently \"npm run dev:backend:simple\" \"npm run dev:frontend:turbo\"",
-    "dev:backend": "cd backend && npm run dev",
-    "dev:backend:simple": "cd backend && npm run dev:simple",
-    "dev:frontend": "cd frontend-new && npm run dev",
-    "dev:frontend:turbo": "cd frontend-new && npm run dev:turbo",
-    "build": "npm run build:shared && npm run build:backend && npm run build:frontend",
-    "build:backend": "cd backend && npm run build",
-    "build:frontend": "cd frontend-new && npm run build",
-    "build:shared": "cd shared && npm run build",
-    "test": "npm run test:backend && npm run test:frontend",
-    "test:backend": "cd backend && npm test",
-    "test:frontend": "cd frontend-new && npm test",
-    "docker:dev": "docker-compose -f docker-compose.dev.yml up",
-    "docker:prod": "docker-compose -f docker-compose.prod.yml up",
-    "setup": "npm install && npm run setup:backend && npm run setup:frontend",
-    "setup:backend": "cd backend && npm install && npm run db:generate",
-    "setup:frontend": "cd frontend-new && npm install"
+    "start": "node index.js"
   },
-  "devDependencies": {
-    "@types/node": "^20.10.0",
-    "concurrently": "^8.2.2",
-    "typescript": "^5.3.0"
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
   },
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=9.0.0"
-  },
-  "keywords": [
-    "bookkeeping",
-    "accounting",
-    "saas",
-    "ai",
-    "mcp",
-    "fintech"
-  ],
-  "author": "VeriGrade Team",
-  "license": "MIT",
-  "dependencies": {
-    "n8n-nodes-mcp": "^0.1.29"
+    "node": ">=18.0.0"
   }
 }

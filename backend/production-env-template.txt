@@ -1,59 +1,8 @@
-# Production Environment Variables for VeriGrade
-# Copy this to .env.production and add to Vercel
+# Production Environment Variables for Vercel
+# Copy these to Vercel dashboard environment variables
 
-# Database (Production)
-DATABASE_URL="your-production-database-url"
-
-# Authentication
-JWT_SECRET="your-super-secret-jwt-key-here"
-JWT_EXPIRES_IN="7d"
-REFRESH_TOKEN_SECRET="your-refresh-token-secret"
-REFRESH_TOKEN_EXPIRES_IN="30d"
-
-# Server Configuration
-NODE_ENV="production"
-PORT=3001
-API_VERSION="v1"
-
-# Email Configuration (Gmail Setup - WORKING!)
-SMTP_HOST="smtp.gmail.com"
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER="verigradebookkeeping@gmail.com"
-SMTP_PASS="ntoi taiy qdst asfg"
-FROM_EMAIL="verigradebookkeeping+noreply@gmail.com"
-CONTACT_EMAIL="verigradebookkeeping+hello@gmail.com"
-SUPPORT_EMAIL="verigradebookkeeping+support@gmail.com"
-SECURITY_EMAIL="verigradebookkeeping+security@gmail.com"
-BANKING_EMAIL="verigradebookkeeping+banking@gmail.com"
-TAX_EMAIL="verigradebookkeeping+tax@gmail.com"
-
-# External APIs
-OPENAI_API_KEY="your-openai-api-key"
-PLAID_CLIENT_ID="your-plaid-client-id"
-PLAID_SECRET="your-plaid-secret"
-PLAID_ENVIRONMENT="sandbox"
-
-# Payment Processing
-STRIPE_SECRET_KEY="your-stripe-secret-key"
-STRIPE_PUBLISHABLE_KEY="your-stripe-publishable-key"
-STRIPE_WEBHOOK_SECRET="your-stripe-webhook-secret"
-
-# Security
-BCRYPT_ROUNDS=12
-SESSION_SECRET="your-session-secret"
-RATE_LIMIT_WINDOW_MS=900000
-RATE_LIMIT_MAX_REQUESTS=100
-
-# CORS
-CORS_ORIGIN="https://verigradebookkeeping.com"
-
-# Feature Flags
-ENABLE_AI_FEATURES=true
-ENABLE_PLAID_INTEGRATION=true
-ENABLE_STRIPE_INTEGRATION=true
-ENABLE_EMAIL_NOTIFICATIONS=true
-
-# Monitoring
-SENTRY_DSN="your-sentry-dsn"
-
+NODE_ENV=production
+N8N_WEBHOOK_URL=https://robbie313.app.n8n.cloud/webhook-test/56e8e602-4918-4292-b624-19e4b2fd389d
+# DATABASE_URL=postgresql://username:password@host:port/database
+# DIRECT_URL=postgresql://username:password@host:port/database
+# OPENAI_API_KEY=your-openai-api-key-here

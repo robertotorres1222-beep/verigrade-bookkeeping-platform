@@ -1,0 +1,59 @@
+apiVersion: v2
+name: verigrade
+description: VeriGrade Bookkeeping Platform - Enterprise Production Deployment
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+home: https://verigrade.com
+sources:
+  - https://github.com/verigrade/bookkeeping-platform
+maintainers:
+  - name: VeriGrade Team
+    email: devops@verigrade.com
+keywords:
+  - bookkeeping
+  - accounting
+  - saas
+  - enterprise
+  - fintech
+dependencies:
+  - name: postgresql
+    version: 12.1.2
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled
+  - name: redis
+    version: 17.3.7
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled
+  - name: prometheus
+    version: 19.6.1
+    repository: https://prometheus-community.github.io/helm-charts
+    condition: monitoring.prometheus.enabled
+  - name: grafana
+    version: 6.43.5
+    repository: https://grafana.github.io/helm-charts
+    condition: monitoring.grafana.enabled
+  - name: jaeger
+    version: 0.69.1
+    repository: https://jaegertracing.github.io/helm-charts
+    condition: monitoring.jaeger.enabled
+  - name: elasticsearch
+    version: 19.6.1
+    repository: https://helm.elastic.co
+    condition: logging.elasticsearch.enabled
+  - name: kibana
+    version: 7.17.3
+    repository: https://helm.elastic.co
+    condition: logging.kibana.enabled
+  - name: istio
+    version: 1.19.0
+    repository: https://istio-release.github.io/releases/charts
+    condition: istio.enabled
+annotations:
+  category: Business
+  licenses: Proprietary
+
+
+
+
+

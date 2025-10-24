@@ -1,0 +1,75 @@
+// Manufacturing Models
+model BillOfMaterials {
+  id            String   @id @default(cuid())
+  organizationId String
+  productId     String
+  name          String
+  description   String?
+  version       String   @default("1.0")
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relationships
+  organization  Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  product       InventoryItem @relation(fields: [productId], references: [id])
+  items         BOMItem[]
+  productionOrders ProductionOrder[]
+
+  @@index([organizationId])
+  @@index([productId])
+  @@index([isActive])
+}
+
+model BOMItem {
+  id            String   @id @default(cuid())
+  bomId         String
+  componentId   String
+  quantity      Decimal  @db.Decimal(10, 2)
+  unit          String
+  cost          Decimal  @db.Decimal(10, 2)
+  isRequired    Boolean  @default(true)
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relationships
+  bom           BillOfMaterials @relation(fields: [bomId], references: [id], onDelete: Cascade)
+  component     InventoryItem @relation(fields: [componentId], references: [id])
+
+  @@index([bomId])
+  @@index([componentId])
+}
+
+model ProductionOrder {
+  id              String   @id @default(cuid())
+  organizationId  String
+  productId       String
+  bomId           String
+  quantity        Int
+  priority        String   @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  startDate       DateTime
+  dueDate         DateTime?
+  actualStartDate DateTime?
+  actualEndDate   DateTime?
+  completedQuantity Int    @default(0)
+  estimatedCost   Decimal  @db.Decimal(15, 2)
+  actualCost      Decimal? @db.Decimal(15, 2)
+  status          String   @default("PLANNED") // PLANNED, IN_PROGRESS, COMPLETED, CANCELLED
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relationships
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  product         InventoryItem @relation(fields: [productId], references: [id])
+  bom             BillOfMaterials @relation(fields: [bomId], references: [id])
+
+  @@index([organizationId])
+  @@index([productId])
+  @@index([bomId])
+  @@index([status])
+  @@index([priority])
+  @@index([startDate])
+}
+

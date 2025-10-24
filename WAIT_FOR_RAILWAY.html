@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Railway is Deploying...</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 60px;
+            max-width: 700px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+        .spinner {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #667eea;
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            animation: spin 1s linear infinite;
+            margin: 30px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .timeline {
+            text-align: left;
+            margin: 30px 0;
+        }
+        .timeline-item {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .done {
+            background: #d4edda;
+            color: #155724;
+        }
+        .current {
+            background: #fff3cd;
+            color: #856404;
+            font-weight: bold;
+        }
+        .pending {
+            background: #f0f0f0;
+            color: #6c757d;
+        }
+        .button {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 15px 40px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            margin: 10px;
+            transition: all 0.3s;
+        }
+        .button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+        .url {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            margin: 20px 0;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>⏳ Railway is Deploying...</h1>
+        <div class="spinner"></div>
+        <p style="font-size: 1.3em; color: #666; margin: 20px 0;">
+            Your backend is being deployed!<br>
+            This takes 5-10 minutes...
+        </p>
+
+        <div class="url">
+            <strong>Your Backend URL:</strong><br>
+            https://verigrade-backend-production.up.railway.app
+        </div>
+
+        <div class="timeline">
+            <h3 style="color: #667eea;">Deployment Progress:</h3>
+            
+            <div class="timeline-item done">
+                ✅ Code pulled from GitHub
+            </div>
+            
+            <div class="timeline-item done">
+                ✅ Dependencies downloading
+            </div>
+            
+            <div class="timeline-item current">
+                ⏳ Building backend (npm run build)
+            </div>
+            
+            <div class="timeline-item pending">
+                ⏳ Starting server
+            </div>
+            
+            <div class="timeline-item pending">
+                ⏳ Health checks
+            </div>
+            
+            <div class="timeline-item pending">
+                ⏳ Service live!
+            </div>
+        </div>
+
+        <h3 style="color: #667eea; margin-top: 40px;">What to Do While Waiting:</h3>
+        
+        <div style="background: #fff3cd; padding: 20px; border-radius: 10px; margin: 20px 0; text-align: left;">
+            <strong>IMPORTANT - Add Environment Variables Now!</strong>
+            <ol style="margin: 15px 0; line-height: 2;">
+                <li>Go to Railway dashboard</li>
+                <li>Click on your service</li>
+                <li>Go to <strong>"Variables"</strong> tab</li>
+                <li>Click <strong>"Raw Editor"</strong></li>
+                <li>Paste your environment variables (no quotes!)</li>
+                <li>Click <strong>"Save"</strong></li>
+            </ol>
+        </div>
+
+        <a href="https://railway.app/project/8c3e811e-39c1-4631-be6f-8662f01c08f3" class="button" target="_blank">
+            Open Railway Dashboard
+        </a>
+
+        <div style="background: #e7f3ff; padding: 20px; border-radius: 10px; margin: 30px 0;">
+            <h4 style="color: #0066cc; margin-top: 0;">⏱️ Estimated Time Remaining:</h4>
+            <p style="font-size: 1.5em; margin: 10px 0; color: #667eea;">
+                <strong>3-5 minutes</strong>
+            </p>
+            <p style="color: #666;">
+                Refresh the health URL in 5 minutes to check if it's ready:
+            </p>
+            <div class="url">
+                https://verigrade-backend-production.up.railway.app/health
+            </div>
+            <a href="https://verigrade-backend-production.up.railway.app/health" class="button" target="_blank">
+                Check Health Status
+            </a>
+        </div>
+
+        <div style="margin-top: 40px; padding: 20px; background: #d4edda; border-radius: 10px;">
+            <h4 style="color: #28a745; margin-top: 0;">✅ After It's Live:</h4>
+            <ol style="text-align: left; line-height: 2;">
+                <li>Add environment variables (if not done)</li>
+                <li>Add backend URL to Vercel</li>
+                <li>Disable deployment protection</li>
+                <li>Test your site!</li>
+                <li><strong>YOU'RE DONE!</strong> 🎉</li>
+            </ol>
+        </div>
+
+        <p style="margin-top: 30px; color: #999; font-size: 14px;">
+            Auto-refresh in <span id="countdown">60</span> seconds...
+        </p>
+    </div>
+
+    <script>
+        let seconds = 60;
+        const countdown = setInterval(() => {
+            seconds--;
+            document.getElementById('countdown').textContent = seconds;
+            if (seconds <= 0) {
+                clearInterval(countdown);
+                window.location.reload();
+            }
+        }, 1000);
+
+        // Check backend health every 30 seconds
+        setInterval(() => {
+            fetch('https://verigrade-backend-production.up.railway.app/health')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.ok) {
+                        alert('🎉 Backend is LIVE! Health check successful!');
+                        document.querySelector('.card').innerHTML = '<h1>✅ Backend is LIVE!</h1><p style="font-size: 1.5em; color: #28a745;">Your backend is now running!</p><a href="https://verigrade-backend-production.up.railway.app/health" class="button">View Health Status</a>';
+                    }
+                })
+                .catch(() => {
+                    console.log('Still deploying...');
+                });
+        }, 30000);
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+

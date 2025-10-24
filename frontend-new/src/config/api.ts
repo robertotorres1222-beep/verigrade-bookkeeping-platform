@@ -8,12 +8,11 @@ const getBackendURL = () => {
   if (process.env.NEXT_PUBLIC_API_URL) {
     return process.env.NEXT_PUBLIC_API_URL;
   }
-  // If we're in production and not on localhost, return empty for demo mode
-  // (Backend needs to be deployed separately or use demo data)
-  if (isProduction && !isLocalhost) {
-    return '';  // Empty string = demo mode without backend
+  // Production fallback to deployed backend
+  if (isProduction) {
+    return 'https://backend-lspqvhnjp-robertotos-projects.vercel.app';
   }
-  // Otherwise use localhost for development
+  // Development fallback
   return 'http://localhost:3001';
 };
 

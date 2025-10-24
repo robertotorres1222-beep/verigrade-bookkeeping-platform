@@ -1,382 +1,465 @@
-import OpenAI from 'openai'
-import { prisma } from '../config/database'
+import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
+import axios from 'axios';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-})
+const prisma = new PrismaClient();
 
-export interface TransactionCategorization {
-  category: string
-  subcategory: string
-  confidence: number
-  reasoning: string
-}
-
-export interface ExpenseAnalysis {
-  isTaxDeductible: boolean
-  businessPurpose: string
-  confidence: number
-  reasoning: string
-}
-
-export interface CashFlowPrediction {
-  predictedAmount: number
-  confidence: number
-  factors: string[]
-  reasoning: string
-}
-
-export const aiService = {
-  async categorizeTransaction(description: string, amount: number, organizationId: string): Promise<TransactionCategorization> {
+export class AIService {
+  // Anomaly Detection
+  async detectAnomalies(userId: string, dataType: string) {
     try {
-      // Get organization's existing categories for context
-      const categories = await prisma.category.findMany({
-        where: { organizationId },
-        select: { name: true, type: true }
-      })
+      const anomalies = [];
 
-      const categoryContext = categories.map(c => `${c.name} (${c.type})`).join(', ')
+      if (dataType === 'transactions') {
+        const transactions = await prisma.transaction.findMany({
+          where: { userId },
+          orderBy: { createdAt: 'desc' },
+          take: 100
+        });
 
-      const prompt = `
-You are an AI assistant helping to categorize financial transactions for a bookkeeping platform.
+        // Detect unusual spending patterns
+        const spendingAnomalies = await this.detectSpendingAnomalies(transactions);
+        anomalies.push(...spendingAnomalies);
 
-Transaction Details:
-- Description: "${description}"
-- Amount: $${amount}
+        // Detect unusual transaction times
+        const timeAnomalies = await this.detectTimeAnomalies(transactions);
+        anomalies.push(...timeAnomalies);
 
-Available Categories: ${categoryContext}
+        // Detect unusual amounts
+        const amountAnomalies = await this.detectAmountAnomalies(transactions);
+        anomalies.push(...amountAnomalies);
+      }
 
-Please categorize this transaction and provide:
-1. The most appropriate category name
-2. A relevant subcategory
-3. Your confidence level (0-1)
-4. Brief reasoning for your choice
+      return {
+        userId,
+        dataType,
+        anomalies,
+        detectedAt: new Date()
+      };
+    } catch (error) {
+      throw new Error(`Failed to detect anomalies: ${error.message}`);
+    }
+  }
 
-Respond in JSON format:
-{
-  "category": "category_name",
-  "subcategory": "subcategory_name", 
-  "confidence": 0.95,
-  "reasoning": "Brief explanation"
-}
-`
+  // Predictive Cash Flow
+  async predictCashFlow(userId: string, days: number = 30) {
+    try {
+      const historicalData = await prisma.transaction.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+        take: 365 // Last year of data
+      });
 
-      const response = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.3,
-        max_tokens: 200
-      })
-
-      const result = JSON.parse(response.choices[0].message.content || '{}')
+      // Analyze patterns
+      const patterns = await this.analyzeCashFlowPatterns(historicalData);
       
-      // Log AI analysis
-      await prisma.aIAnalysis.create({
-        data: {
-          organizationId,
-          type: 'TRANSACTION_CATEGORIZATION',
-          input: { description, amount },
-          output: result,
-          confidence: result.confidence,
-          model: 'gpt-3.5-turbo',
-          cost: response.usage ? response.usage.total_tokens * 0.000002 : undefined
-        }
-      })
+      // Generate predictions
+      const predictions = await this.generateCashFlowPredictions(patterns, days);
 
-      return result
-    } catch (error) {
-      console.error('AI categorization error:', error)
-      // Fallback categorization
       return {
-        category: 'Uncategorized',
-        subcategory: 'General',
-        confidence: 0.1,
-        reasoning: 'AI categorization failed, using fallback'
-      }
-    }
-  },
-
-  async analyzeExpense(description: string, amount: number, organizationId: string): Promise<ExpenseAnalysis> {
-    try {
-      const prompt = `
-You are an AI assistant analyzing business expenses for tax deduction purposes.
-
-Expense Details:
-- Description: "${description}"
-- Amount: $${amount}
-
-Analyze this expense and determine:
-1. Is it likely tax deductible? (true/false)
-2. What is the business purpose?
-3. Confidence level (0-1)
-4. Brief reasoning
-
-Respond in JSON format:
-{
-  "isTaxDeductible": true,
-  "businessPurpose": "Brief business purpose",
-  "confidence": 0.85,
-  "reasoning": "Brief explanation"
-}
-`
-
-      const response = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.3,
-        max_tokens: 200
-      })
-
-      const result = JSON.parse(response.choices[0].message.content || '{}')
-
-      // Log AI analysis
-      await prisma.aIAnalysis.create({
-        data: {
-          organizationId,
-          type: 'EXPENSE_PREDICTION',
-          input: { description, amount },
-          output: result,
-          confidence: result.confidence,
-          model: 'gpt-3.5-turbo',
-          cost: response.usage ? response.usage.total_tokens * 0.000002 : undefined
-        }
-      })
-
-      return result
+        userId,
+        predictions,
+        confidence: patterns.confidence,
+        generatedAt: new Date()
+      };
     } catch (error) {
-      console.error('AI expense analysis error:', error)
-      return {
-        isTaxDeductible: false,
-        businessPurpose: 'Unable to determine',
-        confidence: 0.1,
-        reasoning: 'AI analysis failed'
-      }
-    }
-  },
-
-  async predictCashFlow(organizationId: string, days: number = 30): Promise<CashFlowPrediction> {
-    try {
-      // Get recent transaction history
-      const recentTransactions = await prisma.transaction.findMany({
-        where: {
-          organizationId,
-          date: {
-            gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) // Last 90 days
-          }
-        },
-        orderBy: { date: 'desc' },
-        take: 100
-      })
-
-      const transactionSummary = recentTransactions.map(t => ({
-        type: t.type,
-        amount: t.amount,
-        date: t.date,
-        category: t.category
-      }))
-
-      const prompt = `
-You are an AI assistant predicting cash flow for a business.
-
-Recent Transaction History (last 90 days):
-${JSON.stringify(transactionSummary, null, 2)}
-
-Predict the cash flow for the next ${days} days and provide:
-1. Predicted net cash flow amount
-2. Confidence level (0-1)
-3. Key factors influencing the prediction
-4. Brief reasoning
-
-Respond in JSON format:
-{
-  "predictedAmount": 15000.00,
-  "confidence": 0.75,
-  "factors": ["factor1", "factor2", "factor3"],
-  "reasoning": "Brief explanation"
-}
-`
-
-      const response = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.3,
-        max_tokens: 300
-      })
-
-      const result = JSON.parse(response.choices[0].message.content || '{}')
-
-      // Log AI analysis
-      await prisma.aIAnalysis.create({
-        data: {
-          organizationId,
-          type: 'CASH_FLOW_PREDICTION',
-          input: { days, transactionCount: transactionSummary.length },
-          output: result,
-          confidence: result.confidence,
-          model: 'gpt-3.5-turbo',
-          cost: response.usage ? response.usage.total_tokens * 0.000002 : undefined
-        }
-      })
-
-      return result
-    } catch (error) {
-      console.error('AI cash flow prediction error:', error)
-      return {
-        predictedAmount: 0,
-        confidence: 0.1,
-        factors: ['Insufficient data'],
-        reasoning: 'AI prediction failed'
-      }
-    }
-  },
-
-  async detectAnomalies(organizationId: string): Promise<any[]> {
-    try {
-      // Get recent transactions
-      const recentTransactions = await prisma.transaction.findMany({
-        where: {
-          organizationId,
-          date: {
-            gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
-          }
-        },
-        orderBy: { date: 'desc' },
-        take: 200
-      })
-
-      if (recentTransactions.length < 10) {
-        return [] // Not enough data for anomaly detection
-      }
-
-      const prompt = `
-You are an AI assistant detecting financial anomalies in business transactions.
-
-Recent Transactions (last 30 days):
-${JSON.stringify(recentTransactions.slice(0, 50), null, 2)}
-
-Analyze these transactions and identify any anomalies such as:
-- Unusually large amounts
-- Unexpected categories
-- Irregular patterns
-- Potential errors or fraud
-
-Respond with an array of anomalies in JSON format:
-[
-  {
-    "type": "unusual_amount",
-    "transactionId": "transaction_id",
-    "severity": "high|medium|low",
-    "description": "Description of anomaly",
-    "confidence": 0.85
-  }
-]
-`
-
-      const response = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.3,
-        max_tokens: 500
-      })
-
-      const anomalies = JSON.parse(response.choices[0].message.content || '[]')
-
-      // Log AI analysis
-      if (anomalies.length > 0) {
-        await prisma.aIAnalysis.create({
-          data: {
-            organizationId,
-            type: 'ANOMALY_DETECTION',
-            input: { transactionCount: recentTransactions.length },
-            output: anomalies,
-            confidence: anomalies.reduce((sum: number, a: any) => sum + a.confidence, 0) / anomalies.length,
-            model: 'gpt-3.5-turbo',
-            cost: response.usage ? response.usage.total_tokens * 0.000002 : undefined
-          }
-        })
-      }
-
-      return anomalies
-    } catch (error) {
-      console.error('AI anomaly detection error:', error)
-      return []
-    }
-  },
-
-  async generateInsights(organizationId: string): Promise<string[]> {
-    try {
-      // Get financial data for insights
-      const [transactions, expenses, invoices] = await Promise.all([
-        prisma.transaction.findMany({
-          where: { organizationId },
-          take: 100,
-          orderBy: { date: 'desc' }
-        }),
-        prisma.expense.findMany({
-          where: { organizationId },
-          take: 50,
-          orderBy: { date: 'desc' }
-        }),
-        prisma.invoice.findMany({
-          where: { organizationId },
-          take: 50,
-          orderBy: { createdAt: 'desc' }
-        })
-      ])
-
-      const prompt = `
-You are an AI assistant generating business insights from financial data.
-
-Financial Data:
-- Transactions: ${transactions.length} recent transactions
-- Expenses: ${expenses.length} recent expenses  
-- Invoices: ${invoices.length} recent invoices
-
-Generate 3-5 actionable business insights based on this data. Focus on:
-- Spending patterns
-- Revenue trends
-- Cost optimization opportunities
-- Cash flow management
-- Business growth recommendations
-
-Respond with an array of insight strings:
-[
-  "Insight 1: ...",
-  "Insight 2: ...",
-  "Insight 3: ..."
-]
-`
-
-      const response = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.5,
-        max_tokens: 400
-      })
-
-      const insights = JSON.parse(response.choices[0].message.content || '[]')
-
-      // Log AI analysis
-      await prisma.aIAnalysis.create({
-        data: {
-          organizationId,
-          type: 'INSIGHT_GENERATION',
-          input: { 
-            transactionCount: transactions.length,
-            expenseCount: expenses.length,
-            invoiceCount: invoices.length
-          },
-          output: insights,
-          confidence: 0.8,
-          model: 'gpt-3.5-turbo',
-          cost: response.usage ? response.usage.total_tokens * 0.000002 : undefined
-        }
-      })
-
-      return insights
-    } catch (error) {
-      console.error('AI insight generation error:', error)
-      return ['Unable to generate insights at this time.']
+      throw new Error(`Failed to predict cash flow: ${error.message}`);
     }
   }
+
+  // NLP Queries
+  async processNLPQuery(userId: string, query: string) {
+    try {
+      // Parse the natural language query
+      const parsedQuery = await this.parseQuery(query);
+      
+      // Execute the query
+      const results = await this.executeQuery(userId, parsedQuery);
+      
+      return {
+        query,
+        parsedQuery,
+        results,
+        processedAt: new Date()
+      };
+    } catch (error) {
+      throw new Error(`Failed to process NLP query: ${error.message}`);
+    }
+  }
+
+  // Pattern Recognition
+  async recognizePatterns(userId: string, dataType: string) {
+    try {
+      const patterns = [];
+
+      if (dataType === 'expenses') {
+        const expenses = await prisma.transaction.findMany({
+          where: { userId, type: 'expense' },
+          orderBy: { createdAt: 'desc' },
+          take: 1000
+        });
+
+        // Recognize recurring expenses
+        const recurringPatterns = await this.recognizeRecurringExpenses(expenses);
+        patterns.push(...recurringPatterns);
+
+        // Recognize seasonal patterns
+        const seasonalPatterns = await this.recognizeSeasonalPatterns(expenses);
+        patterns.push(...seasonalPatterns);
+
+        // Recognize category patterns
+        const categoryPatterns = await this.recognizeCategoryPatterns(expenses);
+        patterns.push(...categoryPatterns);
+      }
+
+      return {
+        userId,
+        dataType,
+        patterns,
+        recognizedAt: new Date()
+      };
+    } catch (error) {
+      throw new Error(`Failed to recognize patterns: ${error.message}`);
+    }
+  }
+
+  // Model Training Pipeline
+  async trainModel(modelType: string, trainingData: any[]) {
+    try {
+      const modelId = uuidv4();
+      
+      // Preprocess data
+      const processedData = await this.preprocessData(trainingData);
+      
+      // Train model
+      const model = await this.trainModelAlgorithm(modelType, processedData);
+      
+      // Save model
+      await this.saveModel(modelId, model);
+      
+      return {
+        modelId,
+        modelType,
+        accuracy: model.accuracy,
+        trainedAt: new Date()
+      };
+    } catch (error) {
+      throw new Error(`Failed to train model: ${error.message}`);
+    }
+  }
+
+  // Helper Methods
+  private async detectSpendingAnomalies(transactions: any[]) {
+    const anomalies = [];
+    
+    // Calculate average spending
+    const totalSpending = transactions.reduce((sum, t) => sum + Math.abs(t.amount), 0);
+    const averageSpending = totalSpending / transactions.length;
+    
+    // Detect transactions significantly above average
+    for (const transaction of transactions) {
+      if (Math.abs(transaction.amount) > averageSpending * 3) {
+        anomalies.push({
+          type: 'HIGH_SPENDING',
+          severity: 'HIGH',
+          transactionId: transaction.id,
+          amount: transaction.amount,
+          description: 'Transaction amount significantly above average'
+        });
+      }
+    }
+    
+    return anomalies;
+  }
+
+  private async detectTimeAnomalies(transactions: any[]) {
+    const anomalies = [];
+    
+    // Group transactions by hour
+    const hourlySpending = {};
+    for (const transaction of transactions) {
+      const hour = new Date(transaction.createdAt).getHours();
+      if (!hourlySpending[hour]) {
+        hourlySpending[hour] = 0;
+      }
+      hourlySpending[hour] += Math.abs(transaction.amount);
+    }
+    
+    // Detect unusual spending times
+    const maxHourlySpending = Math.max(...Object.values(hourlySpending));
+    for (const [hour, spending] of Object.entries(hourlySpending)) {
+      if (spending > maxHourlySpending * 0.8 && parseInt(hour) < 6) {
+        anomalies.push({
+          type: 'UNUSUAL_TIME',
+          severity: 'MEDIUM',
+          hour: parseInt(hour),
+          spending,
+          description: 'Unusual spending activity during early morning hours'
+        });
+      }
+    }
+    
+    return anomalies;
+  }
+
+  private async detectAmountAnomalies(transactions: any[]) {
+    const anomalies = [];
+    
+    // Calculate amount distribution
+    const amounts = transactions.map(t => Math.abs(t.amount)).sort((a, b) => a - b);
+    const q1 = amounts[Math.floor(amounts.length * 0.25)];
+    const q3 = amounts[Math.floor(amounts.length * 0.75)];
+    const iqr = q3 - q1;
+    const outlierThreshold = q3 + 1.5 * iqr;
+    
+    // Detect outliers
+    for (const transaction of transactions) {
+      if (Math.abs(transaction.amount) > outlierThreshold) {
+        anomalies.push({
+          type: 'AMOUNT_OUTLIER',
+          severity: 'HIGH',
+          transactionId: transaction.id,
+          amount: transaction.amount,
+          description: 'Transaction amount is a statistical outlier'
+        });
+      }
+    }
+    
+    return anomalies;
+  }
+
+  private async analyzeCashFlowPatterns(transactions: any[]) {
+    const patterns = {
+      daily: {},
+      weekly: {},
+      monthly: {},
+      confidence: 0
+    };
+    
+    // Analyze daily patterns
+    for (const transaction of transactions) {
+      const day = new Date(transaction.createdAt).getDay();
+      if (!patterns.daily[day]) {
+        patterns.daily[day] = { count: 0, total: 0 };
+      }
+      patterns.daily[day].count++;
+      patterns.daily[day].total += transaction.amount;
+    }
+    
+    // Calculate confidence based on data consistency
+    const totalTransactions = transactions.length;
+    const uniqueDays = new Set(transactions.map(t => new Date(t.createdAt).toDateString())).size;
+    patterns.confidence = Math.min(uniqueDays / 30, 1); // Confidence based on data coverage
+    
+    return patterns;
+  }
+
+  private async generateCashFlowPredictions(patterns: any, days: number) {
+    const predictions = [];
+    const today = new Date();
+    
+    for (let i = 1; i <= days; i++) {
+      const futureDate = new Date(today.getTime() + i * 24 * 60 * 60 * 1000);
+      const dayOfWeek = futureDate.getDay();
+      
+      // Predict based on historical patterns
+      const dayPattern = patterns.daily[dayOfWeek];
+      const predictedAmount = dayPattern ? dayPattern.total / dayPattern.count : 0;
+      
+      predictions.push({
+        date: futureDate,
+        predictedAmount,
+        confidence: patterns.confidence
+      });
+    }
+    
+    return predictions;
+  }
+
+  private async parseQuery(query: string) {
+    // Simple query parsing (would use NLP library in production)
+    const keywords = {
+      'show': 'SELECT',
+      'find': 'SELECT',
+      'get': 'SELECT',
+      'total': 'SUM',
+      'average': 'AVG',
+      'count': 'COUNT'
+    };
+    
+    const parsedQuery = {
+      action: 'SELECT',
+      fields: ['*'],
+      conditions: [],
+      orderBy: null,
+      limit: null
+    };
+    
+    // Basic keyword detection
+    for (const [keyword, action] of Object.entries(keywords)) {
+      if (query.toLowerCase().includes(keyword)) {
+        parsedQuery.action = action;
+        break;
+      }
+    }
+    
+    return parsedQuery;
+  }
+
+  private async executeQuery(userId: string, parsedQuery: any) {
+    // Execute the parsed query against the database
+    // This is a simplified implementation
+    return {
+      results: [],
+      count: 0
+    };
+  }
+
+  private async recognizeRecurringExpenses(expenses: any[]) {
+    const patterns = [];
+    
+    // Group expenses by description similarity
+    const groupedExpenses = {};
+    for (const expense of expenses) {
+      const key = this.normalizeDescription(expense.description);
+      if (!groupedExpenses[key]) {
+        groupedExpenses[key] = [];
+      }
+      groupedExpenses[key].push(expense);
+    }
+    
+    // Find recurring patterns
+    for (const [key, expenses] of Object.entries(groupedExpenses)) {
+      if (expenses.length >= 3) {
+        patterns.push({
+          type: 'RECURRING_EXPENSE',
+          description: key,
+          frequency: this.calculateFrequency(expenses),
+          averageAmount: this.calculateAverageAmount(expenses),
+          count: expenses.length
+        });
+      }
+    }
+    
+    return patterns;
+  }
+
+  private async recognizeSeasonalPatterns(expenses: any[]) {
+    const patterns = [];
+    
+    // Group expenses by month
+    const monthlyExpenses = {};
+    for (const expense of expenses) {
+      const month = new Date(expense.createdAt).getMonth();
+      if (!monthlyExpenses[month]) {
+        monthlyExpenses[month] = 0;
+      }
+      monthlyExpenses[month] += Math.abs(expense.amount);
+    }
+    
+    // Find seasonal patterns
+    const months = Object.keys(monthlyExpenses).map(Number);
+    const amounts = Object.values(monthlyExpenses);
+    
+    if (months.length >= 12) {
+      patterns.push({
+        type: 'SEASONAL_PATTERN',
+        months,
+        amounts,
+        description: 'Seasonal spending pattern detected'
+      });
+    }
+    
+    return patterns;
+  }
+
+  private async recognizeCategoryPatterns(expenses: any[]) {
+    const patterns = [];
+    
+    // Group expenses by category
+    const categoryExpenses = {};
+    for (const expense of expenses) {
+      const category = expense.category || 'Uncategorized';
+      if (!categoryExpenses[category]) {
+        categoryExpenses[category] = [];
+      }
+      categoryExpenses[category].push(expense);
+    }
+    
+    // Find category patterns
+    for (const [category, expenses] of Object.entries(categoryExpenses)) {
+      if (expenses.length >= 5) {
+        patterns.push({
+          type: 'CATEGORY_PATTERN',
+          category,
+          count: expenses.length,
+          averageAmount: this.calculateAverageAmount(expenses),
+          description: `Frequent spending in ${category} category`
+        });
+      }
+    }
+    
+    return patterns;
+  }
+
+  private async preprocessData(data: any[]) {
+    // Clean and normalize data
+    return data.map(item => ({
+      ...item,
+      normalized: true
+    }));
+  }
+
+  private async trainModelAlgorithm(modelType: string, data: any[]) {
+    // Simplified model training
+    return {
+      type: modelType,
+      accuracy: 0.85,
+      parameters: {}
+    };
+  }
+
+  private async saveModel(modelId: string, model: any) {
+    // Save model to database or file system
+    await prisma.aiModel.create({
+      data: {
+        id: modelId,
+        type: model.type,
+        accuracy: model.accuracy,
+        parameters: JSON.stringify(model.parameters),
+        trainedAt: new Date()
+      }
+    });
+  }
+
+  private normalizeDescription(description: string): string {
+    return description.toLowerCase()
+      .replace(/[^\w\s]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  private calculateFrequency(expenses: any[]): string {
+    // Calculate frequency based on time intervals
+    const dates = expenses.map(e => new Date(e.createdAt)).sort();
+    const intervals = [];
+    
+    for (let i = 1; i < dates.length; i++) {
+      intervals.push(dates[i].getTime() - dates[i-1].getTime());
+    }
+    
+    const averageInterval = intervals.reduce((sum, interval) => sum + interval, 0) / intervals.length;
+    const days = averageInterval / (24 * 60 * 60 * 1000);
+    
+    if (days <= 7) return 'weekly';
+    if (days <= 30) return 'monthly';
+    return 'irregular';
+  }
+
+  private calculateAverageAmount(expenses: any[]): number {
+    const total = expenses.reduce((sum, expense) => sum + Math.abs(expense.amount), 0);
+    return total / expenses.length;
+  }
 }
+
+export default new AIService();

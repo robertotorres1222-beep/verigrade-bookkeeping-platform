@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as LocalAuthentication from 'expo-local-authentication';
 import { apiService } from '../services/apiService';
 
 interface User {
@@ -7,9 +8,6 @@ interface User {
   email: string;
   firstName: string;
   lastName: string;
-  organizationId: string;
-  organizationName: string;
-  role: string;
   avatar?: string;
 }
 
@@ -17,10 +15,11 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
-  register: (userData: any) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<void>;
+  register: (userData: any) => Promise<void>;
   logout: () => Promise<void>;
-  updateUser: (userData: Partial<User>) => Promise<void>;
+  biometricLogin: () => Promise<void>;
+  enableBiometric: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,101 +32,113 @@ export const useAuth = () => {
   return context;
 };
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    checkAuthStatus();
+    checkAuthState();
   }, []);
 
-  const checkAuthStatus = async () => {
+  const checkAuthState = async () => {
     try {
       const token = await AsyncStorage.getItem('authToken');
       if (token) {
-        // Verify token with backend
-        const userData = await apiService.getProfile();
+        const userData = await apiService.getCurrentUser();
         setUser(userData);
+        setIsAuthenticated(true);
       }
     } catch (error) {
       console.error('Auth check failed:', error);
-      await AsyncStorage.removeItem('authToken');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string) => {
     try {
-      setIsLoading(true);
       const response = await apiService.login(email, password);
-      
-      if (response.success) {
-        await AsyncStorage.setItem('authToken', response.token);
-        setUser(response.user);
-        return true;
-      }
-      return false;
+      await AsyncStorage.setItem('authToken', response.token);
+      setUser(response.user);
+      setIsAuthenticated(true);
     } catch (error) {
-      console.error('Login failed:', error);
-      return false;
-    } finally {
-      setIsLoading(false);
+      throw error;
     }
   };
 
-  const register = async (userData: any): Promise<boolean> => {
+  const register = async (userData: any) => {
     try {
-      setIsLoading(true);
       const response = await apiService.register(userData);
-      
-      if (response.success) {
-        await AsyncStorage.setItem('authToken', response.token);
-        setUser(response.user);
-        return true;
-      }
-      return false;
+      await AsyncStorage.setItem('authToken', response.token);
+      setUser(response.user);
+      setIsAuthenticated(true);
     } catch (error) {
-      console.error('Registration failed:', error);
-      return false;
-    } finally {
-      setIsLoading(false);
+      throw error;
     }
   };
 
-  const logout = async (): Promise<void> => {
+  const logout = async () => {
     try {
-      await apiService.logout();
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
       await AsyncStorage.removeItem('authToken');
       setUser(null);
+      setIsAuthenticated(false);
+    } catch (error) {
+      console.error('Logout failed:', error);
     }
   };
 
-  const updateUser = async (userData: Partial<User>): Promise<void> => {
+  const biometricLogin = async () => {
     try {
-      const updatedUser = await apiService.updateProfile(userData);
-      setUser(updatedUser);
+      const hasHardware = await LocalAuthentication.hasHardwareAsync();
+      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+      
+      if (!hasHardware || !isEnrolled) {
+        throw new Error('Biometric authentication not available');
+      }
+
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: 'Authenticate to access VeriGrade',
+        fallbackLabel: 'Use Passcode',
+      });
+
+      if (result.success) {
+        const token = await AsyncStorage.getItem('authToken');
+        if (token) {
+          const userData = await apiService.getCurrentUser();
+          setUser(userData);
+          setIsAuthenticated(true);
+        }
+      }
     } catch (error) {
-      console.error('Profile update failed:', error);
+      throw error;
+    }
+  };
+
+  const enableBiometric = async () => {
+    try {
+      const hasHardware = await LocalAuthentication.hasHardwareAsync();
+      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+      
+      if (!hasHardware || !isEnrolled) {
+        throw new Error('Biometric authentication not available');
+      }
+
+      await AsyncStorage.setItem('biometricEnabled', 'true');
+    } catch (error) {
       throw error;
     }
   };
 
   const value: AuthContextType = {
     user,
-    isAuthenticated: !!user,
+    isAuthenticated,
     isLoading,
     login,
     register,
     logout,
-    updateUser,
+    biometricLogin,
+    enableBiometric,
   };
 
   return (

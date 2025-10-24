@@ -8,301 +8,189 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
 }
 
-// User Management
+// Core Models
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  firstName     String
-  lastName      String
-  passwordHash  String
-  avatar        String?
-  phone         String?
-  isActive      Boolean   @default(true)
-  emailVerified Boolean   @default(false)
-  twoFactorEnabled Boolean @default(false)
-  twoFactorSecret String?
-  mfaEnabled     Boolean   @default(false)
-  mfaSecret      String?
-  stripeCustomerId String?
-  lastLoginAt   DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  // Relationships
-  organizationMemberships OrganizationMember[]
-  ownedOrganizations      Organization[]       @relation("OrganizationOwner")
-  sessions                Session[]
-  transactions            Transaction[]
-  invoices                Invoice[]
-  expenses                Expense[]
-  reports                 Report[]
-  auditLogs               AuditLog[]
-  receiptProcessing       ReceiptProcessing[]
-  reconciliations         Reconciliation[]
-  recurringTransactions   RecurringTransaction[]
-  budgets                 Budget[]
-  currencyConversions     CurrencyConversion[]
-  integrations            Integration[]
-  subscriptions           Subscription[]
-  projects                Project[]
-  uploadedFiles           UploadedFile[]
-
-  @@index([email])
-  @@index([isActive])
-  @@index([createdAt])
-  @@index([lastLoginAt])
-  @@map("users")
-}
-
-model Session {
   id        String   @id @default(cuid())
-  userId    String
-  token     String   @unique
-  expiresAt DateTime
+  email     String   @unique
+  password  String
+  firstName String?
+  lastName  String?
+  role      UserRole @default(USER)
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Relationships
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  transactions   Transaction[]
+  invoices       Invoice[]
+  expenses       Expense[]
+  projects       Project[]
+  timeEntries    TimeEntry[]
 
-  @@map("sessions")
+  @@map("users")
 }
 
-// Organization Management
 model Organization {
   id          String   @id @default(cuid())
   name        String
-  slug        String   @unique
-  description String?
-  logo        String?
+  email       String?
+  phone       String?
+  address     String?
+  city        String?
+  state       String?
+  zipCode     String?
+  country     String?
   website     String?
-  industry    String?
-  size        String?
-  currency    String   @default("USD")
-  timezone    String   @default("UTC")
-  address     Json?
-  settings    Json?
   isActive    Boolean  @default(true)
-  ownerId     String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   // Relationships
-  owner      User                   @relation("OrganizationOwner", fields: [ownerId], references: [id])
-  members    OrganizationMember[]
-  receiptProcessing ReceiptProcessing[]
-  reconciliations   Reconciliation[]
-  recurringTransactions RecurringTransaction[]
-  budgets           Budget[]
-  currencyConversions CurrencyConversion[]
-  integrations      Integration[]
+  users        User[]
   transactions Transaction[]
-  invoices   Invoice[]
-  expenses   Expense[]
-  reports    Report[]
-  bankAccounts BankAccount[]
-  taxSettings TaxSettings[]
-  projects   Project[]
-  uploadedFiles UploadedFile[]
-  categories Category[]
-  customers  Customer[]
-  vendors    Vendor[]
+  invoices     Invoice[]
+  expenses     Expense[]
+  projects     Project[]
 
   @@map("organizations")
 }
 
-model OrganizationMember {
-  id             String   @id @default(cuid())
-  organizationId String
-  userId         String
-  role           Role     @default(VIEWER)
-  permissions    Json?
-  invitedAt      DateTime @default(now())
-  joinedAt       DateTime?
-  isActive       Boolean  @default(true)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([organizationId, userId])
-  @@map("organization_members")
-}
-
-enum Role {
-  OWNER
-  ADMIN
-  ACCOUNTANT
-  VIEWER
-}
-
-// Financial Data
 model Transaction {
-  id             String          @id @default(cuid())
-  organizationId String
-  userId         String
-  type           TransactionType
-  amount         Decimal         @db.Decimal(15, 2)
+  id             String            @id @default(cuid())
+  amount         Decimal
   description    String
-  reference      String?
   category       String?
   subcategory    String?
+  type           TransactionType
+  status         TransactionStatus @default(PENDING)
   date           DateTime
-  balance        Decimal?        @db.Decimal(15, 2)
-  metadata       Json?
-  isReconciled   Boolean         @default(false)
-  merchant       String?
-  transactionType String?        // income, expense, transfer (for AI categorization)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  reference      String?
+  notes          String?
+  createdAt      DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 
-  recurringTransactionId String?
-  recurringTransaction RecurringTransaction? @relation("RecurringTransaction", fields: [recurringTransactionId], references: [id])
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user         User         @relation(fields: [userId], references: [id])
-  bankAccount  BankAccount? @relation(fields: [bankAccountId], references: [id])
-  bankAccountId String?
+  // Relationships
+  userId         String
+  user           User              @relation(fields: [userId], references: [id])
+  organizationId String
+  organization   Organization      @relation(fields: [organizationId], references: [id])
 
-  @@index([organizationId])
-  @@index([userId])
-  @@index([date])
-  @@index([type])
-  @@index([category])
-  @@index([isReconciled])
-  @@index([merchant])
   @@map("transactions")
+}
+
+model Invoice {
+  id             String        @id @default(cuid())
+  invoiceNumber  String        @unique
+  amount         Decimal
+  tax            Decimal        @default(0)
+  total          Decimal
+  status         InvoiceStatus  @default(DRAFT)
+  dueDate        DateTime
+  paidDate       DateTime?
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  // Relationships
+  userId         String
+  user           User          @relation(fields: [userId], references: [id])
+  organizationId String
+  organization   Organization  @relation(fields: [organizationId], references: [id])
+
+  @@map("invoices")
+}
+
+model Expense {
+  id             String        @id @default(cuid())
+  amount         Decimal
+  description    String
+  category       String?
+  subcategory    String?
+  status         ExpenseStatus @default(PENDING)
+  date           DateTime
+  receipt        String?
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  // Relationships
+  userId         String
+  user           User          @relation(fields: [userId], references: [id])
+  organizationId String
+  organization   Organization  @relation(fields: [organizationId], references: [id])
+
+  @@map("expenses")
+}
+
+model Project {
+  id             String        @id @default(cuid())
+  name           String
+  description    String?
+  status         ProjectStatus @default(ACTIVE)
+  budget         Decimal?
+  startDate      DateTime?
+  endDate        DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  // Relationships
+  userId         String
+  user           User          @relation(fields: [userId], references: [id])
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  timeEntries    TimeEntry[]
+
+  @@map("projects")
+}
+
+model TimeEntry {
+  id             String        @id @default(cuid())
+  description    String
+  hours          Decimal
+  rate           Decimal?
+  billable       Boolean       @default(true)
+  date           DateTime
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  // Relationships
+  userId         String
+  user           User          @relation(fields: [userId], references: [id])
+  projectId      String
+  project        Project       @relation(fields: [projectId], references: [id])
+
+  @@map("time_entries")
+}
+
+// Enums
+enum UserRole {
+  USER
+  ADMIN
+  SUPER_ADMIN
 }
 
 enum TransactionType {
   INCOME
   EXPENSE
   TRANSFER
-  ADJUSTMENT
 }
 
-model BankAccount {
-  id             String   @id @default(cuid())
-  organizationId String
-  name           String
-  type           BankAccountType
-  accountNumber  String?
-  routingNumber  String?
-  balance        Decimal  @default(0) @db.Decimal(15, 2)
-  currency       String   @default("USD")
-  isActive       Boolean  @default(true)
-  plaidAccountId String?
-  plaidItemId    String?
-  lastSyncAt     DateTime?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  transactions Transaction[]
-
-  @@map("bank_accounts")
-}
-
-enum BankAccountType {
-  CHECKING
-  SAVINGS
-  CREDIT_CARD
-  INVESTMENT
-  LOAN
-  OTHER
-}
-
-// Invoice Management
-model Invoice {
-  id             String        @id @default(cuid())
-  organizationId String
-  userId         String
-  invoiceNumber  String?
-  clientId       String?
-  clientName     String
-  clientEmail    String?
-  clientAddress  String?
-  status         InvoiceStatus @default(draft)
-  issueDate      DateTime      @default(now())
-  dueDate        DateTime?
-  paidDate       DateTime?
-  subtotal       Decimal       @db.Decimal(15, 2)
-  taxAmount      Decimal       @default(0) @db.Decimal(15, 2)
-  discountAmount Decimal       @default(0) @db.Decimal(15, 2)
-  total          Decimal       @db.Decimal(15, 2)
-  currency       String        @default("USD")
-  taxRate        Decimal       @default(0) @db.Decimal(5, 4)
-  discount       Decimal       @default(0) @db.Decimal(5, 4)
-  notes          String?
-  terms          String?
-  metadata       Json?
-  pdfUrl         String?
-  paymentMethod  String?
-  paymentReference String?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user         User         @relation(fields: [userId], references: [id])
-  client       Customer?    @relation(fields: [clientId], references: [id])
-  items        InvoiceItem[]
-
-  @@map("invoices")
-}
-
-model InvoiceItem {
-  id          String  @id @default(cuid())
-  invoiceId   String
-  description String
-  quantity    Int
-  unitPrice   Decimal @db.Decimal(15, 2)
-  totalPrice  Decimal @db.Decimal(15, 2)
-  taxRate     Decimal @default(0) @db.Decimal(5, 4)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-
-  @@map("invoice_items")
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
 }
 
 enum InvoiceStatus {
-  draft
-  sent
-  paid
-  overdue
-  cancelled
-}
-
-// Expense Management
-model Expense {
-  id             String       @id @default(cuid())
-  organizationId String
-  userId         String
-  amount         Decimal      @db.Decimal(15, 2)
-  description    String
-  category       String?
-  subcategory    String?
-  date           DateTime
-  receipt        String?
-  vendor         String?
-  isReimbursable Boolean      @default(false)
-  isTaxDeductible Boolean     @default(false)
-  projectId      String?
-  status         ExpenseStatus @default(PENDING)
-  approvedBy     String?
-  approvedAt     DateTime?
-  metadata       Json?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user         User         @relation(fields: [userId], references: [id])
-  project      Project?     @relation(fields: [projectId], references: [id])
-
-  @@map("expenses")
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
 }
 
 enum ExpenseStatus {
@@ -312,362 +200,9 @@ enum ExpenseStatus {
   PAID
 }
 
-// Customer & Vendor Management
-model Customer {
-  id             String   @id @default(cuid())
-  organizationId String
-  name           String
-  email          String?
-  phone          String?
-  address        Json?
-  taxId          String?
-  metadata       Json?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  invoices     Invoice[]
-
-  @@map("customers")
-}
-
-model Vendor {
-  id             String   @id @default(cuid())
-  organizationId String
-  name           String
-  email          String?
-  phone          String?
-  address        Json?
-  taxId          String?
-  metadata       Json?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  @@map("vendors")
-}
-
-// Categories
-model Category {
-  id             String  @id @default(cuid())
-  organizationId String
-  name           String
-  type           CategoryType
-  parentId       String?
-  color          String?
-  description    String?
-  isActive       Boolean @default(true)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  parent       Category?    @relation("CategoryHierarchy", fields: [parentId], references: [id])
-  children     Category[]   @relation("CategoryHierarchy")
-
-  @@map("categories")
-}
-
-enum CategoryType {
-  INCOME
-  EXPENSE
-  ASSET
-  LIABILITY
-  EQUITY
-}
-
-// Reporting
-model Report {
-  id             String     @id @default(cuid())
-  organizationId String
-  userId         String
-  name           String
-  type           ReportType
-  parameters     Json
-  data           Json?
-  status         ReportStatus @default(PENDING)
-  scheduledAt    DateTime?
-  generatedAt    DateTime?
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
-
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user         User         @relation(fields: [userId], references: [id])
-
-  @@map("reports")
-}
-
-enum ReportType {
-  PROFIT_LOSS
-  BALANCE_SHEET
-  CASH_FLOW
-  AGING_REPORT
-  EXPENSE_REPORT
-  INCOME_REPORT
-  TAX_REPORT
-  CUSTOM
-}
-
-enum ReportStatus {
-  PENDING
-  GENERATING
+enum ProjectStatus {
+  ACTIVE
   COMPLETED
-  FAILED
-}
-
-// AI & MCP Features
-model AIAnalysis {
-  id             String   @id @default(cuid())
-  organizationId String
-  type           AIAnalysisType
-  input          Json
-  output         Json
-  confidence     Decimal  @db.Decimal(3, 2)
-  model          String
-  cost           Decimal? @db.Decimal(10, 4)
-  createdAt      DateTime @default(now())
-
-  @@map("ai_analyses")
-}
-
-model ReceiptProcessing {
-  id             String   @id @default(cuid())
-  organizationId String
-  userId         String
-  imageUrl       String?
-  extractedData  Json
-  confidence     Decimal  @db.Decimal(3, 2)
-  status         String   @default("PROCESSED") // PROCESSED, CONVERTED_TO_EXPENSE, FAILED
-  processingTime Int?     // Processing time in milliseconds
-  createdAt      DateTime @default(now())
-
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("receipt_processing")
-}
-
-model Reconciliation {
-  id                   String   @id @default(cuid())
-  organizationId       String
-  userId               String
-  bankTransactionId    String
-  internalTransactionId String?
-  confidence           Decimal  @db.Decimal(3, 2)
-  status               String   @default("MATCHED") // MATCHED, DISPUTED, RESOLVED
-  matchedAt            DateTime
-  notes                String?
-  metadata             Json?
-  createdAt            DateTime @default(now())
-
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("reconciliations")
-}
-
-model RecurringTransaction {
-  id             String   @id @default(cuid())
-  organizationId String
-  userId         String
-  description    String
-  amount         Decimal  @db.Decimal(12, 2)
-  category       String
-  subcategory    String?
-  frequency      String   // DAILY, WEEKLY, MONTHLY, QUARTERLY, YEARLY
-  interval       Int      @default(1) // Every X days/weeks/months
-  startDate      DateTime
-  endDate        DateTime?
-  nextDueDate    DateTime
-  isActive       Boolean  @default(true)
-  autoCreate     Boolean  @default(false)
-  vendor         String?
-  account        String?
-  notes          String?
-  metadata       Json?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  transactions Transaction[] @relation("RecurringTransaction")
-
-  @@map("recurring_transactions")
-}
-
-model Budget {
-  id             String   @id @default(cuid())
-  organizationId String
-  userId         String
-  name           String
-  description    String?
-  period         String   // MONTHLY, QUARTERLY, YEARLY
-  startDate      DateTime
-  endDate        DateTime
-  totalBudget    Decimal  @db.Decimal(15, 2)
-  isActive       Boolean  @default(true)
-  categories     Json     // Array of category budgets
-  metadata       Json?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("budgets")
-}
-
-model CurrencyConversion {
-  id               String   @id @default(cuid())
-  organizationId   String
-  userId           String
-  fromCurrency     String
-  toCurrency       String
-  amount           Decimal  @db.Decimal(15, 2)
-  convertedAmount  Decimal  @db.Decimal(15, 2)
-  rate             Decimal  @db.Decimal(10, 6)
-  date             DateTime
-  metadata         Json?
-  createdAt        DateTime @default(now())
-
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("currency_conversions")
-}
-
-model Integration {
-  id             String   @id @default(cuid())
-  organizationId String
-  userId         String
-  type           String   // QUICKBOOKS, XERO, SAGE, WAVE, FRESHBOOKS, ZOHO_BOOKS
-  credentials    Json
-  settings       Json
-  status         String   @default("CONNECTING") // CONNECTING, CONNECTED, ERROR, DISCONNECTED
-  isActive       Boolean  @default(true)
-  lastSyncAt     DateTime?
-  metadata       Json?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("integrations")
-}
-
-enum AIAnalysisType {
-  TRANSACTION_CATEGORIZATION
-  EXPENSE_PREDICTION
-  ANOMALY_DETECTION
-  CASH_FLOW_PREDICTION
-  NATURAL_LANGUAGE_QUERY
-  INSIGHT_GENERATION
-  RECEIPT_PROCESSING
-}
-
-// Audit & Compliance
-model AuditLog {
-  id             String   @id @default(cuid())
-  organizationId String?
-  userId         String?
-  action         String
-  resource       String
-  resourceId     String?
-  changes        Json?
-  ipAddress      String?
-  userAgent      String?
-  createdAt      DateTime @default(now())
-
-  user User? @relation(fields: [userId], references: [id])
-
-  @@map("audit_logs")
-}
-
-
-// Tax Settings
-model TaxSettings {
-  id             String   @id @default(cuid())
-  organizationId String
-  taxYear        Int
-  taxRate        Decimal  @db.Decimal(5, 4) // e.g., 0.25 for 25%
-  businessType   String   @default("LLC")
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  @@unique([organizationId, taxYear])
-  @@map("tax_settings")
-}
-
-// Project Management
-model Project {
-  id             String   @id @default(cuid())
-  name           String
-  description    String?
-  organizationId String
-  userId         String
-  status         String   @default("ACTIVE") // ACTIVE, COMPLETED, CANCELLED
-  startDate      DateTime?
-  endDate        DateTime?
-  budget         Decimal? @db.Decimal(12, 2)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user         User         @relation(fields: [userId], references: [id])
-  expenses     Expense[]
-
-  @@map("projects")
-}
-
-// File Management
-model UploadedFile {
-  id             String   @id @default(cuid())
-  originalName   String
-  fileName       String
-  filePath       String
-  fileUrl        String
-  mimeType       String
-  fileSize       Int
-  type           String   @default("RECEIPT") // RECEIPT, DOCUMENT, INVOICE, etc.
-  organizationId String
-  userId         String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user         User         @relation(fields: [userId], references: [id])
-
-  @@map("uploaded_files")
-}
-
-// Subscription Management
-model Subscription {
-  id                   String   @id @default(cuid())
-  userId               String
-  stripeSubscriptionId String   @unique
-  stripeCustomerId     String
-  status               String   // active, cancelled, past_due, unpaid
-  currentPeriodStart   DateTime
-  currentPeriodEnd     DateTime
-  cancelAtPeriodEnd    Boolean  @default(false)
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("subscriptions")
-}
-
-// System Configuration
-model SystemConfig {
-  id    String @id @default(cuid())
-  key   String @unique
-  value Json
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("system_configs")
+  ON_HOLD
+  CANCELLED
 }

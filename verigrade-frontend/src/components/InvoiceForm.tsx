@@ -19,6 +19,7 @@ export default function InvoiceForm({ onClose }: { onClose: () => void }) {
     customerAddress: '',
     invoiceNumber: '',
     dueDate: '',
+    currency: 'USD',
     notes: ''
   })
   const [items, setItems] = useState<InvoiceItem[]>([
@@ -28,6 +29,19 @@ export default function InvoiceForm({ onClose }: { onClose: () => void }) {
   const [error, setError] = useState('')
 
   const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+
+  const currencies = [
+    { code: 'USD', name: 'US Dollar', symbol: '$' },
+    { code: 'EUR', name: 'Euro', symbol: '€' },
+    { code: 'GBP', name: 'British Pound', symbol: '£' },
+    { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$' },
+    { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
+    { code: 'JPY', name: 'Japanese Yen', symbol: '¥' },
+    { code: 'CHF', name: 'Swiss Franc', symbol: 'CHF' },
+    { code: 'CNY', name: 'Chinese Yuan', symbol: '¥' },
+    { code: 'INR', name: 'Indian Rupee', symbol: '₹' },
+    { code: 'BRL', name: 'Brazilian Real', symbol: 'R$' }
+  ]
 
   const addItem = () => {
     const newItem: InvoiceItem = {
@@ -83,6 +97,7 @@ export default function InvoiceForm({ onClose }: { onClose: () => void }) {
         customerAddress: formData.customerAddress,
         invoiceNumber: formData.invoiceNumber || `INV-${Date.now()}`,
         dueDate: formData.dueDate,
+        currency: formData.currency,
         notes: formData.notes,
         items: items.map(item => ({
           description: item.description,
@@ -176,7 +191,7 @@ export default function InvoiceForm({ onClose }: { onClose: () => void }) {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Invoice Number
@@ -200,6 +215,23 @@ export default function InvoiceForm({ onClose }: { onClose: () => void }) {
                   value={formData.dueDate}
                   onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Currency *
+                </label>
+                <select
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={formData.currency}
+                  onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+                >
+                  {currencies.map(currency => (
+                    <option key={currency.code} value={currency.code}>
+                      {currency.symbol} {currency.code} - {currency.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
@@ -280,15 +312,15 @@ export default function InvoiceForm({ onClose }: { onClose: () => void }) {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Subtotal:</span>
-                  <span className="font-medium">${calculateSubtotal().toFixed(2)}</span>
+                  <span className="font-medium">{currencies.find(c => c.code === formData.currency)?.symbol || '$'}{calculateSubtotal().toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Tax (10%):</span>
-                  <span className="font-medium">${calculateTax().toFixed(2)}</span>
+                  <span className="font-medium">{currencies.find(c => c.code === formData.currency)?.symbol || '$'}{calculateTax().toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between border-t pt-2">
                   <span className="text-lg font-semibold">Total:</span>
-                  <span className="text-lg font-semibold">${calculateTotal().toFixed(2)}</span>
+                  <span className="text-lg font-semibold">{currencies.find(c => c.code === formData.currency)?.symbol || '$'}{calculateTotal().toFixed(2)}</span>
                 </div>
               </div>
             </div>

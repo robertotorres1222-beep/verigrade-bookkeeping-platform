@@ -1,0 +1,377 @@
+{
+  "templates": [
+    {
+      "id": "individual-tax-return",
+      "name": "Individual Tax Return (Form 1040)",
+      "description": "Comprehensive checklist for preparing individual tax returns",
+      "category": "Individual Tax",
+      "difficulty": "Intermediate",
+      "estimatedTime": "2-4 hours",
+      "deadline": "April 15",
+      "sections": [
+        {
+          "title": "Personal Information",
+          "items": [
+            "Social Security Number",
+            "Date of Birth",
+            "Filing Status",
+            "Dependents Information",
+            "Address and Contact Information"
+          ]
+        },
+        {
+          "title": "Income Documents",
+          "items": [
+            "W-2 Forms (all employers)",
+            "1099 Forms (contractor income)",
+            "1099-INT (interest income)",
+            "1099-DIV (dividend income)",
+            "1099-B (brokerage statements)",
+            "1099-R (retirement distributions)",
+            "1099-SSA (Social Security benefits)",
+            "1099-G (unemployment compensation)",
+            "K-1 Forms (partnership/trust income)",
+            "Other income documentation"
+          ]
+        },
+        {
+          "title": "Deductions and Credits",
+          "items": [
+            "Standard vs Itemized Deduction Analysis",
+            "Medical Expenses (if itemizing)",
+            "State and Local Taxes (SALT)",
+            "Mortgage Interest (Form 1098)",
+            "Charitable Contributions",
+            "Business Expenses (if applicable)",
+            "Education Credits (1098-T)",
+            "Child Tax Credit",
+            "Earned Income Credit",
+            "Other applicable credits"
+          ]
+        },
+        {
+          "title": "Tax Payments and Withholding",
+          "items": [
+            "Federal Tax Withholding",
+            "Estimated Tax Payments",
+            "Prior Year Refund Applied",
+            "Other Payments",
+            "Balance Due or Refund Calculation"
+          ]
+        },
+        {
+          "title": "Review and Filing",
+          "items": [
+            "Double-check all numbers",
+            "Verify math calculations",
+            "Review for common errors",
+            "Sign and date return",
+            "Attach required schedules",
+            "Make copies for records",
+            "File electronically or by mail",
+            "Pay any balance due"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "corporate-tax-return",
+      "name": "Corporate Tax Return (Form 1120)",
+      "description": "Checklist for preparing corporate tax returns",
+      "category": "Corporate Tax",
+      "difficulty": "Advanced",
+      "estimatedTime": "4-8 hours",
+      "deadline": "March 15 (or 15th day of 3rd month after year-end)",
+      "sections": [
+        {
+          "title": "Corporate Information",
+          "items": [
+            "Corporate Name and Address",
+            "Employer Identification Number (EIN)",
+            "Date of Incorporation",
+            "State of Incorporation",
+            "Principal Business Activity",
+            "Accounting Method"
+          ]
+        },
+        {
+          "title": "Financial Statements",
+          "items": [
+            "Balance Sheet (beginning and end of year)",
+            "Income Statement (P&L)",
+            "Cash Flow Statement",
+            "General Ledger",
+            "Trial Balance",
+            "Bank Statements and Reconciliations"
+          ]
+        },
+        {
+          "title": "Income and Expenses",
+          "items": [
+            "Gross Receipts/Sales",
+            "Cost of Goods Sold",
+            "Operating Expenses",
+            "Interest Income and Expense",
+            "Depreciation and Amortization",
+            "Bad Debts",
+            "Charitable Contributions",
+            "Meals and Entertainment (50% limit)",
+            "Travel Expenses",
+            "Professional Fees"
+          ]
+        },
+        {
+          "title": "Tax Calculations",
+          "items": [
+            "Taxable Income Calculation",
+            "Tax Rate Application",
+            "Alternative Minimum Tax (AMT)",
+            "Estimated Tax Payments",
+            "Penalties and Interest",
+            "Net Operating Losses (NOLs)",
+            "Tax Credits"
+          ]
+        },
+        {
+          "title": "Schedules and Attachments",
+          "items": [
+            "Schedule M-1 (Reconciliation)",
+            "Schedule M-3 (if required)",
+            "Form 4562 (Depreciation)",
+            "Form 8825 (Rental Real Estate)",
+            "K-1 Forms for Shareholders",
+            "Other required schedules"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quarterly-estimated-tax",
+      "name": "Quarterly Estimated Tax Payments",
+      "description": "Checklist for calculating and making quarterly estimated tax payments",
+      "category": "Estimated Tax",
+      "difficulty": "Intermediate",
+      "estimatedTime": "1-2 hours",
+      "deadline": "January 15, April 15, June 15, September 15",
+      "sections": [
+        {
+          "title": "Income Projection",
+          "items": [
+            "Project annual income",
+            "Identify income sources",
+            "Account for seasonal variations",
+            "Consider one-time income",
+            "Update projections quarterly"
+          ]
+        },
+        {
+          "title": "Tax Calculation",
+          "items": [
+            "Calculate estimated tax liability",
+            "Apply current tax rates",
+            "Account for deductions",
+            "Consider credits",
+            "Calculate quarterly payment"
+          ]
+        },
+        {
+          "title": "Safe Harbor Rules",
+          "items": [
+            "Check prior year tax liability",
+            "Apply 110% rule (if applicable)",
+            "Verify safe harbor amounts",
+            "Consider annualized method",
+            "Review penalty exceptions"
+          ]
+        },
+        {
+          "title": "Payment Process",
+          "items": [
+            "Calculate payment amount",
+            "Choose payment method",
+            "Submit payment on time",
+            "Keep payment confirmation",
+            "Update records"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "payroll-tax-return",
+      "name": "Payroll Tax Return (Form 941)",
+      "description": "Checklist for preparing quarterly payroll tax returns",
+      "category": "Payroll Tax",
+      "difficulty": "Intermediate",
+      "estimatedTime": "1-3 hours",
+      "deadline": "Last day of month following quarter end",
+      "sections": [
+        {
+          "title": "Payroll Records",
+          "items": [
+            "Employee wage records",
+            "Federal income tax withheld",
+            "Social Security wages",
+            "Medicare wages",
+            "Social Security tax withheld",
+            "Medicare tax withheld"
+          ]
+        },
+        {
+          "title": "Employer Taxes",
+          "items": [
+            "Employer Social Security tax",
+            "Employer Medicare tax",
+            "Federal unemployment tax (FUTA)",
+            "State unemployment tax (SUTA)",
+            "Workers' compensation"
+          ]
+        },
+        {
+          "title": "Deposits and Payments",
+          "items": [
+            "Federal tax deposits made",
+            "Deposit schedule compliance",
+            "Deposit frequency determination",
+            "Electronic deposit requirements",
+            "Deposit penalties (if any)"
+          ]
+        },
+        {
+          "title": "Form Completion",
+          "items": [
+            "Verify all amounts",
+            "Check math calculations",
+            "Sign and date form",
+            "Attach required schedules",
+            "File electronically or by mail"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sales-tax-return",
+      "name": "Sales Tax Return",
+      "description": "Checklist for preparing sales tax returns",
+      "category": "Sales Tax",
+      "difficulty": "Beginner",
+      "estimatedTime": "30 minutes - 2 hours",
+      "deadline": "Varies by state (typically monthly, quarterly, or annually)",
+      "sections": [
+        {
+          "title": "Sales Records",
+          "items": [
+            "Total gross sales",
+            "Taxable sales",
+            "Exempt sales",
+            "Sales by jurisdiction",
+            "Sales by product/service type"
+          ]
+        },
+        {
+          "title": "Tax Calculations",
+          "items": [
+            "Calculate tax by jurisdiction",
+            "Apply correct tax rates",
+            "Account for exemptions",
+            "Calculate total tax due",
+            "Verify calculations"
+          ]
+        },
+        {
+          "title": "Filing Requirements",
+          "items": [
+            "Determine filing frequency",
+            "Gather required forms",
+            "Complete return accurately",
+            "Sign and date return",
+            "Submit by deadline"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1099-preparation",
+      "name": "1099 Form Preparation",
+      "description": "Checklist for preparing 1099 forms for contractors and vendors",
+      "category": "Information Returns",
+      "difficulty": "Beginner",
+      "estimatedTime": "1-2 hours",
+      "deadline": "January 31 (to recipients), February 28 (to IRS paper), March 31 (to IRS electronic)",
+      "sections": [
+        {
+          "title": "Vendor Information",
+          "items": [
+            "Collect W-9 forms",
+            "Verify vendor information",
+            "Check TIN (Tax ID Number)",
+            "Update vendor records",
+            "Identify reportable payments"
+          ]
+        },
+        {
+          "title": "Payment Records",
+          "items": [
+            "Total payments made",
+            "Payment dates",
+            "Payment methods",
+            "Business vs personal payments",
+            "Exempt payments"
+          ]
+        },
+        {
+          "title": "Form Preparation",
+          "items": [
+            "Choose correct 1099 form type",
+            "Complete recipient information",
+            "Enter payment amounts",
+            "Verify all information",
+            "Print and mail forms"
+          ]
+        },
+        {
+          "title": "Filing Requirements",
+          "items": [
+            "File with IRS",
+            "File with state (if required)",
+            "Keep copies for records",
+            "Meet filing deadlines",
+            "Handle corrections if needed"
+          ]
+        }
+      ]
+    }
+  ],
+  "categories": [
+    {
+      "name": "Individual Tax",
+      "description": "Checklists for individual tax returns and personal tax matters",
+      "color": "#3B82F6"
+    },
+    {
+      "name": "Corporate Tax",
+      "description": "Checklists for corporate tax returns and business tax matters",
+      "color": "#10B981"
+    },
+    {
+      "name": "Estimated Tax",
+      "description": "Checklists for quarterly estimated tax payments",
+      "color": "#F59E0B"
+    },
+    {
+      "name": "Payroll Tax",
+      "description": "Checklists for payroll tax returns and compliance",
+      "color": "#EF4444"
+    },
+    {
+      "name": "Sales Tax",
+      "description": "Checklists for sales tax returns and compliance",
+      "color": "#8B5CF6"
+    },
+    {
+      "name": "Information Returns",
+      "description": "Checklists for 1099 and other information returns",
+      "color": "#06B6D4"
+    }
+  ]
+}
+

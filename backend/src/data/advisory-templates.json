@@ -1,0 +1,354 @@
+{
+  "templates": [
+    {
+      "id": "cash-flow-analysis",
+      "name": "Cash Flow Analysis",
+      "description": "Comprehensive cash flow analysis and forecasting template",
+      "category": "Financial Analysis",
+      "difficulty": "Intermediate",
+      "estimatedTime": "2-3 hours",
+      "deliverables": [
+        "Cash flow statement",
+        "12-month cash flow projection",
+        "Cash flow variance analysis",
+        "Recommendations for improvement"
+      ],
+      "sections": [
+        {
+          "title": "Current Cash Position",
+          "description": "Analyze current cash position and trends",
+          "questions": [
+            "What is the current cash balance?",
+            "What are the main sources of cash inflow?",
+            "What are the primary cash outflow categories?",
+            "How has cash flow changed over the past 6 months?"
+          ]
+        },
+        {
+          "title": "Cash Flow Projections",
+          "description": "Create forward-looking cash flow projections",
+          "questions": [
+            "What are the expected cash inflows for the next 12 months?",
+            "What are the anticipated cash outflows?",
+            "Are there any seasonal variations to consider?",
+            "What are the key assumptions in the projections?"
+          ]
+        },
+        {
+          "title": "Risk Assessment",
+          "description": "Identify potential cash flow risks and mitigation strategies",
+          "questions": [
+            "What are the biggest risks to cash flow?",
+            "How can the business prepare for cash flow shortfalls?",
+            "What contingency plans are in place?",
+            "How can cash flow be optimized?"
+          ]
+        }
+      ],
+      "tools": [
+        "Cash flow statement template",
+        "12-month projection spreadsheet",
+        "Variance analysis worksheet",
+        "Risk assessment matrix"
+      ]
+    },
+    {
+      "id": "profitability-analysis",
+      "name": "Profitability Analysis",
+      "description": "Deep dive into business profitability and margin analysis",
+      "category": "Financial Analysis",
+      "difficulty": "Intermediate",
+      "estimatedTime": "3-4 hours",
+      "deliverables": [
+        "Profit and loss analysis",
+        "Margin analysis by product/service",
+        "Cost structure breakdown",
+        "Profitability improvement recommendations"
+      ],
+      "sections": [
+        {
+          "title": "Revenue Analysis",
+          "description": "Analyze revenue streams and trends",
+          "questions": [
+            "What are the main revenue sources?",
+            "How has revenue grown over time?",
+            "What are the most profitable products/services?",
+            "Are there any seasonal revenue patterns?"
+          ]
+        },
+        {
+          "title": "Cost Analysis",
+          "description": "Break down and analyze all costs",
+          "questions": [
+            "What are the fixed vs variable costs?",
+            "Which costs have increased the most?",
+            "Are there any cost reduction opportunities?",
+            "How do costs compare to industry benchmarks?"
+          ]
+        },
+        {
+          "title": "Margin Analysis",
+          "description": "Analyze profit margins and profitability",
+          "questions": [
+            "What is the gross profit margin?",
+            "What is the net profit margin?",
+            "How do margins compare to industry standards?",
+            "What factors are affecting profitability?"
+          ]
+        }
+      ],
+      "tools": [
+        "P&L statement template",
+        "Margin analysis worksheet",
+        "Cost breakdown template",
+        "Industry benchmark data"
+      ]
+    },
+    {
+      "id": "budget-planning",
+      "name": "Budget Planning & Forecasting",
+      "description": "Comprehensive budget planning and financial forecasting",
+      "category": "Planning",
+      "difficulty": "Advanced",
+      "estimatedTime": "4-6 hours",
+      "deliverables": [
+        "Annual budget",
+        "Monthly budget breakdown",
+        "Financial forecasts",
+        "Budget variance tracking system"
+      ],
+      "sections": [
+        {
+          "title": "Historical Analysis",
+          "description": "Analyze past financial performance",
+          "questions": [
+            "What were the revenue trends over the past 3 years?",
+            "How have expenses changed over time?",
+            "What were the key drivers of growth?",
+            "What were the major cost increases?"
+          ]
+        },
+        {
+          "title": "Revenue Planning",
+          "description": "Plan and forecast revenue for the upcoming year",
+          "questions": [
+            "What are the revenue targets for next year?",
+            "What growth assumptions are being made?",
+            "Are there any new revenue streams planned?",
+            "How will seasonality affect revenue?"
+          ]
+        },
+        {
+          "title": "Expense Planning",
+          "description": "Plan and budget for all expenses",
+          "questions": [
+            "What are the fixed expenses for next year?",
+            "What variable expenses are expected?",
+            "Are there any major capital expenditures planned?",
+            "How will inflation affect expenses?"
+          ]
+        },
+        {
+          "title": "Cash Flow Planning",
+          "description": "Plan cash flow and working capital needs",
+          "questions": [
+            "What are the cash flow requirements?",
+            "When will cash flow be tight?",
+            "What financing might be needed?",
+            "How can cash flow be optimized?"
+          ]
+        }
+      ],
+      "tools": [
+        "Budget template",
+        "Forecasting spreadsheet",
+        "Variance analysis worksheet",
+        "Cash flow projection template"
+      ]
+    },
+    {
+      "id": "kpi-dashboard",
+      "name": "KPI Dashboard Setup",
+      "description": "Set up key performance indicators and monitoring dashboard",
+      "category": "Performance Management",
+      "difficulty": "Intermediate",
+      "estimatedTime": "2-3 hours",
+      "deliverables": [
+        "KPI framework",
+        "Dashboard design",
+        "Data collection system",
+        "Reporting schedule"
+      ],
+      "sections": [
+        {
+          "title": "KPI Selection",
+          "description": "Identify and select key performance indicators",
+          "questions": [
+            "What are the most important metrics for this business?",
+            "Which KPIs align with business goals?",
+            "What data is readily available?",
+            "How frequently should KPIs be measured?"
+          ]
+        },
+        {
+          "title": "Dashboard Design",
+          "description": "Design the KPI dashboard layout and structure",
+          "questions": [
+            "Who will use the dashboard?",
+            "What information is most important?",
+            "How should the data be visualized?",
+            "What level of detail is needed?"
+          ]
+        },
+        {
+          "title": "Data Collection",
+          "description": "Set up systems for collecting and updating KPI data",
+          "questions": [
+            "Where will the data come from?",
+            "How will data be collected and updated?",
+            "Who is responsible for data entry?",
+            "How will data quality be ensured?"
+          ]
+        }
+      ],
+      "tools": [
+        "KPI selection worksheet",
+        "Dashboard template",
+        "Data collection checklist",
+        "Reporting schedule template"
+      ]
+    },
+    {
+      "id": "tax-planning",
+      "name": "Tax Planning & Optimization",
+      "description": "Comprehensive tax planning and optimization strategy",
+      "category": "Tax Planning",
+      "difficulty": "Advanced",
+      "estimatedTime": "3-4 hours",
+      "deliverables": [
+        "Tax planning strategy",
+        "Tax optimization recommendations",
+        "Compliance checklist",
+        "Tax calendar"
+      ],
+      "sections": [
+        {
+          "title": "Current Tax Situation",
+          "description": "Analyze current tax position and obligations",
+          "questions": [
+            "What are the current tax obligations?",
+            "What deductions are being claimed?",
+            "Are there any tax credits available?",
+            "What is the effective tax rate?"
+          ]
+        },
+        {
+          "title": "Tax Optimization",
+          "description": "Identify opportunities for tax optimization",
+          "questions": [
+            "What deductions are being missed?",
+            "Are there any tax credits available?",
+            "Can expenses be timed for better tax treatment?",
+            "Are there any tax-advantaged investments?"
+          ]
+        },
+        {
+          "title": "Compliance Planning",
+          "description": "Plan for tax compliance and deadlines",
+          "questions": [
+            "What are the key tax deadlines?",
+            "What documentation is needed?",
+            "Are there any estimated tax payments required?",
+            "What records need to be maintained?"
+          ]
+        }
+      ],
+      "tools": [
+        "Tax planning worksheet",
+        "Deduction checklist",
+        "Tax calendar template",
+        "Compliance checklist"
+      ]
+    },
+    {
+      "id": "business-valuation",
+      "name": "Business Valuation Analysis",
+      "description": "Comprehensive business valuation and value enhancement",
+      "category": "Strategic Planning",
+      "difficulty": "Advanced",
+      "estimatedTime": "6-8 hours",
+      "deliverables": [
+        "Business valuation report",
+        "Value enhancement recommendations",
+        "Market analysis",
+        "Strategic recommendations"
+      ],
+      "sections": [
+        {
+          "title": "Financial Analysis",
+          "description": "Analyze financial performance and trends",
+          "questions": [
+            "What is the historical financial performance?",
+            "What are the key financial ratios?",
+            "How does performance compare to industry standards?",
+            "What are the growth trends?"
+          ]
+        },
+        {
+          "title": "Market Analysis",
+          "description": "Analyze market position and competitive landscape",
+          "questions": [
+            "What is the market size and growth?",
+            "Who are the main competitors?",
+            "What is the competitive advantage?",
+            "What are the market trends?"
+          ]
+        },
+        {
+          "title": "Value Drivers",
+          "description": "Identify key value drivers and enhancement opportunities",
+          "questions": [
+            "What drives the business value?",
+            "What are the key assets?",
+            "What are the growth opportunities?",
+            "What risks affect value?"
+          ]
+        }
+      ],
+      "tools": [
+        "Valuation worksheet",
+        "Financial analysis template",
+        "Market analysis template",
+        "Value enhancement checklist"
+      ]
+    }
+  ],
+  "categories": [
+    {
+      "name": "Financial Analysis",
+      "description": "Templates for analyzing financial performance and health",
+      "color": "#3B82F6"
+    },
+    {
+      "name": "Planning",
+      "description": "Templates for budgeting, forecasting, and strategic planning",
+      "color": "#10B981"
+    },
+    {
+      "name": "Performance Management",
+      "description": "Templates for setting up KPIs and performance monitoring",
+      "color": "#F59E0B"
+    },
+    {
+      "name": "Tax Planning",
+      "description": "Templates for tax optimization and compliance",
+      "color": "#EF4444"
+    },
+    {
+      "name": "Strategic Planning",
+      "description": "Templates for strategic analysis and business valuation",
+      "color": "#8B5CF6"
+    }
+  ]
+}
+

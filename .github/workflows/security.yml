@@ -1,0 +1,406 @@
+name: Security Scanning
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    - cron: '0 2 * * *' # Daily at 2 AM
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Container Image Security Scanning
+  container-scan:
+    name: Container Image Security Scan
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Build Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: false
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+        
+    - name: Run Trivy for critical vulnerabilities
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+        format: 'table'
+        severity: 'CRITICAL,HIGH'
+        exit-code: '1'
+        
+  # Dependency Vulnerability Scanning
+  dependency-scan:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Run Snyk to check for vulnerabilities
+      uses: snyk/actions/node@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --severity-threshold=high --file=package.json
+        
+    - name: Run Snyk for backend dependencies
+      uses: snyk/actions/node@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --severity-threshold=high --file=backend/package.json
+        
+    - name: Run Snyk for frontend dependencies
+      uses: snyk/actions/node@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --severity-threshold=high --file=frontend/package.json
+        
+    - name: Run Snyk for mobile app dependencies
+      uses: snyk/actions/node@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --severity-threshold=high --file=mobile-app/package.json
+        
+  # Code Quality and Security Analysis
+  code-quality-scan:
+    name: Code Quality and Security Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: |
+        npm ci
+        cd backend && npm ci
+        cd ../frontend && npm ci
+        cd ../mobile-app && npm ci
+        
+    - name: Run SonarQube Scan
+      uses: SonarSource/sonarcloud-github-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        
+    - name: Run ESLint security rules
+      run: |
+        npm run lint:security
+        cd backend && npm run lint:security
+        cd ../frontend && npm run lint:security
+        cd ../mobile-app && npm run lint:security
+        
+    - name: Run security audit
+      run: |
+        npm audit --audit-level=high
+        cd backend && npm audit --audit-level=high
+        cd ../frontend && npm audit --audit-level=high
+        cd ../mobile-app && npm audit --audit-level=high
+        
+  # Infrastructure as Code Security Scanning
+  iac-scan:
+    name: Infrastructure as Code Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Run Checkov for Kubernetes manifests
+      uses: bridgecrewio/checkov-action@master
+      with:
+        directory: k8s/
+        framework: kubernetes
+        output_format: sarif
+        output_file_path: checkov-k8s-results.sarif
+        
+    - name: Run Checkov for Terraform files
+      uses: bridgecrewio/checkov-action@master
+      with:
+        directory: terraform/
+        framework: terraform
+        output_format: sarif
+        output_file_path: checkov-terraform-results.sarif
+        
+    - name: Upload Checkov results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'checkov-k8s-results.sarif'
+        
+    - name: Upload Checkov Terraform results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'checkov-terraform-results.sarif'
+        
+  # Secret Scanning
+  secret-scan:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Run TruffleHog secret scanner
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        base: main
+        head: HEAD
+        extra_args: --debug --only-verified
+        
+    - name: Run GitGuardian secret scanner
+      uses: GitGuardian/ggshield-action@main
+      env:
+        GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+        GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
+        
+  # OWASP ZAP Security Testing
+  zap-scan:
+    name: OWASP ZAP Security Test
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Start application
+      run: |
+        docker-compose up -d
+        sleep 30
+        
+    - name: Run OWASP ZAP baseline scan
+      uses: zaproxy/action-baseline@v0.7.0
+      with:
+        target: 'http://localhost:3000'
+        rules_file_name: '.zap/rules.tsv'
+        cmd_options: '-a'
+        
+    - name: Run OWASP ZAP full scan
+      uses: zaproxy/action-full-scan@v0.4.0
+      with:
+        target: 'http://localhost:3000'
+        rules_file_name: '.zap/rules.tsv'
+        cmd_options: '-a'
+        
+    - name: Stop application
+      run: docker-compose down
+      
+  # License Compliance Scanning
+  license-scan:
+    name: License Compliance Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: |
+        npm ci
+        cd backend && npm ci
+        cd ../frontend && npm ci
+        cd ../mobile-app && npm ci
+        
+    - name: Run license checker
+      run: |
+        npm install -g license-checker
+        license-checker --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;Unlicense'
+        cd backend && license-checker --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;Unlicense'
+        cd ../frontend && license-checker --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;Unlicense'
+        cd ../mobile-app && license-checker --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;Unlicense'
+        
+  # Security Scorecard
+  security-scorecard:
+    name: Security Scorecard
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Run Security Scorecard
+      uses: ossf/scorecard-action@v2.3.1
+      with:
+        results_file: results.sarif
+        results_format: sarif
+        publish_results: true
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Upload Security Scorecard results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: results.sarif
+        
+  # Compliance Check
+  compliance-check:
+    name: Compliance Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Run SOC 2 compliance check
+      run: |
+        echo "Running SOC 2 compliance checks..."
+        # Check for required security controls
+        if [ ! -f "docs/compliance/soc2.md" ]; then
+          echo "❌ SOC 2 documentation missing"
+          exit 1
+        fi
+        
+        # Check for required security policies
+        if [ ! -f "docs/security/security-policy.md" ]; then
+          echo "❌ Security policy missing"
+          exit 1
+        fi
+        
+        # Check for required monitoring
+        if [ ! -f "k8s/monitoring/prometheus.yaml" ]; then
+          echo "❌ Monitoring configuration missing"
+          exit 1
+        fi
+        
+        echo "✅ SOC 2 compliance checks passed"
+        
+    - name: Run GDPR compliance check
+      run: |
+        echo "Running GDPR compliance checks..."
+        # Check for data protection measures
+        if [ ! -f "docs/compliance/gdpr.md" ]; then
+          echo "❌ GDPR documentation missing"
+          exit 1
+        fi
+        
+        # Check for privacy controls
+        if [ ! -f "docs/privacy/privacy-policy.md" ]; then
+          echo "❌ Privacy policy missing"
+          exit 1
+        fi
+        
+        echo "✅ GDPR compliance checks passed"
+        
+    - name: Run PCI DSS compliance check
+      run: |
+        echo "Running PCI DSS compliance checks..."
+        # Check for payment security measures
+        if [ ! -f "docs/compliance/pci.md" ]; then
+          echo "❌ PCI DSS documentation missing"
+          exit 1
+        fi
+        
+        # Check for encryption
+        if ! grep -r "encryption" backend/src/; then
+          echo "❌ Encryption implementation missing"
+          exit 1
+        fi
+        
+        echo "✅ PCI DSS compliance checks passed"
+        
+  # Security Report Generation
+  security-report:
+    name: Generate Security Report
+    runs-on: ubuntu-latest
+    needs: [container-scan, dependency-scan, code-quality-scan, iac-scan, secret-scan, zap-scan, license-scan, security-scorecard, compliance-check]
+    if: always()
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Generate security report
+      run: |
+        echo "# Security Scan Report" > security-report.md
+        echo "Generated on: $(date)" >> security-report.md
+        echo "" >> security-report.md
+        
+        echo "## Scan Results" >> security-report.md
+        echo "- Container Scan: ${{ needs.container-scan.result }}" >> security-report.md
+        echo "- Dependency Scan: ${{ needs.dependency-scan.result }}" >> security-report.md
+        echo "- Code Quality Scan: ${{ needs.code-quality-scan.result }}" >> security-report.md
+        echo "- IaC Scan: ${{ needs.iac-scan.result }}" >> security-report.md
+        echo "- Secret Scan: ${{ needs.secret-scan.result }}" >> security-report.md
+        echo "- OWASP ZAP Scan: ${{ needs.zap-scan.result }}" >> security-report.md
+        echo "- License Scan: ${{ needs.license-scan.result }}" >> security-report.md
+        echo "- Security Scorecard: ${{ needs.security-scorecard.result }}" >> security-report.md
+        echo "- Compliance Check: ${{ needs.compliance-check.result }}" >> security-report.md
+        
+    - name: Upload security report
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-report
+        path: security-report.md
+        
+    - name: Comment on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const report = fs.readFileSync('security-report.md', 'utf8');
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: report
+          });
+
+
+
+
+

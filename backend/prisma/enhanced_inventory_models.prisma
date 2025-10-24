@@ -1,0 +1,92 @@
+// Enhanced Inventory Models
+model InventoryStockLevel {
+  id          String   @id @default(cuid())
+  itemId      String
+  locationId  String
+  quantity    Decimal  @db.Decimal(15, 2)
+  lastUpdated DateTime @default(now())
+
+  // Relationships
+  item        InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  location    InventoryLocation @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, locationId])
+  @@index([itemId])
+  @@index([locationId])
+}
+
+model InventorySerialNumber {
+  id            String   @id @default(cuid())
+  organizationId String
+  itemId        String
+  locationId    String
+  serialNumber  String
+  status        String   @default("AVAILABLE") // AVAILABLE, SOLD, DAMAGED, LOST
+  transactionId String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relationships
+  organization  Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  item          InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  location      InventoryLocation @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  transaction   InventoryTransaction? @relation(fields: [transactionId], references: [id])
+
+  @@unique([itemId, serialNumber])
+  @@index([organizationId])
+  @@index([itemId])
+  @@index([locationId])
+  @@index([status])
+}
+
+model InventoryBatch {
+  id            String   @id @default(cuid())
+  organizationId String
+  itemId        String
+  locationId    String
+  batchNumber   String
+  quantity      Decimal  @db.Decimal(15, 2)
+  unitCost      Decimal  @db.Decimal(10, 2)
+  expiryDate    DateTime?
+  status        String   @default("AVAILABLE") // AVAILABLE, SOLD, EXPIRED, DAMAGED
+  transactionId String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relationships
+  organization  Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  item          InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  location      InventoryLocation @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  transaction   InventoryTransaction? @relation(fields: [transactionId], references: [id])
+
+  @@unique([itemId, batchNumber])
+  @@index([organizationId])
+  @@index([itemId])
+  @@index([locationId])
+  @@index([status])
+  @@index([expiryDate])
+}
+
+model InventoryAlert {
+  id            String   @id @default(cuid())
+  organizationId String
+  itemId        String
+  locationId    String
+  type          String   // REORDER, LOW_STOCK, EXPIRY, DAMAGE
+  message       String
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relationships
+  organization  Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  item          InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  location      InventoryLocation @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([itemId])
+  @@index([locationId])
+  @@index([type])
+  @@index([isActive])
+}
+

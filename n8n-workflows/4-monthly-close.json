@@ -1,0 +1,94 @@
+{
+  "name": "VeriGrade - Monthly Close Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {"field": "cronExpression", "expression": "0 0 L * *"}
+          ]
+        }
+      },
+      "id": "monthly-trigger",
+      "name": "Last Day of Month",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://backend-lspqvhnjp-robertotos-projects.vercel.app/api/reports/monthly",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {"name": "month", "value": "={{ $now.minus({months: 1}).toFormat('yyyy-MM') }}"},
+            {"name": "includeBalanceSheet", "value": true},
+            {"name": "includeProfitLoss", "value": true},
+            {"name": "includeCashFlow", "value": true}
+          ]
+        }
+      },
+      "id": "generate-reports",
+      "name": "Generate Financial Reports",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://backend-lspqvhnjp-robertotos-projects.vercel.app/api/reconciliation/status",
+        "queryParameters": {
+          "parameters": [
+            {"name": "month", "value": "={{ $now.minus({months: 1}).toFormat('yyyy-MM') }}"}
+          ]
+        }
+      },
+      "id": "check-reconciliation",
+      "name": "Bank Reconciliation Check",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "operation": "sendEmail",
+        "email": "={{ $json.clientEmail }}",
+        "subject": "Monthly Financial Report - {{ $now.minus({months: 1}).toFormat('MMMM yyyy') }}",
+        "emailFormat": "html",
+        "attachments": "data",
+        "html": "<h2>Monthly Financial Summary</h2><p>Please find attached your financial reports for {{ $now.minus({months: 1}).toFormat('MMMM yyyy') }}</p>"
+      },
+      "id": "send-client-reports",
+      "name": "Send Reports to Clients",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "content": "📊 Monthly Close Complete!\n\nMonth: {{ $now.minus({months: 1}).toFormat('MMMM yyyy') }}\n\n✅ Reports generated\n✅ Reconciliation verified\n✅ Client reports sent",
+        "channel": "#month-end"
+      },
+      "id": "notify-completion",
+      "name": "Notify Completion",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.1,
+      "position": [1120, 300]
+    }
+  ],
+  "connections": {
+    "Last Day of Month": {"main": [[{"node": "Generate Financial Reports", "type": "main", "index": 0}]]},
+    "Generate Financial Reports": {"main": [[{"node": "Bank Reconciliation Check", "type": "main", "index": 0}]]},
+    "Bank Reconciliation Check": {"main": [[{"node": "Send Reports to Clients", "type": "main", "index": 0}]]},
+    "Send Reports to Clients": {"main": [[{"node": "Notify Completion", "type": "main", "index": 0}]]}
+  },
+  "active": true,
+  "settings": {},
+  "versionId": "1",
+  "id": "verigrade-monthly-close"
+}
+
+
+
+

@@ -4,6 +4,10 @@ import { CategorizationRequest } from './aiCategorizerService';
 
 export interface CreateTransactionData {
   amount: number;
+  currency?: string;
+  originalAmount?: number;
+  originalCurrency?: string;
+  exchangeRate?: number;
   description: string;
   date?: Date;
   category?: string;
@@ -17,6 +21,10 @@ export interface CreateTransactionData {
 
 export interface UpdateTransactionData {
   amount?: number;
+  currency?: string;
+  originalAmount?: number;
+  originalCurrency?: string;
+  exchangeRate?: number;
   description?: string;
   date?: Date;
   category?: string;
@@ -51,6 +59,10 @@ export async function createTransaction(data: CreateTransactionData) {
   const transaction = await prisma.transaction.create({
     data: {
       amount: data.amount,
+      currency: data.currency || 'USD',
+      originalAmount: data.originalAmount,
+      originalCurrency: data.originalCurrency,
+      exchangeRate: data.exchangeRate,
       description: data.description,
       date: data.date || new Date(),
       category: data.category || null,
@@ -397,6 +409,14 @@ export default {
   getTransactionStats,
   bulkCategorizeTransactions
 };
+
+
+
+
+
+
+
+
 
 
 

@@ -15,7 +15,9 @@ import {
   PresentationChartLineIcon,
   BuildingOfficeIcon,
   XMarkIcon,
-  Bars3Icon
+  Bars3Icon,
+  SparklesIcon,
+  CurrencyDollarIcon
 } from '@heroicons/react/24/outline';
 
 interface NavigationProps {
@@ -27,14 +29,20 @@ interface NavigationProps {
 
 const navigationItems = [
   { id: 'overview', name: 'Overview', icon: HomeIcon, href: '#overview' },
+  { id: 'practice', name: 'Practice Dashboard', icon: BuildingOfficeIcon, href: '/practice' },
   { id: 'transactions', name: 'Transactions', icon: DocumentTextIcon, href: '#transactions' },
   { id: 'analytics', name: 'Analytics', icon: ChartBarIcon, href: '#analytics' },
+  { id: 'ai-assistant', name: 'AI Assistant', icon: SparklesIcon, href: '/ai-assistant' },
+  { id: 'kpi-builder', name: 'KPI Builder', icon: PresentationChartLineIcon, href: '/kpi-builder' },
+  { id: 'tax-calendar', name: 'Tax Calendar', icon: CalculatorIcon, href: '/tax-calendar' },
+  { id: 'currency', name: 'Currency Management', icon: CurrencyDollarIcon, href: '/currency' },
   { id: 'reports', name: 'Reports', icon: PresentationChartLineIcon, href: '#reports' },
   { id: 'budget', name: 'Budget', icon: CalculatorIcon, href: '#budget' },
   { id: 'invoices', name: 'Invoices', icon: DocumentCheckIcon, href: '#invoices' },
   { id: 'expenses', name: 'Expenses', icon: ReceiptRefundIcon, href: '#expenses' },
   { id: 'clients', name: 'Clients', icon: UserGroupIcon, href: '#clients' },
-  { id: 'banking', name: 'Banking', icon: BuildingOfficeIcon, href: '#banking' },
+  { id: 'client-portal', name: 'Client Portal', icon: UserGroupIcon, href: '/client-portal' },
+  { id: 'banking', name: 'Banking', icon: BanknotesIcon, href: '#banking' },
   { id: 'settings', name: 'Settings', icon: CogIcon, href: '#settings' },
 ];
 
@@ -85,8 +93,13 @@ export default function Navigation({ activeTab, onTabChange, sidebarOpen, onSide
                 <button
                   key={item.id}
                   onClick={() => {
-                    onTabChange(item.id);
-                    onSidebarToggle(); // Close mobile menu after selection
+                    if (item.href?.startsWith('/')) {
+                      // Handle external routes
+                      window.location.href = item.href;
+                    } else {
+                      onTabChange(item.id);
+                      onSidebarToggle(); // Close mobile menu after selection
+                    }
                   }}
                   className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
                     isActive

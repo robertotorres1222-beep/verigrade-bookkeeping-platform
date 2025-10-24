@@ -1,0 +1,550 @@
+// Missing Prisma Models - Add these to your schema.prisma file
+
+// Product Management
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  sku         String   @unique
+  barcode     String?
+  category    String?
+  subcategory String?
+  unit        String   @default("each")
+  price       Decimal  @default(0)
+  cost        Decimal  @default(0)
+  isActive    Boolean  @default(true)
+  organizationId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  organization Organization @relation(fields: [organizationId], references: [id])
+  stockLevels  StockLevel[]
+  purchaseOrderItems PurchaseOrderItem[]
+  costLayers   CostLayer[]
+  serialNumbers SerialNumber[]
+  lotNumbers   LotNumber[]
+
+  @@map("products")
+}
+
+// Stock Management
+model StockLevel {
+  id          String   @id @default(cuid())
+  productId   String
+  warehouseId String
+  quantity    Int      @default(0)
+  reserved    Int      @default(0)
+  available   Int      @default(0)
+  reorderPoint Int     @default(0)
+  maxStock    Int?
+  organizationId String
+  createdAt   DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relationships
+  product      Product   @relation(fields: [productId], references: [id])
+  warehouse    Warehouse @relation(fields: [warehouseId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([productId, warehouseId])
+  @@map("stock_levels")
+}
+
+// Warehouse Management
+model Warehouse {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique
+  address     Json?
+  isActive    Boolean  @default(true)
+  organizationId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  organization Organization @relation(fields: [organizationId], references: [id])
+  stockLevels  StockLevel[]
+  binLocations BinLocation[]
+  stockTransfers StockTransfer[]
+
+  @@map("warehouses")
+}
+
+// Bin Location Management
+model BinLocation {
+  id          String   @id @default(cuid())
+  warehouseId String
+  code        String
+  description String?
+  isActive    Boolean  @default(true)
+  organizationId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  warehouse    Warehouse @relation(fields: [warehouseId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([warehouseId, code])
+  @@map("bin_locations")
+}
+
+// Purchase Orders
+model PurchaseOrder {
+  id          String   @id @default(cuid())
+  poNumber    String   @unique
+  vendorId    String
+  status      String   @default("DRAFT") // DRAFT, SENT, RECEIVED, CANCELLED
+  orderDate   DateTime
+  expectedDate DateTime?
+  totalAmount Decimal  @default(0)
+  organizationId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  organization Organization @relation(fields: [organizationId], references: [id])
+  items        PurchaseOrderItem[]
+  approvals    PurchaseOrderApproval[]
+
+  @@map("purchase_orders")
+}
+
+model PurchaseOrderItem {
+  id          String   @id @default(cuid())
+  purchaseOrderId String
+  productId   String
+  quantity    Int
+  unitPrice   Decimal
+  totalPrice  Decimal
+  received    Int      @default(0)
+  organizationId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
+  product       Product       @relation(fields: [productId], references: [id])
+  organization  Organization  @relation(fields: [organizationId], references: [id])
+
+  @@map("purchase_order_items")
+}
+
+model PurchaseOrderApproval {
+  id          String   @id @default(cuid())
+  purchaseOrderId String
+  approverId  String
+  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  comments    String?
+  organizationId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
+  organization  Organization  @relation(fields: [organizationId], references: [id])
+
+  @@map("purchase_order_approvals")
+}
+
+// Time Tracking
+model TimeEntry {
+  id          String   @id @default(cuid())
+  userId      String
+  projectId   String
+  taskId      String?
+  description String?
+  startTime   DateTime
+  endTime     DateTime?
+  duration    Int?     // in minutes
+  isBillable  Boolean  @default(true)
+  hourlyRate  Decimal?
+  status      String   @default("ACTIVE") // ACTIVE, PAUSED, COMPLETED
+  organizationId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  user        User        @relation(fields: [userId], references: [id])
+  project     Project     @relation(fields: [projectId], references: [id])
+  task        Task?       @relation(fields: [taskId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@map("time_entries")
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  status      String   @default("ACTIVE") // ACTIVE, INACTIVE, COMPLETED, ON_HOLD
+  startDate   DateTime?
+  endDate     DateTime?
+  budget      Decimal?
+  hourlyRate  Decimal?
+  clientId    String?
+  managerId   String?
+  organizationId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  organization Organization @relation(fields: [organizationId], references: [id])
+  timeEntries TimeEntry[]
+  tasks       Task[]
+  teamMembers ProjectTeamMember[]
+
+  @@map("projects")
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  projectId   String
+  name        String
+  description String?
+  status      String   @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED, CANCELLED
+  priority    String   @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  estimatedHours Int?
+  actualHours Int?
+  assignedUserId String?
+  createdByUserId String
+  organizationId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  project     Project     @relation(fields: [projectId], references: [id])
+  assignedUser User?      @relation(fields: [assignedUserId], references: [id])
+  createdBy   User        @relation(fields: [createdByUserId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
+  timeEntries TimeEntry[]
+
+  @@map("tasks")
+}
+
+model ProjectTeamMember {
+  id          String   @id @default(cuid())
+  projectId   String
+  userId      String
+  role        String   @default("MEMBER") // MANAGER, MEMBER, VIEWER
+  hourlyRate  Decimal?
+  organizationId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  project     Project     @relation(fields: [projectId], references: [id])
+  user        User        @relation(fields: [userId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([projectId, userId])
+  @@map("project_team_members")
+}
+
+// Serial and Lot Tracking
+model SerialNumber {
+  id          String   @id @default(cuid())
+  productId   String
+  serialNumber String  @unique
+  status      String   @default("AVAILABLE") // AVAILABLE, SOLD, RETURNED, DEFECTIVE
+  purchaseDate DateTime?
+  saleDate    DateTime?
+  warrantyExpiry DateTime?
+  organizationId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  product     Product      @relation(fields: [productId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@map("serial_numbers")
+}
+
+model LotNumber {
+  id          String   @id @default(cuid())
+  productId   String
+  lotNumber   String
+  quantity    Int
+  expiryDate  DateTime?
+  status      String   @default("AVAILABLE") // AVAILABLE, SOLD, EXPIRED, RECALLED
+  organizationId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  product     Product      @relation(fields: [productId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@map("lot_numbers")
+}
+
+// Cost Layer Management
+model CostLayer {
+  id          String   @id @default(cuid())
+  productId   String
+  quantity    Int
+  unitCost    Decimal
+  totalCost   Decimal
+  method      String   // FIFO, LIFO, WEIGHTED_AVERAGE, SPECIFIC_IDENTIFICATION
+  referenceId String?
+  referenceType String?
+  organizationId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  product     Product      @relation(fields: [productId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@map("cost_layers")
+}
+
+// Stock Transfers
+model StockTransfer {
+  id          String   @id @default(cuid())
+  fromWarehouseId String
+  toWarehouseId String
+  productId   String
+  quantity    Int
+  status      String   @default("PENDING") // PENDING, IN_TRANSIT, COMPLETED, CANCELLED
+  transferDate DateTime?
+  organizationId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  fromWarehouse Warehouse @relation(fields: [fromWarehouseId], references: [id])
+  toWarehouse  Warehouse @relation(fields: [toWarehouseId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@map("stock_transfers")
+}
+
+// Audit Trail
+model AuditTrail {
+  id          String   @id @default(cuid())
+  entityType  String   // User, Transaction, Invoice, etc.
+  entityId    String
+  action      String   // CREATE, UPDATE, DELETE, VIEW
+  oldValues   Json?
+  newValues   Json?
+  userId      String?
+  ipAddress   String?
+  userAgent   String?
+  organizationId String
+  createdAt   DateTime @default(now())
+
+  // Relationships
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@map("audit_trails")
+}
+
+// API Keys
+model ApiKey {
+  id          String   @id @default(cuid())
+  name        String
+  key         String   @unique
+  secret      String
+  permissions Json     @default("[]")
+  isActive    Boolean  @default(true)
+  expiresAt   DateTime?
+  lastUsedAt  DateTime?
+  userId      String
+  organizationId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  user        User        @relation(fields: [userId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
+  usage       ApiKeyUsage[]
+
+  @@map("api_keys")
+}
+
+model ApiKeyUsage {
+  id          String   @id @default(cuid())
+  apiKeyId    String
+  endpoint    String
+  method      String
+  statusCode  Int
+  responseTime Int
+  organizationId String
+  createdAt   DateTime @default(now())
+
+  // Relationships
+  apiKey      ApiKey      @relation(fields: [apiKeyId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@map("api_key_usage")
+}
+
+// Webhooks
+model Webhook {
+  id          String   @id @default(cuid())
+  name        String
+  url         String
+  events      Json     @default("[]")
+  secret      String?
+  isActive    Boolean  @default(true)
+  userId      String
+  organizationId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  user        User        @relation(fields: [userId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
+  deliveries  WebhookDelivery[]
+
+  @@map("webhooks")
+}
+
+model WebhookDelivery {
+  id          String   @id @default(cuid())
+  webhookId   String
+  eventType  String
+  payload    Json
+  status     String   @default("PENDING") // PENDING, DELIVERED, FAILED, RETRYING
+  attempts   Int      @default(0)
+  maxAttempts Int     @default(3)
+  nextRetryAt DateTime?
+  deliveredAt DateTime?
+  organizationId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  webhook     Webhook     @relation(fields: [webhookId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@map("webhook_deliveries")
+}
+
+// ML Models
+model MLModel {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   // CLASSIFICATION, REGRESSION, CLUSTERING, ANOMALY_DETECTION
+  status      String   @default("TRAINING") // TRAINING, READY, DEPLOYED, FAILED
+  accuracy    Decimal?
+  version     String
+  parameters  Json
+  performance Json?
+  organizationId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  organization Organization @relation(fields: [organizationId], references: [id])
+  versions    MLModelVersion[]
+
+  @@map("ml_models")
+}
+
+model MLModelVersion {
+  id          String   @id @default(cuid())
+  modelId     String
+  version     String
+  status      String   @default("TRAINING") // TRAINING, READY, DEPLOYED, FAILED
+  accuracy    Decimal?
+  parameters  Json
+  performance Json?
+  organizationId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  model       MLModel     @relation(fields: [modelId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([modelId, version])
+  @@map("ml_model_versions")
+}
+
+// Data Warehouse
+model DataWarehouse {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   // SOURCE, TARGET, TRANSFORMATION
+  status      String   @default("ACTIVE") // ACTIVE, INACTIVE, ERROR
+  configuration Json
+  organizationId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@map("data_warehouses")
+}
+
+// Mobile App
+model MobileApp {
+  id          String   @id @default(cuid())
+  name        String
+  platform    String   // IOS, ANDROID, WEB
+  version     String
+  status      String   @default("ACTIVE") // ACTIVE, INACTIVE, MAINTENANCE
+  organizationId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  organization Organization @relation(fields: [organizationId], references: [id])
+  features    MobileFeature[]
+
+  @@map("mobile_apps")
+}
+
+model MobileFeature {
+  id          String   @id @default(cuid())
+  mobileAppId String
+  name        String
+  type        String   // OFFLINE_SYNC, BIOMETRIC_AUTH, GPS_TRACKING, etc.
+  enabled     Boolean  @default(true)
+  configuration Json?
+  organizationId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  mobileApp   MobileApp   @relation(fields: [mobileAppId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@map("mobile_features")
+}
+
+// Add these relationships to existing models:
+
+// Add to Organization model:
+// products        Product[]
+// warehouses      Warehouse[]
+// purchaseOrders  PurchaseOrder[]
+// timeEntries     TimeEntry[]
+// projects        Project[]
+// tasks           Task[]
+// serialNumbers SerialNumber[]
+// lotNumbers      LotNumber[]
+// costLayers      CostLayer[]
+// stockTransfers  StockTransfer[]
+// auditTrails     AuditTrail[]
+// apiKeys         ApiKey[]
+// webhooks        Webhook[]
+// mlModels        MLModel[]
+// dataWarehouses  DataWarehouse[]
+// mobileApps      MobileApp[]
+
+// Add to User model:
+// timeEntries     TimeEntry[]
+// projects        Project[]
+// tasks           Task[]
+// assignedTasks  Task[] @relation("TaskAssignee")
+// apiKeys         ApiKey[]
+// webhooks        Webhook[]
+
+
+

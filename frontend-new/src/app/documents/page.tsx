@@ -1,520 +1,548 @@
 'use client';
 
-import { useState } from 'react';
-import { 
-  DocumentTextIcon,
-  PhotoIcon,
-  CloudArrowUpIcon,
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  PlusIcon,
+  DocumentIcon,
   FolderIcon,
   MagnifyingGlassIcon,
   FunnelIcon,
-  EyeIcon,
-  ArrowDownTrayIcon,
-  TrashIcon,
+  ViewColumnsIcon,
+  ListBulletIcon,
   ShareIcon,
-  PlusIcon,
+  TrashIcon,
+  PencilIcon,
+  EyeIcon,
+  DocumentArrowDownIcon,
+  CloudArrowUpIcon,
   TagIcon,
-  CalendarIcon
+  CalendarIcon,
+  UserIcon,
+  ArrowUpTrayIcon,
+  DocumentDuplicateIcon,
+  ArchiveBoxIcon
 } from '@heroicons/react/24/outline';
 
+interface Document {
+  id: string;
+  name: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  url: string;
+  folderId?: string;
+  tags: string[];
+  isPublic: boolean;
+  createdAt: string;
+  updatedAt: string;
+  uploadedByUser: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  folder?: {
+    id: string;
+    name: string;
+    path: string;
+  };
+  versions: Array<{
+    id: string;
+    version: number;
+    url: string;
+    size: number;
+    createdAt: string;
+    uploadedBy: string;
+  }>;
+}
+
+interface Folder {
+  id: string;
+  name: string;
+  path: string;
+  parentId?: string;
+  createdAt: string;
+  documentCount: number;
+}
+
 export default function DocumentsPage() {
-  const [documents] = useState([
-    {
-      id: 'DOC001',
-      name: 'Invoice_2024_001.pdf',
-      type: 'PDF',
-      category: 'Invoices',
-      size: '2.4 MB',
-      uploaded: '2024-01-15',
-      tags: ['invoice', 'client', '2024'],
-      status: 'processed'
-    },
-    {
-      id: 'DOC002',
-      name: 'Receipt_Office_Supplies.jpg',
-      type: 'Image',
-      category: 'Receipts',
-      size: '1.8 MB',
-      uploaded: '2024-01-14',
-      tags: ['receipt', 'office', 'expenses'],
-      status: 'processed'
-    },
-    {
-      id: 'DOC003',
-      name: 'Contract_ABC_Corp.pdf',
-      type: 'PDF',
-      category: 'Contracts',
-      size: '3.2 MB',
-      uploaded: '2024-01-13',
-      tags: ['contract', 'client', 'legal'],
-      status: 'processed'
-    },
-    {
-      id: 'DOC004',
-      name: 'Bank_Statement_Jan.pdf',
-      type: 'PDF',
-      category: 'Bank Statements',
-      size: '4.1 MB',
-      uploaded: '2024-01-12',
-      tags: ['bank', 'statement', 'january'],
-      status: 'processing'
-    }
-  ]);
-
-  const [categories] = useState([
-    { name: 'All Documents', count: 247, icon: DocumentTextIcon },
-    { name: 'Receipts', count: 89, icon: PhotoIcon },
-    { name: 'Invoices', count: 56, icon: DocumentTextIcon },
-    { name: 'Bank Statements', count: 34, icon: FolderIcon },
-    { name: 'Contracts', count: 23, icon: DocumentTextIcon },
-    { name: 'Tax Documents', count: 18, icon: DocumentTextIcon },
-    { name: 'Other', count: 27, icon: FolderIcon }
-  ]);
-
-  const [recentActivity] = useState([
-    {
-      id: 'ACT001',
-      action: 'Document uploaded',
-      document: 'Receipt_Office_Supplies.jpg',
-      user: 'John Smith',
-      timestamp: '2024-01-15 10:30 AM',
-      type: 'upload'
-    },
-    {
-      id: 'ACT002',
-      action: 'Document processed',
-      document: 'Invoice_2024_001.pdf',
-      user: 'System',
-      timestamp: '2024-01-15 09:45 AM',
-      type: 'process'
-    },
-    {
-      id: 'ACT003',
-      action: 'Document shared',
-      document: 'Contract_ABC_Corp.pdf',
-      user: 'Sarah Johnson',
-      timestamp: '2024-01-14 03:20 PM',
-      type: 'share'
-    }
-  ]);
-
-  const [storageStats] = useState({
-    totalDocuments: 247,
-    totalSize: '2.4 GB',
-    usedStorage: '1.8 GB',
-    availableStorage: '8.2 GB',
-    lastBackup: '2024-01-15 06:00 AM'
-  });
-
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [folders, setFolders] = useState<Folder[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All Documents');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [sortBy, setSortBy] = useState<'name' | 'date' | 'size'>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [currentFolder, setCurrentFolder] = useState<string | null>(null);
+
+  // Mock data - replace with actual API calls
+  useEffect(() => {
+    const mockDocuments: Document[] = [
+      {
+        id: '1',
+        name: 'Invoice_2024_001.pdf',
+        originalName: 'Invoice_2024_001.pdf',
+        mimeType: 'application/pdf',
+        size: 245760,
+        url: '/documents/invoice_2024_001.pdf',
+        folderId: '1',
+        tags: ['invoice', '2024', 'client-a'],
+        isPublic: false,
+        createdAt: '2024-01-15T10:30:00Z',
+        updatedAt: '2024-01-15T10:30:00Z',
+        uploadedByUser: {
+          id: '1',
+          name: 'John Doe',
+          email: 'john@example.com'
+        },
+        folder: {
+          id: '1',
+          name: 'Invoices',
+          path: '/Invoices'
+        },
+        versions: []
+      },
+      {
+        id: '2',
+        name: 'Receipt_Starbucks_Jan15.jpg',
+        originalName: 'Receipt_Starbucks_Jan15.jpg',
+        mimeType: 'image/jpeg',
+        size: 1024000,
+        url: '/documents/receipt_starbucks.jpg',
+        folderId: '2',
+        tags: ['receipt', 'expense', 'coffee'],
+        isPublic: false,
+        createdAt: '2024-01-15T14:20:00Z',
+        updatedAt: '2024-01-15T14:20:00Z',
+        uploadedByUser: {
+          id: '1',
+          name: 'John Doe',
+          email: 'john@example.com'
+        },
+        folder: {
+          id: '2',
+          name: 'Receipts',
+          path: '/Receipts'
+        },
+        versions: []
+      },
+      {
+        id: '3',
+        name: 'Contract_Client_B_2024.docx',
+        originalName: 'Contract_Client_B_2024.docx',
+        mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        size: 512000,
+        url: '/documents/contract_client_b.docx',
+        folderId: '3',
+        tags: ['contract', 'client-b', 'legal'],
+        isPublic: false,
+        createdAt: '2024-01-14T09:15:00Z',
+        updatedAt: '2024-01-14T09:15:00Z',
+        uploadedByUser: {
+          id: '2',
+          name: 'Jane Smith',
+          email: 'jane@example.com'
+        },
+        folder: {
+          id: '3',
+          name: 'Contracts',
+          path: '/Contracts'
+        },
+        versions: []
+      }
+    ];
+
+    const mockFolders: Folder[] = [
+      {
+        id: '1',
+        name: 'Invoices',
+        path: '/Invoices',
+        createdAt: '2024-01-01T00:00:00Z',
+        documentCount: 15
+      },
+      {
+        id: '2',
+        name: 'Receipts',
+        path: '/Receipts',
+        createdAt: '2024-01-01T00:00:00Z',
+        documentCount: 8
+      },
+      {
+        id: '3',
+        name: 'Contracts',
+        path: '/Contracts',
+        createdAt: '2024-01-01T00:00:00Z',
+        documentCount: 3
+      }
+    ];
+
+    setTimeout(() => {
+      setDocuments(mockDocuments);
+      setFolders(mockFolders);
+      setIsLoading(false);
+    }, 1000);
+  }, []);
 
   const filteredDocuments = documents.filter(doc => {
     const matchesSearch = doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         doc.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesCategory = selectedCategory === 'All Documents' || doc.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+                         doc.originalName.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesTags = selectedTags.length === 0 || 
+                       selectedTags.some(tag => doc.tags.includes(tag));
+    return matchesSearch && matchesTags;
   });
 
-  const getFileTypeColor = (type: string) => {
-    switch (type) {
-      case 'PDF':
-        return 'bg-red-100 text-red-800';
-      case 'Image':
-        return 'bg-blue-100 text-blue-800';
-      case 'Excel':
-        return 'bg-green-100 text-green-800';
-      case 'Word':
-        return 'bg-blue-100 text-blue-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+  const sortedDocuments = [...filteredDocuments].sort((a, b) => {
+    let comparison = 0;
+    switch (sortBy) {
+      case 'name':
+        comparison = a.name.localeCompare(b.name);
+        break;
+      case 'date':
+        comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        break;
+      case 'size':
+        comparison = a.size - b.size;
+        break;
+    }
+    return sortOrder === 'asc' ? comparison : -comparison;
+  });
+
+  const formatFileSize = (bytes: number): string => {
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    if (bytes === 0) return '0 Bytes';
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+  };
+
+  const getFileIcon = (mimeType: string) => {
+    if (mimeType.startsWith('image/')) return '🖼️';
+    if (mimeType.includes('pdf')) return '📄';
+    if (mimeType.includes('word')) return '📝';
+    if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return '📊';
+    if (mimeType.includes('powerpoint') || mimeType.includes('presentation')) return '📈';
+    return '📁';
+  };
+
+  const handleDocumentSelect = (documentId: string) => {
+    setSelectedDocuments(prev => 
+      prev.includes(documentId) 
+        ? prev.filter(id => id !== documentId)
+        : [...prev, documentId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedDocuments.length === sortedDocuments.length) {
+      setSelectedDocuments([]);
+    } else {
+      setSelectedDocuments(sortedDocuments.map(doc => doc.id));
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'processed':
-        return 'bg-green-100 text-green-800';
-      case 'processing':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'error':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+  const handleBulkAction = (action: string) => {
+    console.log(`Bulk action: ${action} on documents:`, selectedDocuments);
+    setSelectedDocuments([]);
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading documents...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-white">
-      {/* Hero Section */}
-      <section className="pt-24 pb-16 bg-gradient-to-br from-purple-50 via-white to-blue-50">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
-              Document
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600"> Management</span>
-            </h1>
-            <p className="mt-6 text-lg leading-8 text-gray-600 max-w-3xl mx-auto">
-              Organize, store, and manage all your business documents in one secure place. 
-              Upload receipts, invoices, contracts, and more with intelligent categorization and search.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Storage Overview */}
-      <section className="py-16 bg-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mr-4">
-                  <DocumentTextIcon className="h-6 w-6 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Documents</p>
-                  <p className="text-2xl font-bold text-gray-900">{storageStats.totalDocuments}</p>
-                </div>
-              </div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Documents</h1>
+              <p className="mt-2 text-gray-600">
+                Manage and organize your business documents
+              </p>
             </div>
-
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg mr-4">
-                  <CloudArrowUpIcon className="h-6 w-6 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Storage Used</p>
-                  <p className="text-2xl font-bold text-gray-900">{storageStats.usedStorage}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg mr-4">
-                  <FolderIcon className="h-6 w-6 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Available Storage</p>
-                  <p className="text-2xl font-bold text-gray-900">{storageStats.availableStorage}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-lg mr-4">
-                  <CalendarIcon className="h-6 w-6 text-yellow-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Last Backup</p>
-                  <p className="text-sm font-bold text-gray-900">{storageStats.lastBackup}</p>
-                </div>
-              </div>
+            
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => setShowUploadModal(true)}
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+              >
+                <CloudArrowUpIcon className="h-4 w-4 mr-2" />
+                Upload Files
+              </button>
             </div>
           </div>
         </div>
-      </section>
 
-      {/* Document Controls */}
-      <section className="py-16 bg-gray-50">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-            <div className="flex flex-col md:flex-row gap-6">
-              {/* Search */}
-              <div className="flex-1">
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Search documents..."
-                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-              </div>
+        {/* Filters and Search */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+            {/* Search */}
+            <div className="relative flex-1 max-w-md">
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search documents..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
 
-              {/* Category Filter */}
-              <div className="md:w-64">
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            {/* Filters */}
+            <div className="flex items-center space-x-4">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="date">Sort by Date</option>
+                <option value="name">Sort by Name</option>
+                <option value="size">Sort by Size</option>
+              </select>
+
+              <button
+                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                className="p-2 border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                <ArrowUpTrayIcon className={`h-4 w-4 ${sortOrder === 'asc' ? 'rotate-180' : ''}`} />
+              </button>
+
+              <div className="flex border border-gray-300 rounded-md">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 ${viewMode === 'grid' ? 'bg-blue-50 text-blue-600' : 'text-gray-500'}`}
                 >
-                  {categories.map((category) => (
-                    <option key={category.name} value={category.name}>
-                      {category.name} ({category.count})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Upload Button */}
-              <div>
-                <button className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-500 transition-colors flex items-center gap-2">
-                  <CloudArrowUpIcon className="h-5 w-5" />
-                  Upload
+                  <ViewColumnsIcon className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 ${viewMode === 'list' ? 'bg-blue-50 text-blue-600' : 'text-gray-500'}`}
+                >
+                  <ListBulletIcon className="h-4 w-4" />
                 </button>
               </div>
             </div>
           </div>
         </div>
-      </section>
 
-      {/* Categories Sidebar & Documents Grid */}
-      <section className="py-16 bg-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            {/* Categories Sidebar */}
-            <div className="lg:col-span-1">
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Categories</h3>
-                <div className="space-y-2">
-                  {categories.map((category) => {
-                    const Icon = category.icon;
-                    return (
-                      <button
-                        key={category.name}
-                        onClick={() => setSelectedCategory(category.name)}
-                        className={`w-full flex items-center justify-between p-3 rounded-lg transition-colors ${
-                          selectedCategory === category.name
-                            ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                            : 'text-gray-700 hover:bg-gray-50'
-                        }`}
-                      >
-                        <div className="flex items-center">
-                          <Icon className="h-5 w-5 mr-3" />
-                          <span className="text-sm font-medium">{category.name}</span>
-                        </div>
-                        <span className="text-xs text-gray-500">{category.count}</span>
-                      </button>
-                    );
-                  })}
-                </div>
+        {/* Bulk Actions */}
+        {selectedDocuments.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-blue-900">
+                {selectedDocuments.length} document(s) selected
+              </span>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => handleBulkAction('download')}
+                  className="inline-flex items-center px-3 py-1 border border-blue-300 rounded text-sm text-blue-700 hover:bg-blue-100"
+                >
+                  <DocumentArrowDownIcon className="h-4 w-4 mr-1" />
+                  Download
+                </button>
+                <button
+                  onClick={() => handleBulkAction('move')}
+                  className="inline-flex items-center px-3 py-1 border border-blue-300 rounded text-sm text-blue-700 hover:bg-blue-100"
+                >
+                  <FolderIcon className="h-4 w-4 mr-1" />
+                  Move
+                </button>
+                <button
+                  onClick={() => handleBulkAction('delete')}
+                  className="inline-flex items-center px-3 py-1 border border-red-300 rounded text-sm text-red-700 hover:bg-red-100"
+                >
+                  <TrashIcon className="h-4 w-4 mr-1" />
+                  Delete
+                </button>
               </div>
             </div>
+          </motion.div>
+        )}
 
-            {/* Documents Grid */}
-            <div className="lg:col-span-3">
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      Documents ({filteredDocuments.length})
-                    </h3>
-                    <div className="flex items-center space-x-2">
-                      {selectedDocuments.length > 0 && (
-                        <span className="text-sm text-gray-600">
-                          {selectedDocuments.length} selected
+        {/* Documents Grid/List */}
+        {viewMode === 'grid' ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {sortedDocuments.map((document) => (
+              <motion.div
+                key={document.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`bg-white rounded-lg shadow-sm border-2 p-4 cursor-pointer transition-all duration-200 ${
+                  selectedDocuments.includes(document.id)
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
+                }`}
+                onClick={() => handleDocumentSelect(document.id)}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center">
+                    <span className="text-2xl mr-2">{getFileIcon(document.mimeType)}</span>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-medium text-gray-900 truncate">
+                        {document.name}
+                      </h3>
+                      <p className="text-xs text-gray-500">
+                        {formatFileSize(document.size)}
+                      </p>
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={selectedDocuments.includes(document.id)}
+                    onChange={() => handleDocumentSelect(document.id)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  {document.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {document.tags.slice(0, 2).map((tag) => (
+                        <span
+                          key={tag}
+                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                      {document.tags.length > 2 && (
+                        <span className="text-xs text-gray-500">
+                          +{document.tags.length - 2} more
                         </span>
                       )}
-                      <button className="text-gray-600 hover:text-gray-500 p-2">
-                        <FunnelIcon className="h-5 w-5" />
-                      </button>
                     </div>
+                  )}
+
+                  <div className="flex items-center justify-between text-xs text-gray-500">
+                    <span>{new Date(document.createdAt).toLocaleDateString()}</span>
+                    <span>{document.uploadedByUser.name}</span>
                   </div>
                 </div>
 
-                <div className="divide-y divide-gray-200">
-                  {filteredDocuments.map((document) => (
-                    <div key={document.id} className="px-6 py-4 hover:bg-gray-50">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={selectedDocuments.includes(document.id)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedDocuments([...selectedDocuments, document.id]);
-                              } else {
-                                setSelectedDocuments(selectedDocuments.filter(id => id !== document.id));
-                              }
-                            }}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-4"
-                          />
-                          <div className="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-lg mr-4">
-                            <DocumentTextIcon className="h-5 w-5 text-gray-600" />
-                          </div>
-                          <div>
-                            <h4 className="text-lg font-semibold text-gray-900">{document.name}</h4>
-                            <div className="flex items-center space-x-4 text-sm text-gray-600">
-                              <span>{document.category}</span>
-                              <span>•</span>
-                              <span>{document.size}</span>
-                              <span>•</span>
-                              <span>{document.uploaded}</span>
-                            </div>
-                            <div className="flex items-center space-x-2 mt-2">
-                              {document.tags.map((tag, index) => (
-                                <span
-                                  key={index}
-                                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
-                                >
-                                  <TagIcon className="h-3 w-3 mr-1" />
-                                  {tag}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-4">
-                          <div className="flex items-center space-x-2">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getFileTypeColor(document.type)}`}>
-                              {document.type}
-                            </span>
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(document.status)}`}>
-                              {document.status}
-                            </span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <button className="text-gray-600 hover:text-gray-500 p-2">
-                              <EyeIcon className="h-4 w-4" />
-                            </button>
-                            <button className="text-gray-600 hover:text-gray-500 p-2">
-                              <ArrowDownTrayIcon className="h-4 w-4" />
-                            </button>
-                            <button className="text-gray-600 hover:text-gray-500 p-2">
-                              <ShareIcon className="h-4 w-4" />
-                            </button>
-                            <button className="text-red-600 hover:text-red-500 p-2">
-                              <TrashIcon className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                <div className="mt-3 flex items-center justify-between">
+                  <div className="flex space-x-1">
+                    <button className="p-1 text-gray-400 hover:text-gray-600">
+                      <EyeIcon className="h-4 w-4" />
+                    </button>
+                    <button className="p-1 text-gray-400 hover:text-gray-600">
+                      <ShareIcon className="h-4 w-4" />
+                    </button>
+                    <button className="p-1 text-gray-400 hover:text-gray-600">
+                      <DocumentArrowDownIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <button className="p-1 text-gray-400 hover:text-gray-600">
+                    <PencilIcon className="h-4 w-4" />
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div className="px-6 py-3 border-b border-gray-200 bg-gray-50">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={selectedDocuments.length === sortedDocuments.length && sortedDocuments.length > 0}
+                  onChange={handleSelectAll}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-3"
+                />
+                <div className="flex-1 grid grid-cols-12 gap-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <div className="col-span-4">Name</div>
+                  <div className="col-span-2">Size</div>
+                  <div className="col-span-2">Modified</div>
+                  <div className="col-span-2">Uploaded By</div>
+                  <div className="col-span-2">Actions</div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Recent Activity */}
-      <section className="py-16 bg-gray-50">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Recent Activity</h2>
-            <p className="text-lg text-gray-600">Track document uploads, processing, and sharing activities</p>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Document Activity Log</h3>
-            </div>
             <div className="divide-y divide-gray-200">
-              {recentActivity.map((activity) => (
-                <div key={activity.id} className="px-6 py-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-lg mr-4">
-                        <DocumentTextIcon className="h-5 w-5 text-blue-600" />
+              {sortedDocuments.map((document) => (
+                <motion.div
+                  key={document.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="px-6 py-4 hover:bg-gray-50"
+                >
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedDocuments.includes(document.id)}
+                      onChange={() => handleDocumentSelect(document.id)}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-3"
+                    />
+                    <div className="flex-1 grid grid-cols-12 gap-4 items-center">
+                      <div className="col-span-4 flex items-center">
+                        <span className="text-lg mr-3">{getFileIcon(document.mimeType)}</span>
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">{document.name}</div>
+                          <div className="text-xs text-gray-500">{document.folder?.name}</div>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="text-lg font-semibold text-gray-900">{activity.action}</h4>
-                        <p className="text-sm text-gray-600">
-                          {activity.document} • {activity.user} • {activity.timestamp}
-                        </p>
+                      <div className="col-span-2 text-sm text-gray-900">
+                        {formatFileSize(document.size)}
+                      </div>
+                      <div className="col-span-2 text-sm text-gray-500">
+                        {new Date(document.createdAt).toLocaleDateString()}
+                      </div>
+                      <div className="col-span-2 text-sm text-gray-500">
+                        {document.uploadedByUser.name}
+                      </div>
+                      <div className="col-span-2 flex items-center space-x-2">
+                        <button className="text-gray-400 hover:text-gray-600">
+                          <EyeIcon className="h-4 w-4" />
+                        </button>
+                        <button className="text-gray-400 hover:text-gray-600">
+                          <ShareIcon className="h-4 w-4" />
+                        </button>
+                        <button className="text-gray-400 hover:text-gray-600">
+                          <DocumentArrowDownIcon className="h-4 w-4" />
+                        </button>
+                        <button className="text-gray-400 hover:text-gray-600">
+                          <PencilIcon className="h-4 w-4" />
+                        </button>
                       </div>
                     </div>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {activity.type}
-                    </span>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
-        </div>
-      </section>
+        )}
 
-      {/* Document Features */}
-      <section className="py-16 bg-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Document Management Features</h2>
-            <p className="text-lg text-gray-600">Powerful tools for organizing and managing your business documents</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mb-4">
-                <CloudArrowUpIcon className="h-6 w-6 text-blue-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Smart Upload</h3>
-              <p className="text-gray-600 mb-4">Drag and drop or click to upload documents with automatic categorization.</p>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Bulk upload support</li>
-                <li>• Automatic categorization</li>
-                <li>• OCR text extraction</li>
-                <li>• File format validation</li>
-              </ul>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg mb-4">
-                <MagnifyingGlassIcon className="h-6 w-6 text-green-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Advanced Search</h3>
-              <p className="text-gray-600 mb-4">Find documents quickly with powerful search and filtering capabilities.</p>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Full-text search</li>
-                <li>• Tag-based filtering</li>
-                <li>• Date range filtering</li>
-                <li>• File type filtering</li>
-              </ul>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg mb-4">
-                <ShareIcon className="h-6 w-6 text-purple-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Secure Sharing</h3>
-              <p className="text-gray-600 mb-4">Share documents securely with team members and external parties.</p>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Password-protected links</li>
-                <li>• Expiration dates</li>
-                <li>• Access permissions</li>
-                <li>• Audit trails</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-16 bg-blue-600">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">
-            Organize Your Business Documents
-          </h2>
-          <p className="text-lg text-blue-100 mb-8 max-w-2xl mx-auto">
-            Store, organize, and manage all your business documents in one secure place. 
-            Smart categorization, powerful search, and seamless collaboration.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              href="/register"
-              className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
+        {/* Empty State */}
+        {sortedDocuments.length === 0 && (
+          <div className="text-center py-12">
+            <DocumentIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No documents found</h3>
+            <p className="text-gray-500 mb-4">
+              {searchQuery ? 'Try adjusting your search terms' : 'Upload your first document to get started'}
+            </p>
+            <button
+              onClick={() => setShowUploadModal(true)}
+              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
             >
-              Start Free Trial
-            </a>
-            <a
-              href="/contact"
-              className="bg-transparent text-white border border-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors"
-            >
-              Talk to Document Expert
-            </a>
+              <CloudArrowUpIcon className="h-4 w-4 mr-2" />
+              Upload Documents
+            </button>
           </div>
-        </div>
-      </section>
+        )}
+      </div>
     </div>
   );
 }
-

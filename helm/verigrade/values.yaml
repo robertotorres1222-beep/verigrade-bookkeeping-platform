@@ -1,0 +1,388 @@
+# Default values for verigrade
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  storageClass: ""
+
+# Image configuration
+image:
+  registry: ghcr.io
+  repository: verigrade
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+# Image pull secrets
+imagePullSecrets: []
+
+# Service account
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# Pod security context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+# Security context
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 3000
+  annotations: {}
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: app.verigrade.com
+      paths:
+        - path: /
+          pathType: Prefix
+    - host: api.verigrade.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: verigrade-tls
+      hosts:
+        - app.verigrade.com
+        - api.verigrade.com
+
+# Resource configuration
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+# Autoscaling configuration
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# Node selector
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Affinity
+affinity: {}
+
+# Pod disruption budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+
+# Network policy
+networkPolicy:
+  enabled: true
+  ingress: []
+  egress: []
+
+# Backend configuration
+backend:
+  enabled: true
+  image:
+    repository: verigrade/backend
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  replicas: 3
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 3000
+  env:
+    NODE_ENV: production
+    PORT: "3000"
+  envFrom:
+    - secretRef:
+        name: verigrade-secrets
+    - configMapRef:
+        name: verigrade-config
+
+# Frontend configuration
+frontend:
+  enabled: true
+  image:
+    repository: verigrade/frontend
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  replicas: 3
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 3000
+  env:
+    NODE_ENV: production
+    NEXT_PUBLIC_API_URL: "https://api.verigrade.com"
+  envFrom:
+    - secretRef:
+        name: verigrade-secrets
+    - configMapRef:
+        name: verigrade-config
+
+# PostgreSQL configuration
+postgresql:
+  enabled: true
+  auth:
+    postgresPassword: "postgres"
+    username: "verigrade"
+    password: "verigrade"
+    database: "verigrade"
+  primary:
+    persistence:
+      enabled: true
+      size: 20Gi
+      storageClass: "gp3"
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+      requests:
+        cpu: 500m
+        memory: 1Gi
+  readReplicas:
+    replicaCount: 2
+    persistence:
+      enabled: true
+      size: 20Gi
+      storageClass: "gp3"
+
+# Redis configuration
+redis:
+  enabled: true
+  auth:
+    enabled: true
+    password: "redis"
+  master:
+    persistence:
+      enabled: true
+      size: 5Gi
+      storageClass: "gp3"
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+  replica:
+    replicaCount: 2
+    persistence:
+      enabled: true
+      size: 5Gi
+      storageClass: "gp3"
+
+# Monitoring configuration
+monitoring:
+  enabled: true
+  prometheus:
+    enabled: true
+    server:
+      persistentVolume:
+        enabled: true
+        size: 10Gi
+        storageClass: "gp3"
+  grafana:
+    enabled: true
+    adminPassword: "admin"
+    persistence:
+      enabled: true
+      size: 5Gi
+      storageClass: "gp3"
+  jaeger:
+    enabled: true
+    collector:
+      resources:
+        limits:
+          cpu: 500m
+          memory: 512Mi
+        requests:
+          cpu: 250m
+          memory: 256Mi
+
+# Logging configuration
+logging:
+  enabled: true
+  elasticsearch:
+    enabled: true
+    master:
+      persistence:
+        enabled: true
+        size: 20Gi
+        storageClass: "gp3"
+      resources:
+        limits:
+          cpu: 1000m
+          memory: 2Gi
+        requests:
+          cpu: 500m
+          memory: 1Gi
+  kibana:
+    enabled: true
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1Gi
+      requests:
+        cpu: 250m
+        memory: 512Mi
+
+# Istio configuration
+istio:
+  enabled: true
+  gateway:
+    enabled: true
+  virtualService:
+    enabled: true
+  destinationRule:
+    enabled: true
+
+# External secrets configuration
+externalSecrets:
+  enabled: true
+  operator:
+    image:
+      repository: external-secrets/external-secrets
+      tag: "v0.8.3"
+    resources:
+      limits:
+        cpu: 200m
+        memory: 256Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+
+# AWS configuration
+aws:
+  region: us-east-1
+  secretsManager:
+    secretName: "verigrade/production/secrets"
+  s3:
+    bucket: "verigrade-documents"
+    region: us-east-1
+
+# Environment configuration
+environment:
+  name: production
+  tier: enterprise
+  region: us-east-1
+
+# Feature flags
+features:
+  aiCategorization: true
+  bankIntegration: true
+  mobileApp: true
+  apiAccess: true
+  whiteLabel: true
+  advancedInventory: true
+  timeTracking: true
+  projectManagement: true
+  advancedReporting: true
+  compliance: true
+  multiTenant: true
+
+# Security configuration
+security:
+  podSecurityPolicy:
+    enabled: true
+  networkPolicy:
+    enabled: true
+  rbac:
+    enabled: true
+  serviceAccount:
+    create: true
+    annotations: {}
+
+# Backup configuration
+backup:
+  enabled: true
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  retention: 30  # days
+  s3:
+    bucket: "verigrade-backups"
+    region: us-east-1
+
+# High availability configuration
+highAvailability:
+  enabled: true
+  multiAZ: true
+  crossRegion: false
+  backupRegion: us-west-2
+
+# Performance configuration
+performance:
+  cache:
+    enabled: true
+    size: 1Gi
+  cdn:
+    enabled: true
+    provider: "cloudflare"
+  compression:
+    enabled: true
+  minification:
+    enabled: true
+
+# Development configuration
+development:
+  enabled: false
+  hotReload: false
+  debug: false
+  logLevel: "info"
+
+# Testing configuration
+testing:
+  enabled: false
+  loadTest:
+    enabled: false
+    users: 100
+    duration: "5m"
+  chaos:
+    enabled: false
+    experiments: []
+
+
+
+
+

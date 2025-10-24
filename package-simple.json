@@ -1,0 +1,28 @@
+{
+  "name": "verigrade-backend-simple",
+  "version": "1.0.0",
+  "description": "VeriGrade Backend API - Simple Deployment",
+  "main": "deploy-simple.js",
+  "scripts": {
+    "start": "node deploy-simple.js",
+    "dev": "node deploy-simple.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "morgan": "^1.10.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "bookkeeping",
+    "accounting",
+    "saas",
+    "fintech"
+  ],
+  "author": "VeriGrade",
+  "license": "MIT"
+}
+

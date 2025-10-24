@@ -1,480 +1,565 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { 
-  CurrencyDollarIcon,
-  GlobeAltIcon,
+  PlusIcon,
+  PencilIcon,
+  TrashIcon,
   ArrowPathIcon,
   ChartBarIcon,
-  CalculatorIcon,
-  ClockIcon,
-  ExclamationTriangleIcon,
-  CheckCircleIcon,
-  PlusIcon,
-  EyeIcon
+  GlobeAltIcon,
+  CurrencyDollarIcon,
+  ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
+import { toast } from 'react-hot-toast';
+import CurrencySelector from '../../components/CurrencySelector';
+import CurrencyConverter from '../../components/CurrencyConverter';
 
-export default function CurrencyPage() {
-  const [supportedCurrencies] = useState([
-    { code: 'USD', name: 'US Dollar', symbol: '$', rate: 1.00, change: '+0.00%' },
-    { code: 'EUR', name: 'Euro', symbol: '€', rate: 0.85, change: '-0.12%' },
-    { code: 'GBP', name: 'British Pound', symbol: '£', rate: 0.73, change: '+0.08%' },
-    { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$', rate: 1.35, change: '-0.05%' },
-    { code: 'AUD', name: 'Australian Dollar', symbol: 'A$', rate: 1.52, change: '+0.15%' },
-    { code: 'JPY', name: 'Japanese Yen', symbol: '¥', rate: 110.25, change: '-0.03%' },
-    { code: 'CHF', name: 'Swiss Franc', symbol: 'CHF', rate: 0.92, change: '+0.02%' },
-    { code: 'CNY', name: 'Chinese Yuan', symbol: '¥', rate: 6.45, change: '-0.08%' }
-  ]);
+interface Currency {
+  id: string;
+  code: string;
+  name: string;
+  symbol: string;
+  rate: number;
+  isDefault: boolean;
+  isActive: boolean;
+  lastUpdated: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
-  const [transactions] = useState([
+interface CurrencyManagementProps {}
+
+const CurrencyManagement: React.FC<CurrencyManagementProps> = () => {
+  const [currencies, setCurrencies] = useState<Currency[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCurrency, setSelectedCurrency] = useState<Currency | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingCurrency, setEditingCurrency] = useState<Currency | null>(null);
+  const [newCurrency, setNewCurrency] = useState({
+    code: '',
+    name: '',
+    symbol: '',
+    rate: 1,
+    isDefault: false
+  });
+
+  useEffect(() => {
+    fetchCurrencies();
+  }, []);
+
+  const fetchCurrencies = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/currencies', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setCurrencies(data.data);
+      } else {
+        // Fallback data
+        setCurrencies(getFallbackCurrencies());
+      }
+    } catch (error) {
+      console.error('Error fetching currencies:', error);
+      setCurrencies(getFallbackCurrencies());
+      toast.error('Failed to load currencies');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getFallbackCurrencies = (): Currency[] => [
     {
-      id: 'TXN001',
-      date: '2024-01-15',
-      description: 'Client Payment - UK Project',
-      amount: '£5,000.00',
-      baseAmount: '$6,849.32',
-      currency: 'GBP',
-      rate: 0.73,
-      status: 'completed'
+      id: '1',
+      code: 'USD',
+      name: 'US Dollar',
+      symbol: '$',
+      rate: 1,
+      isDefault: true,
+      isActive: true,
+      lastUpdated: new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date()
     },
     {
-      id: 'TXN002',
-      date: '2024-01-14',
-      description: 'Software License - EU Vendor',
-      amount: '€2,500.00',
-      baseAmount: '$2,941.18',
-      currency: 'EUR',
+      id: '2',
+      code: 'EUR',
+      name: 'Euro',
+      symbol: '€',
       rate: 0.85,
-      status: 'completed'
+      isDefault: false,
+      isActive: true,
+      lastUpdated: new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date()
     },
     {
-      id: 'TXN003',
-      date: '2024-01-13',
-      description: 'Office Rent - Canada',
-      amount: 'C$3,200.00',
-      baseAmount: '$2,370.37',
-      currency: 'CAD',
-      rate: 1.35,
-      status: 'pending'
-    },
-    {
-      id: 'TXN004',
-      date: '2024-01-12',
-      description: 'Marketing Services - Australia',
-      amount: 'A$1,800.00',
-      baseAmount: '$1,184.21',
-      currency: 'AUD',
-      rate: 1.52,
-      status: 'completed'
+      id: '3',
+      code: 'GBP',
+      name: 'British Pound',
+      symbol: '£',
+      rate: 0.73,
+      isDefault: false,
+      isActive: true,
+      lastUpdated: new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date()
     }
-  ]);
+  ];
 
-  const [conversionHistory] = useState([
-    {
-      date: '2024-01-15',
-      from: 'EUR',
-      to: 'USD',
-      rate: 1.176,
-      amount: 1000,
-      converted: 1176
-    },
-    {
-      date: '2024-01-15',
-      from: 'GBP',
-      to: 'USD',
-      rate: 1.370,
-      amount: 500,
-      converted: 685
-    },
-    {
-      date: '2024-01-14',
-      from: 'CAD',
-      to: 'USD',
-      rate: 0.741,
-      amount: 2000,
-      converted: 1482
-    }
-  ]);
+  const handleAddCurrency = async () => {
+    try {
+      const response = await fetch('/api/currencies', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify(newCurrency)
+      });
 
-  const [currencySummary] = useState({
-    totalCurrencies: 8,
-    activeTransactions: 24,
-    totalConverted: '$45,230.50',
-    lastUpdate: '2024-01-15 10:30 AM',
-    baseCurrency: 'USD'
-  });
-
-  const [conversionForm, setConversionForm] = useState({
-    amount: '',
-    fromCurrency: 'USD',
-    toCurrency: 'EUR'
-  });
-
-  const [conversionResult, setConversionResult] = useState<number | null>(null);
-
-  const handleConversion = () => {
-    const fromRate = supportedCurrencies.find(c => c.code === conversionForm.fromCurrency)?.rate || 1;
-    const toRate = supportedCurrencies.find(c => c.code === conversionForm.toCurrency)?.rate || 1;
-    const amount = parseFloat(conversionForm.amount);
-    
-    if (amount && fromRate && toRate) {
-      const result = (amount / fromRate) * toRate;
-      setConversionResult(result);
+      if (response.ok) {
+        toast.success('Currency added successfully');
+        setShowAddModal(false);
+        setNewCurrency({ code: '', name: '', symbol: '', rate: 1, isDefault: false });
+        fetchCurrencies();
+      } else {
+        const data = await response.json();
+        toast.error(data.message || 'Failed to add currency');
+      }
+    } catch (error) {
+      console.error('Error adding currency:', error);
+      toast.error('Failed to add currency');
     }
   };
 
-  const getChangeColor = (change: string) => {
-    return change.startsWith('+') ? 'text-green-600' : 'text-red-600';
+  const handleEditCurrency = async () => {
+    if (!editingCurrency) return;
+
+    try {
+      const response = await fetch(`/api/currencies/${editingCurrency.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify(editingCurrency)
+      });
+
+      if (response.ok) {
+        toast.success('Currency updated successfully');
+        setShowEditModal(false);
+        setEditingCurrency(null);
+        fetchCurrencies();
+      } else {
+        const data = await response.json();
+        toast.error(data.message || 'Failed to update currency');
+      }
+    } catch (error) {
+      console.error('Error updating currency:', error);
+      toast.error('Failed to update currency');
+    }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'failed':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+  const handleDeleteCurrency = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this currency?')) return;
+
+    try {
+      const response = await fetch(`/api/currencies/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+
+      if (response.ok) {
+        toast.success('Currency deleted successfully');
+        fetchCurrencies();
+      } else {
+        const data = await response.json();
+        toast.error(data.message || 'Failed to delete currency');
+      }
+    } catch (error) {
+      console.error('Error deleting currency:', error);
+      toast.error('Failed to delete currency');
+    }
+  };
+
+  const handleRefreshRates = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/currencies/refresh', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+
+      if (response.ok) {
+        toast.success('Currency rates refreshed');
+        fetchCurrencies();
+      } else {
+        toast.error('Failed to refresh rates');
+      }
+    } catch (error) {
+      console.error('Error refreshing rates:', error);
+      toast.error('Failed to refresh rates');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSetDefault = async (id: string) => {
+    try {
+      const response = await fetch(`/api/currencies/${id}/set-default`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+
+      if (response.ok) {
+        toast.success('Default currency updated');
+        fetchCurrencies();
+      } else {
+        const data = await response.json();
+        toast.error(data.message || 'Failed to set default currency');
+      }
+    } catch (error) {
+      console.error('Error setting default currency:', error);
+      toast.error('Failed to set default currency');
+    }
+  };
+
+  const formatRate = (rate: number) => {
+    if (rate >= 1) {
+      return rate.toFixed(2);
+    } else {
+      return rate.toFixed(4);
     }
   };
 
   return (
-    <div className="bg-white">
-      {/* Hero Section */}
-      <section className="pt-24 pb-16 bg-gradient-to-br from-green-50 via-white to-blue-50">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
-              Multi-Currency
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-blue-600"> Support</span>
-            </h1>
-            <p className="mt-6 text-lg leading-8 text-gray-600 max-w-3xl mx-auto">
-              Handle transactions in multiple currencies with real-time exchange rates, 
-              automatic conversions, and comprehensive multi-currency reporting for global businesses.
-            </p>
-          </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Currency Management</h1>
+          <p className="text-gray-600">Manage currencies and exchange rates</p>
         </div>
-      </section>
-
-      {/* Currency Overview */}
-      <section className="py-16 bg-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mr-4">
-                  <GlobeAltIcon className="h-6 w-6 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Supported Currencies</p>
-                  <p className="text-2xl font-bold text-gray-900">{currencySummary.totalCurrencies}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg mr-4">
-                  <CurrencyDollarIcon className="h-6 w-6 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Active Transactions</p>
-                  <p className="text-2xl font-bold text-gray-900">{currencySummary.activeTransactions}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg mr-4">
-                  <ChartBarIcon className="h-6 w-6 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Converted</p>
-                  <p className="text-2xl font-bold text-gray-900">{currencySummary.totalConverted}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-lg mr-4">
-                  <ClockIcon className="h-6 w-6 text-yellow-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Last Update</p>
-                  <p className="text-lg font-bold text-gray-900">{currencySummary.lastUpdate}</p>
-                </div>
-              </div>
-            </div>
-          </div>
+        <div className="flex space-x-3">
+          <button
+            onClick={handleRefreshRates}
+            disabled={loading}
+            className="flex items-center px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+          >
+            <ArrowPathIcon className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Refresh Rates
+          </button>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            <PlusIcon className="h-4 w-4 mr-2" />
+            Add Currency
+          </button>
         </div>
-      </section>
+      </div>
 
       {/* Currency Converter */}
-      <section className="py-16 bg-gray-50">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Currency Converter</h2>
-            <p className="text-lg text-gray-600">Convert between currencies with real-time exchange rates</p>
+      <CurrencyConverter className="mb-6" />
+
+      {/* Currencies List */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Supported Currencies</h3>
+            <div className="text-sm text-gray-500">
+              {currencies.length} currencies
+            </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Amount</label>
-                <input
-                  type="number"
-                  value={conversionForm.amount}
-                  onChange={(e) => setConversionForm({ ...conversionForm, amount: e.target.value })}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter amount"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">From</label>
-                <select
-                  value={conversionForm.fromCurrency}
-                  onChange={(e) => setConversionForm({ ...conversionForm, fromCurrency: e.target.value })}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                >
-                  {supportedCurrencies.map((currency) => (
-                    <option key={currency.code} value={currency.code}>
-                      {currency.code} - {currency.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">To</label>
-                <select
-                  value={conversionForm.toCurrency}
-                  onChange={(e) => setConversionForm({ ...conversionForm, toCurrency: e.target.value })}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                >
-                  {supportedCurrencies.map((currency) => (
-                    <option key={currency.code} value={currency.code}>
-                      {currency.code} - {currency.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <ArrowPathIcon className="h-6 w-6 animate-spin text-gray-400" />
+              <span className="ml-2 text-gray-500">Loading currencies...</span>
             </div>
-
-            <div className="mt-6">
-              <button
-                onClick={handleConversion}
-                className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-500 transition-colors flex items-center justify-center gap-2"
-              >
-                <CalculatorIcon className="h-5 w-5" />
-                Convert Currency
-              </button>
-            </div>
-
-            {conversionResult && (
-              <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
-                <div className="text-center">
-                  <p className="text-lg font-semibold text-gray-900">
-                    {parseFloat(conversionForm.amount).toLocaleString()} {conversionForm.fromCurrency} =
-                  </p>
-                  <p className="text-2xl font-bold text-green-600">
-                    {conversionResult.toLocaleString()} {conversionForm.toCurrency}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* Supported Currencies */}
-      <section className="py-16 bg-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Supported Currencies</h2>
-            <p className="text-lg text-gray-600">Real-time exchange rates updated every hour</p>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">Exchange Rates (Base: {currencySummary.baseCurrency})</h3>
-                <div className="flex items-center text-sm text-gray-600">
-                  <ClockIcon className="h-4 w-4 mr-1" />
-                  Last updated: {currencySummary.lastUpdate}
-                </div>
-              </div>
-            </div>
+          ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Currency</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rate</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Change (24h)</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Currency
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Rate
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Last Updated
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {supportedCurrencies.map((currency) => (
-                    <tr key={currency.code}>
+                  {currencies.map((currency) => (
+                    <tr key={currency.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className="text-sm font-medium text-gray-900">{currency.code}</div>
-                          <div className="ml-2 text-sm text-gray-500">{currency.symbol}</div>
+                          <span className="text-lg mr-3">{currency.symbol}</span>
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {currency.code}
+                              {currency.isDefault && (
+                                <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                  Default
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-sm text-gray-500">{currency.name}</div>
+                          </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{currency.name}</div>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {formatRate(currency.rate)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{currency.rate.toFixed(4)}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className={`text-sm font-medium ${getChangeColor(currency.change)}`}>
-                          {currency.change}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          Active
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          currency.isActive 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {currency.isActive ? 'Active' : 'Inactive'}
                         </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {currency.lastUpdated.toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex items-center justify-end space-x-2">
+                          {!currency.isDefault && (
+                            <button
+                              onClick={() => handleSetDefault(currency.id)}
+                              className="text-blue-600 hover:text-blue-900"
+                              title="Set as default"
+                            >
+                              <GlobeAltIcon className="h-4 w-4" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => {
+                              setEditingCurrency(currency);
+                              setShowEditModal(true);
+                            }}
+                            className="text-indigo-600 hover:text-indigo-900"
+                            title="Edit currency"
+                          >
+                            <PencilIcon className="h-4 w-4" />
+                          </button>
+                          {!currency.isDefault && (
+                            <button
+                              onClick={() => handleDeleteCurrency(currency.id)}
+                              className="text-red-600 hover:text-red-900"
+                              title="Delete currency"
+                            >
+                              <TrashIcon className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          </div>
+          )}
         </div>
-      </section>
+      </div>
 
-      {/* Multi-Currency Transactions */}
-      <section className="py-16 bg-gray-50">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Multi-Currency Transactions</h2>
-            <p className="text-lg text-gray-600">Track transactions in different currencies with automatic conversions</p>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Recent Multi-Currency Transactions</h3>
-            </div>
-            <div className="divide-y divide-gray-200">
-              {transactions.map((transaction) => (
-                <div key={transaction.id} className="px-6 py-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-lg mr-4">
-                        <CurrencyDollarIcon className="h-5 w-5 text-blue-600" />
-                      </div>
-                      <div>
-                        <h4 className="text-lg font-semibold text-gray-900">{transaction.description}</h4>
-                        <p className="text-sm text-gray-600">{transaction.date} • Rate: {transaction.rate}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-lg font-bold text-gray-900">{transaction.amount}</div>
-                      <div className="text-sm text-gray-600">{transaction.baseAmount} USD</div>
-                      <div className="mt-1">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(transaction.status)}`}>
-                          {transaction.status}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Currency Features */}
-      <section className="py-16 bg-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Multi-Currency Features</h2>
-            <p className="text-lg text-gray-600">Powerful tools for global business operations</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mb-4">
-                <ArrowPathIcon className="h-6 w-6 text-blue-600" />
+      {/* Add Currency Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Add New Currency</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Currency Code
+                </label>
+                <input
+                  type="text"
+                  value={newCurrency.code}
+                  onChange={(e) => setNewCurrency({...newCurrency, code: e.target.value.toUpperCase()})}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="USD"
+                />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Real-Time Rates</h3>
-              <p className="text-gray-600 mb-4">Exchange rates updated hourly from multiple financial data providers.</p>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Live rate updates</li>
-                <li>• Historical rate data</li>
-                <li>• Rate alerts</li>
-                <li>• API integration</li>
-              </ul>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg mb-4">
-                <CalculatorIcon className="h-6 w-6 text-green-600" />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Currency Name
+                </label>
+                <input
+                  type="text"
+                  value={newCurrency.name}
+                  onChange={(e) => setNewCurrency({...newCurrency, name: e.target.value})}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="US Dollar"
+                />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Auto Conversion</h3>
-              <p className="text-gray-600 mb-4">Automatic currency conversion for reports and financial statements.</p>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Base currency reporting</li>
-                <li>• Multi-currency P&L</li>
-                <li>• Balance sheet conversion</li>
-                <li>• Tax reporting</li>
-              </ul>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg mb-4">
-                <ChartBarIcon className="h-6 w-6 text-purple-600" />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Symbol
+                </label>
+                <input
+                  type="text"
+                  value={newCurrency.symbol}
+                  onChange={(e) => setNewCurrency({...newCurrency, symbol: e.target.value})}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="$"
+                />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Currency Analytics</h3>
-              <p className="text-gray-600 mb-4">Track currency exposure and analyze exchange rate impact.</p>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Currency exposure reports</li>
-                <li>• Exchange rate impact</li>
-                <li>• Historical analysis</li>
-                <li>• Risk assessment</li>
-              </ul>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Exchange Rate
+                </label>
+                <input
+                  type="number"
+                  step="0.0001"
+                  value={newCurrency.rate}
+                  onChange={(e) => setNewCurrency({...newCurrency, rate: parseFloat(e.target.value) || 0})}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="1.0000"
+                />
+              </div>
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="isDefault"
+                  checked={newCurrency.isDefault}
+                  onChange={(e) => setNewCurrency({...newCurrency, isDefault: e.target.checked})}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="isDefault" className="ml-2 block text-sm text-gray-900">
+                  Set as default currency
+                </label>
+              </div>
+            </div>
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={handleAddCurrency}
+                className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+              >
+                Add Currency
+              </button>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>
-      </section>
+      )}
 
-      {/* CTA Section */}
-      <section className="py-16 bg-blue-600">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">
-            Go Global with Multi-Currency Support
-          </h2>
-          <p className="text-lg text-blue-100 mb-8 max-w-2xl mx-auto">
-            Handle international transactions with confidence. Real-time exchange rates, 
-            automatic conversions, and comprehensive multi-currency reporting.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              href="/register"
-              className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
-            >
-              Start Free Trial
-            </a>
-            <a
-              href="/contact"
-              className="bg-transparent text-white border border-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors"
-            >
-              Talk to Currency Expert
-            </a>
+      {/* Edit Currency Modal */}
+      {showEditModal && editingCurrency && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Edit Currency</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Currency Code
+                </label>
+                <input
+                  type="text"
+                  value={editingCurrency.code}
+                  onChange={(e) => setEditingCurrency({...editingCurrency, code: e.target.value.toUpperCase()})}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Currency Name
+                </label>
+                <input
+                  type="text"
+                  value={editingCurrency.name}
+                  onChange={(e) => setEditingCurrency({...editingCurrency, name: e.target.value})}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Symbol
+                </label>
+                <input
+                  type="text"
+                  value={editingCurrency.symbol}
+                  onChange={(e) => setEditingCurrency({...editingCurrency, symbol: e.target.value})}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Exchange Rate
+                </label>
+                <input
+                  type="number"
+                  step="0.0001"
+                  value={editingCurrency.rate}
+                  onChange={(e) => setEditingCurrency({...editingCurrency, rate: parseFloat(e.target.value) || 0})}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="editIsDefault"
+                  checked={editingCurrency.isDefault}
+                  onChange={(e) => setEditingCurrency({...editingCurrency, isDefault: e.target.checked})}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="editIsDefault" className="ml-2 block text-sm text-gray-900">
+                  Set as default currency
+                </label>
+              </div>
+            </div>
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={handleEditCurrency}
+                className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+              >
+                Update Currency
+              </button>
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingCurrency(null);
+                }}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
-      </section>
+      )}
     </div>
   );
-}
+};
 
+export default CurrencyManagement;

@@ -1,0 +1,165 @@
+{
+  "name": "VeriGrade - Invoice & Payment Tracking",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "invoice-created",
+        "responseMode": "responseNode"
+      },
+      "id": "webhook-invoice",
+      "name": "Invoice Created",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "operation": "sendEmail",
+        "email": "={{ $json.body.customerEmail }}",
+        "subject": "Invoice #{{ $json.body.invoiceNumber }} from {{ $json.body.companyName }}",
+        "emailFormat": "html",
+        "html": "<h2>Invoice #{{ $json.body.invoiceNumber }}</h2><p>Amount Due: ${{ $json.body.amount }}</p><p>Due Date: {{ $json.body.dueDate }}</p><p><a href='{{ $json.body.invoiceUrl }}'>View Invoice</a></p>"
+      },
+      "id": "send-invoice-email",
+      "name": "Send Invoice Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [460, 200]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * *"
+            }
+          ]
+        }
+      },
+      "id": "daily-check",
+      "name": "Daily Payment Check",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [240, 500]
+    },
+    {
+      "parameters": {
+        "url": "https://backend-lspqvhnjp-robertotos-projects.vercel.app/api/invoices/overdue",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "id": "fetch-overdue",
+      "name": "Fetch Overdue Invoices",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [460, 500]
+    },
+    {
+      "parameters": {
+        "operation": "sendEmail",
+        "email": "={{ $json.customerEmail }}",
+        "subject": "Payment Reminder - Invoice #{{ $json.invoiceNumber }}",
+        "text": "Hi {{ $json.customerName }},\n\nThis is a friendly reminder that Invoice #{{ $json.invoiceNumber }} for ${{ $json.amount }} was due on {{ $json.dueDate }}.\n\nPlease submit payment at your earliest convenience.\n\nThank you!"
+      },
+      "id": "send-reminder",
+      "name": "Send Payment Reminder",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [680, 500]
+    },
+    {
+      "parameters": {
+        "content": "💰 Payment Received!\n\nInvoice: #{{ $json.body.invoiceNumber }}\nCustomer: {{ $json.body.customerName }}\nAmount: ${{ $json.body.amount }}\n\n✅ Payment confirmed",
+        "channel": "#payments"
+      },
+      "id": "notify-payment",
+      "name": "Notify Payment Received",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, message: 'Invoice tracking initiated' }) }}"
+      },
+      "id": "response",
+      "name": "Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "Invoice Created": {
+      "main": [
+        [
+          {
+            "node": "Send Invoice Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Notify Payment Received",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Invoice Email": {
+      "main": [
+        [
+          {
+            "node": "Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily Payment Check": {
+      "main": [
+        [
+          {
+            "node": "Fetch Overdue Invoices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Overdue Invoices": {
+      "main": [
+        [
+          {
+            "node": "Send Payment Reminder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Payment Received": {
+      "main": [
+        [
+          {
+            "node": "Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "versionId": "1",
+  "id": "verigrade-invoice-tracking"
+}
+
+
+
+

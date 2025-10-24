@@ -1,0 +1,1153 @@
+openapi: 3.0.3
+info:
+  title: Verigrade Bookkeeping Platform API
+  description: |
+    Comprehensive API for the Verigrade bookkeeping platform providing 
+    financial management, inventory tracking, time tracking, and enterprise features.
+  version: 1.0.0
+  contact:
+    name: Verigrade Support
+    email: support@verigrade.com
+    url: https://verigrade.com/support
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.verigrade.com/v1
+    description: Production server
+  - url: https://staging-api.verigrade.com/v1
+    description: Staging server
+  - url: http://localhost:3001/api
+    description: Development server
+
+security:
+  - BearerAuth: []
+  - ApiKeyAuth: []
+
+paths:
+  # Authentication Endpoints
+  /auth/register:
+    post:
+      tags: [Authentication]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistration'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # Transaction Endpoints
+  /transactions:
+    get:
+      tags: [Transactions]
+      summary: Get all transactions
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: dateFrom
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: dateTo
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: List of transactions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags: [Transactions]
+      summary: Create a new transaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionCreate'
+      responses:
+        '201':
+          description: Transaction created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /transactions/{id}:
+    get:
+      tags: [Transactions]
+      summary: Get transaction by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Transaction details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Transactions]
+      summary: Update transaction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionUpdate'
+      responses:
+        '200':
+          description: Transaction updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Transactions]
+      summary: Delete transaction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Transaction deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Invoice Endpoints
+  /invoices:
+    get:
+      tags: [Invoices]
+      summary: Get all invoices
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, sent, paid, overdue, cancelled]
+        - name: clientId
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of invoices
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceList'
+
+    post:
+      tags: [Invoices]
+      summary: Create a new invoice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvoiceCreate'
+      responses:
+        '201':
+          description: Invoice created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+
+  # Inventory Endpoints
+  /inventory/products:
+    get:
+      tags: [Inventory]
+      summary: Get all products
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: lowStock
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of products
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductList'
+
+    post:
+      tags: [Inventory]
+      summary: Create a new product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductCreate'
+      responses:
+        '201':
+          description: Product created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+
+  # Time Tracking Endpoints
+  /time-tracking/entries:
+    get:
+      tags: [Time Tracking]
+      summary: Get time entries
+      parameters:
+        - name: projectId
+          in: query
+          schema:
+            type: string
+        - name: userId
+          in: query
+          schema:
+            type: string
+        - name: dateFrom
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: dateTo
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: List of time entries
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeEntryList'
+
+    post:
+      tags: [Time Tracking]
+      summary: Create time entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimeEntryCreate'
+      responses:
+        '201':
+          description: Time entry created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeEntry'
+
+  # AI/ML Endpoints
+  /ai/anomalies/{userId}:
+    get:
+      tags: [AI/ML]
+      summary: Detect anomalies for user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: dataType
+          in: query
+          schema:
+            type: string
+            enum: [transactions, invoices, expenses]
+      responses:
+        '200':
+          description: Anomalies detected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnomalyDetection'
+
+  /ai/predict-cash-flow/{userId}:
+    get:
+      tags: [AI/ML]
+      summary: Predict cash flow
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: days
+          in: query
+          schema:
+            type: integer
+            default: 30
+      responses:
+        '200':
+          description: Cash flow predictions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CashFlowPrediction'
+
+  # Client Portal Endpoints
+  /client-portal/dashboard/{clientId}:
+    get:
+      tags: [Client Portal]
+      summary: Get client dashboard
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Client dashboard data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientDashboard'
+
+  /client-portal/invoices/{clientId}:
+    get:
+      tags: [Client Portal]
+      summary: Get client invoices
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Client invoices
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceList'
+
+  # Security Endpoints
+  /security/audit-logs:
+    get:
+      tags: [Security]
+      summary: Get audit logs
+      parameters:
+        - name: userId
+          in: query
+          schema:
+            type: string
+        - name: action
+          in: query
+          schema:
+            type: string
+        - name: dateFrom
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: dateTo
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Audit logs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditLogList'
+
+  # Performance Endpoints
+  /performance/cache:
+    post:
+      tags: [Performance]
+      summary: Cache data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CacheRequest'
+      responses:
+        '200':
+          description: Data cached successfully
+
+  /performance/optimize-query:
+    post:
+      tags: [Performance]
+      summary: Optimize database query
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryOptimization'
+      responses:
+        '200':
+          description: Query optimization suggestions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryOptimizationResult'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  schemas:
+    # Authentication Schemas
+    UserRegistration:
+      type: object
+      required:
+        - email
+        - password
+        - name
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          minLength: 8
+          example: securePassword123
+        name:
+          type: string
+          example: John Doe
+        company:
+          type: string
+          example: Acme Corp
+
+    UserLogin:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          example: securePassword123
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        user:
+          $ref: '#/components/schemas/User'
+        expiresIn:
+          type: integer
+          example: 3600
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: user_123
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        role:
+          type: string
+          enum: [admin, manager, user]
+        createdAt:
+          type: string
+          format: date-time
+
+    # Transaction Schemas
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+          example: txn_123
+        amount:
+          type: number
+          format: float
+          example: 150.50
+        description:
+          type: string
+          example: Office supplies
+        category:
+          type: string
+          example: Office Expenses
+        date:
+          type: string
+          format: date
+        type:
+          type: string
+          enum: [income, expense, transfer]
+        status:
+          type: string
+          enum: [pending, completed, cancelled]
+        createdAt:
+          type: string
+          format: date-time
+
+    TransactionCreate:
+      type: object
+      required:
+        - amount
+        - description
+        - category
+        - date
+        - type
+      properties:
+        amount:
+          type: number
+          format: float
+        description:
+          type: string
+        category:
+          type: string
+        date:
+          type: string
+          format: date
+        type:
+          type: string
+          enum: [income, expense, transfer]
+        tags:
+          type: array
+          items:
+            type: string
+
+    TransactionUpdate:
+      type: object
+      properties:
+        amount:
+          type: number
+          format: float
+        description:
+          type: string
+        category:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+
+    TransactionList:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    # Invoice Schemas
+    Invoice:
+      type: object
+      properties:
+        id:
+          type: string
+          example: inv_123
+        invoiceNumber:
+          type: string
+          example: INV-2024-001
+        clientId:
+          type: string
+        clientName:
+          type: string
+        total:
+          type: number
+          format: float
+        status:
+          type: string
+          enum: [draft, sent, paid, overdue, cancelled]
+        dueDate:
+          type: string
+          format: date
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/InvoiceItem'
+
+    InvoiceCreate:
+      type: object
+      required:
+        - clientId
+        - items
+      properties:
+        clientId:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/InvoiceItemCreate'
+        dueDate:
+          type: string
+          format: date
+        notes:
+          type: string
+
+    InvoiceItem:
+      type: object
+      properties:
+        id:
+          type: string
+        description:
+          type: string
+        quantity:
+          type: number
+        unitPrice:
+          type: number
+          format: float
+        total:
+          type: number
+          format: float
+
+    InvoiceItemCreate:
+      type: object
+      required:
+        - description
+        - quantity
+        - unitPrice
+      properties:
+        description:
+          type: string
+        quantity:
+          type: number
+        unitPrice:
+          type: number
+          format: float
+
+    InvoiceList:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Invoice'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    # Product Schemas
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          example: prod_123
+        name:
+          type: string
+          example: Office Chair
+        sku:
+          type: string
+          example: CHAIR-001
+        description:
+          type: string
+        category:
+          type: string
+        price:
+          type: number
+          format: float
+        cost:
+          type: number
+          format: float
+        stockQuantity:
+          type: integer
+        lowStockThreshold:
+          type: integer
+        isActive:
+          type: boolean
+
+    ProductCreate:
+      type: object
+      required:
+        - name
+        - sku
+        - price
+      properties:
+        name:
+          type: string
+        sku:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        price:
+          type: number
+          format: float
+        cost:
+          type: number
+          format: float
+        stockQuantity:
+          type: integer
+        lowStockThreshold:
+          type: integer
+
+    ProductList:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    # Time Tracking Schemas
+    TimeEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          example: time_123
+        userId:
+          type: string
+        projectId:
+          type: string
+        description:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        duration:
+          type: number
+          format: float
+        isBillable:
+          type: boolean
+        hourlyRate:
+          type: number
+          format: float
+
+    TimeEntryCreate:
+      type: object
+      required:
+        - projectId
+        - description
+        - startTime
+        - endTime
+      properties:
+        projectId:
+          type: string
+        description:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        isBillable:
+          type: boolean
+        hourlyRate:
+          type: number
+          format: float
+
+    TimeEntryList:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeEntry'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    # AI/ML Schemas
+    AnomalyDetection:
+      type: object
+      properties:
+        userId:
+          type: string
+        dataType:
+          type: string
+        anomalies:
+          type: array
+          items:
+            $ref: '#/components/schemas/Anomaly'
+        detectedAt:
+          type: string
+          format: date-time
+
+    Anomaly:
+      type: object
+      properties:
+        type:
+          type: string
+          example: HIGH_SPENDING
+        severity:
+          type: string
+          enum: [LOW, MEDIUM, HIGH, CRITICAL]
+        description:
+          type: string
+        transactionId:
+          type: string
+        amount:
+          type: number
+          format: float
+
+    CashFlowPrediction:
+      type: object
+      properties:
+        userId:
+          type: string
+        predictions:
+          type: array
+          items:
+            $ref: '#/components/schemas/CashFlowForecast'
+        confidence:
+          type: number
+          format: float
+        generatedAt:
+          type: string
+          format: date-time
+
+    CashFlowForecast:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        predictedAmount:
+          type: number
+          format: float
+        confidence:
+          type: number
+          format: float
+
+    # Client Portal Schemas
+    ClientDashboard:
+      type: object
+      properties:
+        client:
+          $ref: '#/components/schemas/Client'
+        summary:
+          $ref: '#/components/schemas/ClientSummary'
+        recentActivity:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActivityLog'
+
+    Client:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+
+    ClientSummary:
+      type: object
+      properties:
+        totalInvoices:
+          type: integer
+        totalAmount:
+          type: number
+          format: float
+        pendingInvoices:
+          type: integer
+        activeProjects:
+          type: integer
+
+    ActivityLog:
+      type: object
+      properties:
+        id:
+          type: string
+        action:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        user:
+          $ref: '#/components/schemas/User'
+
+    # Security Schemas
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: string
+        action:
+          type: string
+        userId:
+          type: string
+        details:
+          type: object
+        timestamp:
+          type: string
+          format: date-time
+        ipAddress:
+          type: string
+        userAgent:
+          type: string
+
+    AuditLogList:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditLog'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    # Performance Schemas
+    CacheRequest:
+      type: object
+      required:
+        - key
+        - data
+      properties:
+        key:
+          type: string
+        data:
+          type: object
+        ttl:
+          type: integer
+          default: 3600
+
+    QueryOptimization:
+      type: object
+      required:
+        - query
+      properties:
+        query:
+          type: string
+        params:
+          type: array
+          items:
+            type: string
+
+    QueryOptimizationResult:
+      type: object
+      properties:
+        originalQuery:
+          type: string
+        optimizedQuery:
+          type: string
+        analysis:
+          $ref: '#/components/schemas/QueryAnalysis'
+        optimizations:
+          type: array
+          items:
+            $ref: '#/components/schemas/OptimizationSuggestion'
+
+    QueryAnalysis:
+      type: object
+      properties:
+        executionTime:
+          type: number
+        rowsExamined:
+          type: integer
+        rowsReturned:
+          type: integer
+        indexUsage:
+          type: array
+          items:
+            type: string
+        suggestions:
+          type: array
+          items:
+            type: string
+
+    OptimizationSuggestion:
+      type: object
+      properties:
+        type:
+          type: string
+        description:
+          type: string
+        priority:
+          type: string
+          enum: [LOW, MEDIUM, HIGH]
+
+    # Common Schemas
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalCount:
+          type: integer
+        totalPages:
+          type: integer
+        hasNext:
+          type: boolean
+        hasPrev:
+          type: boolean
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        statusCode:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Conflict:
+      description: Resource conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+tags:
+  - name: Authentication
+    description: User authentication and authorization
+  - name: Transactions
+    description: Financial transaction management
+  - name: Invoices
+    description: Invoice creation and management
+  - name: Inventory
+    description: Product and inventory management
+  - name: Time Tracking
+    description: Time tracking and project management
+  - name: AI/ML
+    description: Artificial intelligence and machine learning features
+  - name: Client Portal
+    description: Client-facing portal features
+  - name: Security
+    description: Security and compliance features
+  - name: Performance
+    description: Performance optimization and monitoring
+
+
+
+
+
+

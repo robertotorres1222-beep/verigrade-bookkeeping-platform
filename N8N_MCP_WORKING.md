@@ -84,3 +84,6 @@ Your n8n and MCP integration is fully functional! Here's what's working:
 
 
 
+
+
+

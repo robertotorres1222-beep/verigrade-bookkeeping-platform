@@ -1,0 +1,57 @@
+{
+  "name": "Transaction Categorization Workflow",
+  "description": "Uses AI to automatically categorize transactions",
+  "nodes": [
+    {
+      "name": "Scheduled Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "value": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get Uncategorized Transactions",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "url": "={{$node[\"Webhook\"].json.apiUrl}}/api/transactions/uncategorized",
+        "method": "GET"
+      }
+    },
+    {
+      "name": "AI Categorization",
+      "type": "n8n-nodes-base.openAi",
+      "parameters": {
+        "resource": "chat",
+        "operation": "create",
+        "messages": [
+          {
+            "role": "system",
+            "content": "You are a SaaS bookkeeping expert. Categorize this transaction:"
+          },
+          {
+            "role": "user",
+            "content": "{{$node[\"Get Uncategorized Transactions\"].json.description}}"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Update Transaction",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "url": "={{$node[\"Webhook\"].json.apiUrl}}/api/transactions/{{$node[\"Get Uncategorized Transactions\"].json.id}}",
+        "method": "PUT",
+        "body": {
+          "category": "={{$node[\"AI Categorization\"].json.choices[0].message.content}}"
+        }
+      }
+    }
+  ]
+}

@@ -208,3 +208,10 @@ if ($startLocal -eq "y") {
     Start-Process "http://localhost:3000"
 }
 
+
+
+
+
+
+
+

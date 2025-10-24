@@ -1,0 +1,94 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: verigrade-config
+  namespace: verigrade
+  labels:
+    app: verigrade
+    component: config
+data:
+  # Application URLs
+  app-url: "https://app.verigrade.com"
+  api-url: "https://api.verigrade.com"
+  
+  # Database Configuration
+  database-host: "postgres.verigrade.svc.cluster.local"
+  database-port: "5432"
+  database-name: "verigrade"
+  
+  # Redis Configuration
+  redis-host: "redis.verigrade.svc.cluster.local"
+  redis-port: "6379"
+  
+  # AWS Configuration
+  s3-bucket: "verigrade-documents"
+  s3-region: "us-east-1"
+  
+  # Plaid Configuration
+  plaid-env: "production"
+  
+  # Email Configuration
+  email-from: "noreply@verigrade.com"
+  email-reply-to: "support@verigrade.com"
+  
+  # Application Settings
+  app-name: "VeriGrade Bookkeeping Platform"
+  app-version: "1.0.0"
+  environment: "production"
+  
+  # Feature Flags
+  features-ai-categorization: "true"
+  features-bank-integration: "true"
+  features-mobile-app: "true"
+  features-api-access: "true"
+  features-white-label: "true"
+  
+  # Rate Limiting
+  rate-limit-requests: "1000"
+  rate-limit-window: "3600"
+  
+  # File Upload
+  max-file-size: "10485760" # 10MB
+  allowed-file-types: "image/jpeg,image/png,image/gif,application/pdf"
+  
+  # Session Configuration
+  session-secret: "verigrade-session-secret"
+  session-max-age: "86400000" # 24 hours
+  
+  # CORS Configuration
+  cors-origins: "https://app.verigrade.com,https://admin.verigrade.com"
+  cors-methods: "GET,POST,PUT,DELETE,OPTIONS"
+  cors-headers: "Content-Type,Authorization,X-Requested-With"
+  
+  # Logging Configuration
+  log-level: "info"
+  log-format: "json"
+  
+  # Monitoring Configuration
+  metrics-enabled: "true"
+  health-check-interval: "30"
+  
+  # Security Configuration
+  password-min-length: "8"
+  password-require-special: "true"
+  password-require-numbers: "true"
+  password-require-uppercase: "true"
+  
+  # Backup Configuration
+  backup-enabled: "true"
+  backup-schedule: "0 2 * * *" # Daily at 2 AM
+  backup-retention-days: "30"
+  
+  # Cache Configuration
+  cache-ttl: "3600" # 1 hour
+  cache-max-size: "1000"
+  
+  # Queue Configuration
+  queue-concurrency: "5"
+  queue-max-attempts: "3"
+  queue-timeout: "300"
+
+
+
+
+

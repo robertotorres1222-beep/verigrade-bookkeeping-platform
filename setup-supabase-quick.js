@@ -1,0 +1,36 @@
+#!/usr/bin/env node
+
+console.log('🚀 VeriGrade Supabase Quick Setup');
+console.log('');
+console.log('📋 YOUR SUPABASE PROJECT:');
+console.log('• Project ID: krdwxeeaxldgnhymukyb');
+console.log('• Dashboard: https://krdwxeeaxldgnhymukyb.supabase.co');
+console.log('');
+console.log('🔑 GET YOUR DATABASE CONNECTION STRING:');
+console.log('');
+console.log('1. Go to: https://krdwxeeaxldgnhymukyb.supabase.co');
+console.log('2. Click "Settings" (gear icon in sidebar)');
+console.log('3. Click "Database"');
+console.log('4. Scroll down to "Connection string"');
+console.log('5. Click "URI" tab');
+console.log('6. Copy the complete connection string');
+console.log('');
+console.log('📝 YOUR CONNECTION STRING WILL LOOK LIKE:');
+console.log('postgresql://postgres:[PASSWORD]@db.krdwxeeaxldgnhymukyb.supabase.co:5432/postgres');
+console.log('');
+console.log('🔧 UPDATE YOUR .env FILE:');
+console.log('');
+console.log('Replace these lines in backend/.env:');
+console.log('DATABASE_URL="postgresql://username:password@localhost:5432/verigrade_dev"');
+console.log('DIRECT_URL="postgresql://username:password@localhost:5432/verigrade_dev"');
+console.log('');
+console.log('With your Supabase connection string:');
+console.log('DATABASE_URL="postgresql://postgres:[PASSWORD]@db.krdwxeeaxldgnhymukyb.supabase.co:5432/postgres"');
+console.log('DIRECT_URL="postgresql://postgres:[PASSWORD]@db.krdwxeeaxldgnhymukyb.supabase.co:5432/postgres"');
+console.log('');
+console.log('✅ AFTER UPDATING .env, RUN:');
+console.log('cd backend');
+console.log('npx prisma db push');
+console.log('npx prisma generate');
+console.log('');
+console.log('🎉 YOUR SUPABASE WILL BE WORKING!');

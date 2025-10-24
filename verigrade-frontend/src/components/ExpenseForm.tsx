@@ -8,6 +8,7 @@ export default function ExpenseForm({ onClose }: { onClose: () => void }) {
   const [formData, setFormData] = useState({
     description: '',
     amount: '',
+    currency: 'USD',
     category: '',
     vendor: '',
     date: new Date().toISOString().split('T')[0],
@@ -35,6 +36,19 @@ export default function ExpenseForm({ onClose }: { onClose: () => void }) {
     'Other'
   ]
 
+  const currencies = [
+    { code: 'USD', name: 'US Dollar', symbol: '$' },
+    { code: 'EUR', name: 'Euro', symbol: '€' },
+    { code: 'GBP', name: 'British Pound', symbol: '£' },
+    { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$' },
+    { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
+    { code: 'JPY', name: 'Japanese Yen', symbol: '¥' },
+    { code: 'CHF', name: 'Swiss Franc', symbol: 'CHF' },
+    { code: 'CNY', name: 'Chinese Yuan', symbol: '¥' },
+    { code: 'INR', name: 'Indian Rupee', symbol: '₹' },
+    { code: 'BRL', name: 'Brazilian Real', symbol: 'R$' }
+  ]
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFormData({ ...formData, receipt: e.target.files[0] })
@@ -50,6 +64,7 @@ export default function ExpenseForm({ onClose }: { onClose: () => void }) {
       const expenseData = {
         description: formData.description,
         amount: parseFloat(formData.amount),
+        currency: formData.currency,
         category: formData.category,
         vendor: formData.vendor,
         date: formData.date,
@@ -118,15 +133,28 @@ export default function ExpenseForm({ onClose }: { onClose: () => void }) {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Amount *
                 </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  placeholder="0.00"
-                />
+                <div className="flex">
+                  <select
+                    className="px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                    value={formData.currency}
+                    onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+                  >
+                    {currencies.map(currency => (
+                      <option key={currency.code} value={currency.code}>
+                        {currency.symbol} {currency.code}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="number"
+                    step="0.01"
+                    required
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={formData.amount}
+                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                    placeholder="0.00"
+                  />
+                </div>
               </div>
             </div>
 

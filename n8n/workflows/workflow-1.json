@@ -1,0 +1,33 @@
+{
+  "name": "Invoice Processing Workflow",
+  "description": "Automatically processes new invoices and sends notifications",
+  "nodes": [
+    {
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "parameters": {
+        "path": "invoice-created",
+        "httpMethod": "POST"
+      }
+    },
+    {
+      "name": "Process Invoice",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "url": "={{$node[\"Webhook\"].json.apiUrl}}/api/invoices",
+        "method": "POST",
+        "body": "={{$node[\"Webhook\"].json}}"
+      }
+    },
+    {
+      "name": "Send Notification",
+      "type": "n8n-nodes-base.emailSend",
+      "parameters": {
+        "fromEmail": "noreply@verigrade.com",
+        "toEmail": "={{$node[\"Webhook\"].json.customerEmail}}",
+        "subject": "Invoice Created - {{$node[\"Webhook\"].json.invoiceNumber}}",
+        "message": "Your invoice has been created successfully."
+      }
+    }
+  ]
+}

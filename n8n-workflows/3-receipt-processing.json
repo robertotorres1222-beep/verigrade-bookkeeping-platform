@@ -1,0 +1,212 @@
+{
+  "name": "VeriGrade - Receipt Processing & Categorization",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "receipt-upload",
+        "responseMode": "responseNode"
+      },
+      "id": "webhook-receipt",
+      "name": "Receipt Uploaded",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "operation": "extractText",
+        "binaryPropertyName": "data",
+        "options": {
+          "ocrEngine": "tesseract"
+        }
+      },
+      "id": "ocr-extract",
+      "name": "OCR Extract Data",
+      "type": "n8n-nodes-base.ocrTextExtraction",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://backend-lspqvhnjp-robertotos-projects.vercel.app/api/ai/categorize-receipt",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "receiptText",
+              "value": "={{ $json.text }}"
+            },
+            {
+              "name": "merchant",
+              "value": "={{ $json.body.merchant }}"
+            },
+            {
+              "name": "amount",
+              "value": "={{ $json.body.amount }}"
+            }
+          ]
+        }
+      },
+      "id": "ai-categorize",
+      "name": "AI Categorization",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://backend-lspqvhnjp-robertotos-projects.vercel.app/api/expenses",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "merchant",
+              "value": "={{ $json.merchant }}"
+            },
+            {
+              "name": "amount",
+              "value": "={{ $json.amount }}"
+            },
+            {
+              "name": "category",
+              "value": "={{ $json.category }}"
+            },
+            {
+              "name": "date",
+              "value": "={{ $json.date }}"
+            },
+            {
+              "name": "receiptUrl",
+              "value": "={{ $('Receipt Uploaded').json.body.receiptUrl }}"
+            }
+          ]
+        }
+      },
+      "id": "create-expense",
+      "name": "Create Expense Record",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "upload",
+        "name": "={{ $json.merchant }}_{{ $json.date }}.pdf",
+        "binaryData": true,
+        "folderId": "={{ $json.categoryFolderId }}"
+      },
+      "id": "save-receipt",
+      "name": "Save to Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [900, 400]
+    },
+    {
+      "parameters": {
+        "content": "🧾 New Receipt Processed\n\nMerchant: {{ $json.merchant }}\nAmount: ${{ $json.amount }}\nCategory: {{ $json.category }}\nDate: {{ $json.date }}\n\n✅ Categorized & Filed",
+        "channel": "#receipts"
+      },
+      "id": "notify-team",
+      "name": "Notify Team",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.1,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, category: $json.category, merchant: $json.merchant, amount: $json.amount }) }}"
+      },
+      "id": "response",
+      "name": "Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1340, 300]
+    }
+  ],
+  "connections": {
+    "Receipt Uploaded": {
+      "main": [
+        [
+          {
+            "node": "OCR Extract Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OCR Extract Data": {
+      "main": [
+        [
+          {
+            "node": "AI Categorization",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Categorization": {
+      "main": [
+        [
+          {
+            "node": "Create Expense Record",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Save to Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Expense Record": {
+      "main": [
+        [
+          {
+            "node": "Notify Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to Drive": {
+      "main": [
+        [
+          {
+            "node": "Notify Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Team": {
+      "main": [
+        [
+          {
+            "node": "Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "versionId": "1",
+  "id": "verigrade-receipt-processing"
+}
+
+
+
+

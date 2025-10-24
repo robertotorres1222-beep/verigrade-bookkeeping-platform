@@ -88,3 +88,10 @@ Supabase was already set up!
 Just add these variables to Vercel now! ✅
 ========================================
 
+
+
+
+
+
+
+

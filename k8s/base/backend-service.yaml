@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: verigrade-backend
+  namespace: verigrade
+  labels:
+    app: verigrade-backend
+    component: backend
+    tier: api
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 3000
+    protocol: TCP
+    name: http
+  - port: 9090
+    targetPort: 9090
+    protocol: TCP
+    name: metrics
+  selector:
+    app: verigrade-backend
+  sessionAffinity: None
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: verigrade-backend
+  namespace: verigrade
+  labels:
+    app: verigrade-backend
+    component: backend
+automountServiceAccountToken: true
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: verigrade
+  name: verigrade-backend
+rules:
+- apiGroups: [""]
+  resources: ["secrets", "configmaps"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: verigrade-backend
+  namespace: verigrade
+subjects:
+- kind: ServiceAccount
+  name: verigrade-backend
+  namespace: verigrade
+roleRef:
+  kind: Role
+  name: verigrade-backend
+  apiGroup: rbac.authorization.k8s.io
+
+
+
+
+

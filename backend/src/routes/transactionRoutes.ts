@@ -137,6 +137,10 @@ router.get('/:id', [
  */
 router.post('/', [
   body('amount').isFloat({ min: 0 }).withMessage('Amount must be a positive number'),
+  body('currency').optional().isString().isLength({ min: 3, max: 3 }).withMessage('Currency must be a 3-letter code'),
+  body('originalAmount').optional().isFloat({ min: 0 }).withMessage('Original amount must be positive'),
+  body('originalCurrency').optional().isString().isLength({ min: 3, max: 3 }).withMessage('Original currency must be a 3-letter code'),
+  body('exchangeRate').optional().isFloat({ min: 0 }).withMessage('Exchange rate must be positive'),
   body('description').isString().isLength({ min: 1, max: 500 }).withMessage('Description is required'),
   body('date').optional().isISO8601().toDate(),
   body('category').optional().isString(),
@@ -156,6 +160,10 @@ router.post('/', [
 
     const transactionData = {
       amount: req.body.amount,
+      currency: req.body.currency || 'USD',
+      originalAmount: req.body.originalAmount,
+      originalCurrency: req.body.originalCurrency,
+      exchangeRate: req.body.exchangeRate,
       description: req.body.description,
       date: req.body.date,
       category: req.body.category,

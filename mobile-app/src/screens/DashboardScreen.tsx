@@ -1,45 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  Image,
-  Alert,
-  RefreshControl,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useNavigation } from '@react-navigation/native';
+import { ScrollView, StyleSheet, RefreshControl } from 'react-native';
+import { Card, Title, Paragraph, Button, FAB, List, Chip } from 'react-native-paper';
+import { useAuth } from '../contexts/AuthContext';
+import { useOffline } from '../contexts/OfflineContext';
+import { useSync } from '../contexts/SyncContext';
+import { apiService } from '../services/apiService';
 
-interface Transaction {
-  id: string;
-  description: string;
-  amount: number;
-  category: string;
-  date: string;
-  type: 'income' | 'expense';
-}
-
-interface DashboardStats {
-  totalRevenue: number;
-  totalExpenses: number;
-  netIncome: number;
-  transactionCount: number;
-}
-
-const DashboardScreen: React.FC = () => {
-  const navigation = useNavigation();
-  const [stats, setStats] = useState<DashboardStats>({
-    totalRevenue: 0,
-    totalExpenses: 0,
-    netIncome: 0,
-    transactionCount: 0,
-  });
-  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
+export default function DashboardScreen() {
+  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [loading, setLoading] = useState(true);
+  
+  const { user } = useAuth();
+  const { isOnline, isOfflineMode, pendingActions } = useOffline();
+  const { isSyncing, syncProgress, getSyncStatus } = useSync();
 
   useEffect(() => {
     loadDashboardData();
@@ -47,64 +21,13 @@ const DashboardScreen: React.FC = () => {
 
   const loadDashboardData = async () => {
     try {
-      setLoading(true);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock data
-      setStats({
-        totalRevenue: 45600.00,
-        totalExpenses: 32400.00,
-        netIncome: 13200.00,
-        transactionCount: 127,
-      });
-
-      setRecentTransactions([
-        {
-          id: '1',
-          description: 'Client Payment - Project Alpha',
-          amount: 5000.00,
-          category: 'Revenue',
-          date: '2024-01-15',
-          type: 'income',
-        },
-        {
-          id: '2',
-          description: 'Office Supplies',
-          amount: 245.67,
-          category: 'Office Expenses',
-          date: '2024-01-14',
-          type: 'expense',
-        },
-        {
-          id: '3',
-          description: 'Marketing Campaign',
-          amount: 1200.00,
-          category: 'Marketing',
-          date: '2024-01-13',
-          type: 'expense',
-        },
-        {
-          id: '4',
-          description: 'Consulting Services',
-          amount: 3200.00,
-          category: 'Revenue',
-          date: '2024-01-12',
-          type: 'income',
-        },
-        {
-          id: '5',
-          description: 'Software Subscription',
-          amount: 99.99,
-          category: 'Software',
-          date: '2024-01-11',
-          type: 'expense',
-        },
-      ]);
+      setIsLoading(true);
+      const data = await apiService.getDashboardData();
+      setDashboardData(data.data);
     } catch (error) {
-      Alert.alert('Error', 'Failed to load dashboard data');
+      console.error('Failed to load dashboard data:', error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -114,371 +37,232 @@ const DashboardScreen: React.FC = () => {
     setRefreshing(false);
   };
 
-  const StatCard: React.FC<{ title: string; value: string; icon: string; color: string }> = ({
-    title,
-    value,
-    icon,
-    color,
-  }) => (
-    <View style={[styles.statCard, { borderLeftColor: color }]}>
-      <View style={styles.statCardHeader}>
-        <Icon name={icon} size={24} color={color} />
-        <Text style={styles.statCardTitle}>{title}</Text>
-      </View>
-      <Text style={[styles.statCardValue, { color }]}>{value}</Text>
-    </View>
-  );
+  const getStatusColor = () => {
+    if (isOfflineMode) return '#FF9500';
+    if (!isOnline) return '#FF3B30';
+    if (isSyncing) return '#007AFF';
+    return '#34C759';
+  };
 
-  const TransactionItem: React.FC<{ transaction: Transaction }> = ({ transaction }) => (
-    <TouchableOpacity
-      style={styles.transactionItem}
-      onPress={() => navigation.navigate('TransactionDetail', { transaction })}
-    >
-      <View style={styles.transactionIcon}>
-        <Icon
-          name={transaction.type === 'income' ? 'trending-up' : 'trending-down'}
-          size={20}
-          color={transaction.type === 'income' ? '#10B981' : '#EF4444'}
-        />
-      </View>
-      <View style={styles.transactionContent}>
-        <Text style={styles.transactionDescription}>{transaction.description}</Text>
-        <Text style={styles.transactionCategory}>{transaction.category}</Text>
-        <Text style={styles.transactionDate}>{transaction.date}</Text>
-      </View>
-      <Text
-        style={[
-          styles.transactionAmount,
-          { color: transaction.type === 'income' ? '#10B981' : '#EF4444' },
-        ]}
-      >
-        {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)}
-      </Text>
-    </TouchableOpacity>
-  );
-
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading dashboard...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  const getStatusText = () => {
+    if (isOfflineMode) return 'Offline Mode';
+    if (!isOnline) return 'No Connection';
+    if (isSyncing) return `Syncing... ${syncProgress}%`;
+    return 'Online';
+  };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView
-        style={styles.scrollView}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Good morning!</Text>
-            <Text style={styles.subGreeting}>Here's your financial overview</Text>
-          </View>
-          <TouchableOpacity
-            style={styles.profileButton}
-            onPress={() => navigation.navigate('Profile')}
-          >
-            <Icon name="account-circle" size={32} color="#6B7280" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Stats Cards */}
-        <View style={styles.statsContainer}>
-          <StatCard
-            title="Total Revenue"
-            value={`$${stats.totalRevenue.toLocaleString()}`}
-            icon="trending-up"
-            color="#10B981"
-          />
-          <StatCard
-            title="Total Expenses"
-            value={`$${stats.totalExpenses.toLocaleString()}`}
-            icon="trending-down"
-            color="#EF4444"
-          />
-          <StatCard
-            title="Net Income"
-            value={`$${stats.netIncome.toLocaleString()}`}
-            icon="account-balance"
-            color="#3B82F6"
-          />
-          <StatCard
-            title="Transactions"
-            value={stats.transactionCount.toString()}
-            icon="receipt"
-            color="#8B5CF6"
-          />
-        </View>
-
-        {/* Quick Actions */}
-        <View style={styles.quickActionsContainer}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
-          <View style={styles.quickActions}>
-            <TouchableOpacity
-              style={styles.quickActionButton}
-              onPress={() => navigation.navigate('AddTransaction')}
+    <ScrollView 
+      style={styles.container}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
+      {/* Status Bar */}
+      <Card style={styles.statusCard}>
+        <Card.Content>
+          <View style={styles.statusRow}>
+            <Chip 
+              icon="wifi" 
+              style={[styles.statusChip, { backgroundColor: getStatusColor() }]}
             >
-              <Icon name="add" size={24} color="#FFFFFF" />
-              <Text style={styles.quickActionText}>Add Transaction</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.quickActionButton}
-              onPress={() => navigation.navigate('ReceiptCapture')}
-            >
-              <Icon name="camera-alt" size={24} color="#FFFFFF" />
-              <Text style={styles.quickActionText}>Scan Receipt</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.quickActionButton}
-              onPress={() => navigation.navigate('Reports')}
-            >
-              <Icon name="assessment" size={24} color="#FFFFFF" />
-              <Text style={styles.quickActionText}>Reports</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.quickActionButton}
-              onPress={() => navigation.navigate('Budget')}
-            >
-              <Icon name="account-balance-wallet" size={24} color="#FFFFFF" />
-              <Text style={styles.quickActionText}>Budget</Text>
-            </TouchableOpacity>
+              {getStatusText()}
+            </Chip>
+            {pendingActions.length > 0 && (
+              <Chip icon="clock" style={styles.pendingChip}>
+                {pendingActions.length} Pending
+              </Chip>
+            )}
           </View>
-        </View>
+        </Card.Content>
+      </Card>
 
-        {/* Recent Transactions */}
-        <View style={styles.recentTransactionsContainer}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recent Transactions</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Transactions')}>
-              <Text style={styles.seeAllText}>See All</Text>
-            </TouchableOpacity>
-          </View>
-          {recentTransactions.map((transaction) => (
-            <TransactionItem key={transaction.id} transaction={transaction} />
-          ))}
-        </View>
+      {/* Welcome Card */}
+      <Card style={styles.welcomeCard}>
+        <Card.Content>
+          <Title>Welcome back, {user?.firstName}!</Title>
+          <Paragraph>Here's your financial overview</Paragraph>
+        </Card.Content>
+      </Card>
 
-        {/* AI Insights */}
-        <View style={styles.insightsContainer}>
-          <Text style={styles.sectionTitle}>AI Insights</Text>
-          <View style={styles.insightCard}>
-            <Icon name="lightbulb-outline" size={24} color="#F59E0B" />
-            <View style={styles.insightContent}>
-              <Text style={styles.insightTitle}>Spending Alert</Text>
-              <Text style={styles.insightDescription}>
-                Your marketing expenses are 15% higher than last month. Consider reviewing your campaigns.
-              </Text>
-            </View>
-          </View>
-          <View style={styles.insightCard}>
-            <Icon name="trending-up" size={24} color="#10B981" />
-            <View style={styles.insightContent}>
-              <Text style={styles.insightTitle}>Revenue Growth</Text>
-              <Text style={styles.insightDescription}>
-                Great job! Your revenue has increased by 23% compared to last month.
-              </Text>
-            </View>
-          </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+      {/* Financial Summary */}
+      {dashboardData && (
+        <>
+          <Card style={styles.summaryCard}>
+            <Card.Content>
+              <Title>Financial Summary</Title>
+              <View style={styles.summaryRow}>
+                <View style={styles.summaryItem}>
+                  <Paragraph style={styles.summaryLabel}>Total Income</Paragraph>
+                  <Title style={styles.summaryValue}>
+                    ${dashboardData.totalIncome?.toLocaleString() || '0'}
+                  </Title>
+                </View>
+                <View style={styles.summaryItem}>
+                  <Paragraph style={styles.summaryLabel}>Total Expenses</Paragraph>
+                  <Title style={styles.summaryValue}>
+                    ${dashboardData.totalExpenses?.toLocaleString() || '0'}
+                  </Title>
+                </View>
+              </View>
+              <View style={styles.summaryRow}>
+                <View style={styles.summaryItem}>
+                  <Paragraph style={styles.summaryLabel}>Net Income</Paragraph>
+                  <Title style={[
+                    styles.summaryValue,
+                    { color: (dashboardData.netIncome || 0) >= 0 ? '#34C759' : '#FF3B30' }
+                  ]}>
+                    ${dashboardData.netIncome?.toLocaleString() || '0'}
+                  </Title>
+                </View>
+                <View style={styles.summaryItem}>
+                  <Paragraph style={styles.summaryLabel}>Pending Invoices</Paragraph>
+                  <Title style={styles.summaryValue}>
+                    ${dashboardData.pendingInvoices?.toLocaleString() || '0'}
+                  </Title>
+                </View>
+              </View>
+            </Card.Content>
+          </Card>
+
+          {/* Recent Transactions */}
+          <Card style={styles.transactionsCard}>
+            <Card.Content>
+              <Title>Recent Transactions</Title>
+              {dashboardData.recentTransactions?.map((transaction: any, index: number) => (
+                <List.Item
+                  key={index}
+                  title={transaction.description}
+                  description={`${transaction.type} • ${new Date(transaction.date).toLocaleDateString()}`}
+                  right={() => (
+                    <Paragraph style={[
+                      styles.transactionAmount,
+                      { color: transaction.type === 'income' ? '#34C759' : '#FF3B30' }
+                    ]}>
+                      {transaction.type === 'income' ? '+' : '-'}${transaction.amount}
+                    </Paragraph>
+                  )}
+                />
+              ))}
+            </Card.Content>
+          </Card>
+
+          {/* Quick Actions */}
+          <Card style={styles.actionsCard}>
+            <Card.Content>
+              <Title>Quick Actions</Title>
+              <View style={styles.actionButtons}>
+                <Button 
+                  mode="outlined" 
+                  onPress={() => {}}
+                  style={styles.actionButton}
+                >
+                  Add Expense
+                </Button>
+                <Button 
+                  mode="outlined" 
+                  onPress={() => {}}
+                  style={styles.actionButton}
+                >
+                  Create Invoice
+                </Button>
+                <Button 
+                  mode="outlined" 
+                  onPress={() => {}}
+                  style={styles.actionButton}
+                >
+                  Scan Receipt
+                </Button>
+              </View>
+            </Card.Content>
+          </Card>
+        </>
+      )}
+
+      {/* Sync Status */}
+      <Card style={styles.syncCard}>
+        <Card.Content>
+          <Title>Sync Status</Title>
+          <Paragraph>{getSyncStatus()}</Paragraph>
+          {isSyncing && (
+            <Paragraph>Progress: {syncProgress}%</Paragraph>
+          )}
+        </Card.Content>
+      </Card>
+    </ScrollView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#f5f5f5',
   },
-  scrollView: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    fontSize: 16,
-    color: '#6B7280',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    backgroundColor: '#FFFFFF',
-  },
-  greeting: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#111827',
-  },
-  subGreeting: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginTop: 4,
-  },
-  profileButton: {
-    padding: 8,
-  },
-  statsContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  statCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderLeftWidth: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  statCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  statusCard: {
+    margin: 16,
     marginBottom: 8,
   },
-  statCardTitle: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginLeft: 8,
-  },
-  statCardValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  quickActionsContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#111827',
-    marginBottom: 12,
-  },
-  quickActions: {
+  statusRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     justifyContent: 'space-between',
-  },
-  quickActionButton: {
-    backgroundColor: '#3B82F6',
-    borderRadius: 12,
-    padding: 16,
     alignItems: 'center',
-    width: '48%',
-    marginBottom: 12,
   },
-  quickActionText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '600',
+  statusChip: {
+    marginRight: 8,
+  },
+  pendingChip: {
+    backgroundColor: '#FF9500',
+  },
+  welcomeCard: {
+    margin: 16,
     marginTop: 8,
   },
-  recentTransactionsContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+  summaryCard: {
+    margin: 16,
+    marginTop: 8,
   },
-  sectionHeader: {
+  summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
+    marginTop: 16,
   },
-  seeAllText: {
-    color: '#3B82F6',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  transactionItem: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  transactionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F3F4F6',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  transactionContent: {
+  summaryItem: {
     flex: 1,
+    alignItems: 'center',
   },
-  transactionDescription: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 4,
-  },
-  transactionCategory: {
+  summaryLabel: {
     fontSize: 12,
-    color: '#6B7280',
-    marginBottom: 2,
+    color: '#666',
   },
-  transactionDate: {
-    fontSize: 12,
-    color: '#9CA3AF',
+  summaryValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  transactionsCard: {
+    margin: 16,
+    marginTop: 8,
   },
   transactionAmount: {
     fontSize: 16,
     fontWeight: 'bold',
   },
-  insightsContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    paddingBottom: 32,
+  actionsCard: {
+    margin: 16,
+    marginTop: 8,
   },
-  insightCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+  actionButtons: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    flexWrap: 'wrap',
+    marginTop: 16,
   },
-  insightContent: {
+  actionButton: {
+    margin: 4,
     flex: 1,
-    marginLeft: 12,
+    minWidth: 100,
   },
-  insightTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 4,
-  },
-  insightDescription: {
-    fontSize: 14,
-    color: '#6B7280',
-    lineHeight: 20,
+  syncCard: {
+    margin: 16,
+    marginTop: 8,
+    marginBottom: 100,
   },
 });
-
-export default DashboardScreen;

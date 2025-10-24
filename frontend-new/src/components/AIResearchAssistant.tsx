@@ -95,7 +95,7 @@ export default function AIResearchAssistant() {
           break;
       }
 
-      const response = await fetch(`http://localhost:3001${endpoint}`, {
+      const response = await fetch(`https://backend-lspqvhnjp-robertotos-projects.vercel.app${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

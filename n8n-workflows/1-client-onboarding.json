@@ -1,0 +1,174 @@
+{
+  "name": "VeriGrade - Client Onboarding Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "client-onboarding",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "New Client Signup",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "client-onboarding"
+    },
+    {
+      "parameters": {
+        "operation": "sendEmail",
+        "email": "={{ $json.body.email }}",
+        "subject": "Welcome to VeriGrade Bookkeeping!",
+        "text": "Hi {{ $json.body.firstName }},\n\nWelcome to VeriGrade! We're excited to help manage your bookkeeping.\n\nNext Steps:\n1. Complete your profile\n2. Upload initial documents\n3. Schedule your onboarding call\n\nBest regards,\nVeriGrade Team"
+      },
+      "id": "send-welcome-email",
+      "name": "Send Welcome Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [460, 200]
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "operation": "create",
+        "name": "={{ $json.body.companyName }} - {{ $json.body.firstName }} {{ $json.body.lastName }}",
+        "options": {}
+      },
+      "id": "create-folder",
+      "name": "Create Client Folder",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "additionalFields": {
+          "customFieldsUi": {
+            "customFieldsValues": [
+              {
+                "fieldId": "company",
+                "value": "={{ $json.body.companyName }}"
+              },
+              {
+                "fieldId": "industry",
+                "value": "={{ $json.body.industry }}"
+              }
+            ]
+          }
+        },
+        "email": "={{ $json.body.email }}",
+        "firstName": "={{ $json.body.firstName }}",
+        "lastName": "={{ $json.body.lastName }}"
+      },
+      "id": "add-to-crm",
+      "name": "Add to CRM",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [460, 400]
+    },
+    {
+      "parameters": {
+        "content": "📋 New Client Onboarded!\n\nName: {{ $json.body.firstName }} {{ $json.body.lastName }}\nCompany: {{ $json.body.companyName }}\nEmail: {{ $json.body.email }}\nIndustry: {{ $json.body.industry }}\n\n✅ Welcome email sent\n✅ Client folder created\n✅ Added to CRM",
+        "channel": "#new-clients"
+      },
+      "id": "notify-team",
+      "name": "Notify Team (Slack)",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, message: 'Client onboarding initiated', clientId: $json.body.email }) }}"
+      },
+      "id": "response",
+      "name": "Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "New Client Signup": {
+      "main": [
+        [
+          {
+            "node": "Send Welcome Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create Client Folder",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Add to CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Welcome Email": {
+      "main": [
+        [
+          {
+            "node": "Notify Team (Slack)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Client Folder": {
+      "main": [
+        [
+          {
+            "node": "Notify Team (Slack)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add to CRM": {
+      "main": [
+        [
+          {
+            "node": "Notify Team (Slack)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Team (Slack)": {
+      "main": [
+        [
+          {
+            "node": "Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all"
+  },
+  "versionId": "1",
+  "id": "verigrade-client-onboarding",
+  "tags": []
+}
+
+
+
+

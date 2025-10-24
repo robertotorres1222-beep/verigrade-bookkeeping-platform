@@ -1,0 +1,506 @@
+{
+  "prompts": [
+    {
+      "id": "financial-health-assessment",
+      "title": "Comprehensive Financial Health Assessment",
+      "category": "financial-analysis",
+      "description": "Analyze the client's financial health and create an executive briefing with strengths, areas for attention, and actionable recommendations.",
+      "fields": [
+        {"name": "CLIENT_INDUSTRY", "type": "text", "autoFill": "user.industry", "label": "Client Industry"},
+        {"name": "BUSINESS_MODEL", "type": "text", "autoFill": "user.businessModel", "label": "Business Model"},
+        {"name": "EMPLOYEE_COUNT", "type": "number", "autoFill": "user.employeeCount", "label": "Employee Count"},
+        {"name": "REVENUE_RANGE", "type": "text", "autoFill": "metrics.annualRevenue", "label": "Annual Revenue Range"},
+        {"name": "FINANCIAL_DATA", "type": "textarea", "autoFill": "metrics.financialRatios", "label": "Key Financial Data (ratios, cash flow, growth metrics)"}
+      ],
+      "prompt": "You are a senior financial advisor with 15+ years of experience in [CLIENT_INDUSTRY].\n\nCONTEXT: Client operates [BUSINESS_MODEL] with [EMPLOYEE_COUNT] employees, generating approximately [REVENUE_RANGE] annually.\n\nFINANCIAL DATA: [FINANCIAL_DATA]\n\nTASK: Analyze the client's financial health and create an executive briefing that includes:\n1. Three critical financial strengths to leverage for growth\n2. Three immediate areas requiring attention with risk assessments\n3. Five specific, actionable recommendations with expected ROI\n4. Implementation timeline with quarterly milestones\n5. Key performance indicators to monitor progress\n\nFORMAT: Structure as a professional executive summary suitable for board presentation, including visual data highlights and clear action steps.",
+      "expectedOutputFormat": "executive-summary",
+      "tags": ["financial-analysis", "executive-briefing", "strategic-planning"]
+    },
+    {
+      "id": "cash-flow-optimization",
+      "title": "Cash Flow Optimization Strategy",
+      "category": "financial-analysis",
+      "description": "Develop a comprehensive cash flow optimization plan with immediate actions, medium-term strategies, and technology solutions.",
+      "fields": [
+        {"name": "BUSINESS_SIZE", "type": "text", "autoFill": "user.businessSize", "label": "Business Size"},
+        {"name": "INDUSTRY", "type": "text", "autoFill": "user.industry", "label": "Industry"},
+        {"name": "BUSINESS_TYPE", "type": "select", "options": ["SERVICE", "PRODUCT", "HYBRID"], "label": "Business Type"},
+        {"name": "SEASONALITY", "type": "textarea", "autoFill": "metrics.seasonalPatterns", "label": "Seasonal Patterns"},
+        {"name": "CASH_CONVERSION_CYCLE", "type": "number", "autoFill": "metrics.cashConversionCycle", "label": "Current Cash Conversion Cycle (days)"},
+        {"name": "CASH_FLOW_CHALLENGES", "type": "textarea", "label": "Major Cash Flow Challenges"}
+      ],
+      "prompt": "You are a cash flow management expert specializing in [BUSINESS_SIZE] businesses in [INDUSTRY].\n\nCONTEXT:\n- Business type: [BUSINESS_TYPE]\n- Seasonal patterns: [SEASONALITY]\n- Current cash conversion cycle: [CASH_CONVERSION_CYCLE] days\n- Major cash flow challenges: [CASH_FLOW_CHALLENGES]\n\nTASK: Develop a comprehensive cash flow optimization plan including:\n1. Immediate actions to improve cash position (next 30 days)\n2. Medium-term strategies for sustainable improvement (3-6 months)\n3. Specific KPIs to monitor with target benchmarks\n4. Risk mitigation strategies for identified vulnerabilities\n5. Technology solutions to automate cash flow management\n\nPresent recommendations prioritized by implementation difficulty and expected impact.",
+      "expectedOutputFormat": "action-plan",
+      "tags": ["cash-flow", "optimization", "financial-planning"]
+    },
+    {
+      "id": "strategic-tax-planning",
+      "title": "Strategic Tax Planning Framework",
+      "category": "tax-compliance",
+      "description": "Create a proactive multi-year tax planning strategy with immediate opportunities, entity optimization, and compliance risk assessment.",
+      "fields": [
+        {"name": "ENTITY_TYPE", "type": "select", "options": ["LLC", "S-Corp", "C-Corp", "Partnership"], "autoFill": "user.entityType", "label": "Entity Structure"},
+        {"name": "REVENUE_RANGE", "type": "text", "autoFill": "metrics.annualRevenue", "label": "Revenue Range"},
+        {"name": "EFFECTIVE_TAX_RATE", "type": "number", "autoFill": "metrics.effectiveTaxRate", "label": "Current Effective Tax Rate (%)"},
+        {"name": "GROWTH_RATE", "type": "number", "autoFill": "metrics.growthRate", "label": "Growth Projections (%)"},
+        {"name": "CURRENT_STRATEGIES", "type": "textarea", "label": "Current Tax Planning Strategies"}
+      ],
+      "prompt": "You are a tax strategist with expertise in [ENTITY_TYPE] tax optimization for [REVENUE_RANGE] businesses.\n\nCONTEXT:\n- Current effective tax rate: [EFFECTIVE_TAX_RATE]%\n- Entity structure: [ENTITY_TYPE]\n- Growth projections: [GROWTH_RATE]%\n- Current tax planning strategies: [CURRENT_STRATEGIES]\n\nTASK: Create a proactive multi-year tax planning strategy that includes:\n1. Immediate tax-saving opportunities for current year with dollar estimates\n2. Entity structure optimization recommendations\n3. Multi-year tax planning calendar with quarterly action items\n4. Integration with retirement and succession planning\n5. Compliance risk assessment and mitigation strategies\n\nEnsure all recommendations comply with current tax law and include implementation complexity ratings.",
+      "expectedOutputFormat": "tax-strategy",
+      "tags": ["tax-planning", "entity-optimization", "compliance"]
+    },
+    {
+      "id": "technical-content-simplifier",
+      "title": "Technical Content Simplifier",
+      "category": "content-communication",
+      "description": "Create engaging, educational content that simplifies complex accounting principles for business owners.",
+      "fields": [
+        {"name": "SOPHISTICATION_LEVEL", "type": "select", "options": ["Beginner", "Intermediate", "Advanced"], "label": "Financial Knowledge Level"},
+        {"name": "TOPIC", "type": "text", "label": "Specific Accounting Principle/Regulation"},
+        {"name": "AUDIENCE", "type": "text", "autoFill": "user.industry", "label": "Target Industry"},
+        {"name": "BUSINESS_CHALLENGE", "type": "textarea", "label": "Current Business Challenge"}
+      ],
+      "prompt": "You are an accounting content specialist creating educational materials for business owners with [SOPHISTICATION_LEVEL] financial knowledge.\n\nCONTEXT:\n- Topic: [TOPIC]\n- Audience: [AUDIENCE] business owners\n- Current challenge: [BUSINESS_CHALLENGE]\n\nTASK: Create engaging, educational content that includes:\n1. Plain-language explanation with real-world analogies\n2. Industry-specific examples showing practical application\n3. Step-by-step action plan readers can implement immediately\n4. Common mistakes to avoid with cost implications\n5. Clear indicators of when to seek professional assistance\n\nFORMAT: 800-1000 word blog post with clear headings, bullet points, and actionable takeaways that position your firm as the trusted advisor.",
+      "expectedOutputFormat": "blog-post",
+      "tags": ["content-creation", "education", "marketing"]
+    },
+    {
+      "id": "client-newsletter-generator",
+      "title": "Client Newsletter Content Generator",
+      "category": "content-communication",
+      "description": "Develop newsletter content including lead stories, industry insights, seasonal reminders, and client success stories.",
+      "fields": [
+        {"name": "RECENT_DEVELOPMENTS", "type": "textarea", "label": "Recent Tax Law Changes/Economic Trends"},
+        {"name": "PRIMARY_INDUSTRIES", "type": "textarea", "autoFill": "user.industries", "label": "Primary Industries and Business Sizes"},
+        {"name": "BUSINESS_CYCLES", "type": "textarea", "label": "Relevant Business Cycles"}
+      ],
+      "prompt": "You are a marketing specialist for accounting firms creating monthly client newsletters.\n\nCONTEXT:\n- Recent developments: [RECENT_DEVELOPMENTS]\n- Client base: [PRIMARY_INDUSTRIES]\n- Seasonal considerations: [BUSINESS_CYCLES]\n\nTASK: Develop newsletter content including:\n1. Lead story on most impactful recent development with client action items\n2. Three brief industry-specific insights with implementation tips\n3. Seasonal financial planning reminder with deadline calendar\n4. Client success story (anonymized) highlighting achieved results\n5. Featured service spotlight with clear value proposition\n\nCONSTRAINTS: Maximum 500 words total, professional but approachable tone, include specific call-to-action for consultation scheduling.",
+      "expectedOutputFormat": "newsletter",
+      "tags": ["newsletter", "marketing", "client-communication"]
+    },
+    {
+      "id": "social-media-strategy",
+      "title": "Social Media Content Strategy",
+      "category": "content-communication",
+      "description": "Generate five LinkedIn posts including educational tips, industry insights, client success stories, and firm culture content.",
+      "fields": [
+        {"name": "FIRM_SPECIALTIES", "type": "textarea", "label": "Key Service Areas"},
+        {"name": "CLIENT_DEMOGRAPHICS", "type": "textarea", "label": "Client Demographics"},
+        {"name": "SUCCESS_METRICS", "type": "textarea", "label": "Recent Client Achievements"},
+        {"name": "ECONOMIC_FACTORS", "type": "textarea", "label": "Current Business Environment"}
+      ],
+      "prompt": "You are a digital marketing expert specializing in professional services with expertise in [FIRM_SPECIALTIES].\n\nCONTEXT:\n- Firm specialties: [FIRM_SPECIALTIES]\n- Target audience: [CLIENT_DEMOGRAPHICS]\n- Recent client achievements: [SUCCESS_METRICS]\n- Current business environment: [ECONOMIC_FACTORS]\n\nTASK: Generate five LinkedIn posts including:\n1. Educational tip with immediate practical application\n2. Industry insight with firm's unique perspective\n3. Client success story (anonymized) with measurable results\n4. Seasonal business reminder with action steps\n5. Behind-the-scenes firm culture content that builds trust\n\nFORMAT: Each post optimized for LinkedIn with appropriate hashtags, engagement-driving questions, and clear value propositions.",
+      "expectedOutputFormat": "social-posts",
+      "tags": ["social-media", "linkedin", "marketing"]
+    },
+    {
+      "id": "contract-financial-analysis",
+      "title": "Contract Financial Analysis",
+      "category": "financial-analysis",
+      "description": "Provide comprehensive analysis of contract financial terms, revenue recognition implications, and cash flow impact.",
+      "fields": [
+        {"name": "CONTRACT_TYPE", "type": "text", "label": "Contract Type"},
+        {"name": "CONTRACT_VALUE", "type": "number", "label": "Contract Value ($)"},
+        {"name": "TERM_LENGTH", "type": "text", "label": "Term Length"},
+        {"name": "BUSINESS_CONTEXT", "type": "textarea", "label": "How This Fits Strategy"}
+      ],
+      "prompt": "You are a financial analyst specializing in contract review for accounting implications.\n\nCONTEXT:\n- Document type: [CONTRACT_TYPE]\n- Contract value: $[CONTRACT_VALUE]\n- Term length: [TERM_LENGTH]\n- Business context: [BUSINESS_CONTEXT]\n\nTASK: Provide comprehensive analysis covering:\n1. Key financial terms and their accounting treatment under current standards\n2. Revenue recognition implications with timing analysis\n3. Cash flow impact assessment with monthly projections\n4. Tax considerations and optimization opportunities\n5. Recommended financial controls and monitoring procedures\n\nInclude timeline of critical dates requiring attention and integration requirements with existing accounting systems.",
+      "expectedOutputFormat": "contract-analysis",
+      "tags": ["contracts", "financial-analysis", "compliance"]
+    },
+    {
+      "id": "financial-statement-variance",
+      "title": "Financial Statement Variance Analysis",
+      "category": "financial-analysis",
+      "description": "Perform comprehensive variance analysis including significant variances, root cause analysis, and management recommendations.",
+      "fields": [
+        {"name": "TIME_PERIOD", "type": "text", "label": "Analysis Time Period"},
+        {"name": "CURRENT_ACTUALS", "type": "textarea", "autoFill": "metrics.currentPeriod", "label": "Current Period Actuals"},
+        {"name": "COMPARISON_BASIS", "type": "select", "options": ["Budget", "Prior Year", "Forecast"], "label": "Comparison Basis"},
+        {"name": "BUSINESS_FACTORS", "type": "textarea", "label": "Known Business Influences"},
+        {"name": "INDUSTRY_BENCHMARKS", "type": "textarea", "label": "Relevant Industry Metrics"}
+      ],
+      "prompt": "You are a senior financial analyst conducting variance analysis for [TIME_PERIOD].\n\nCONTEXT:\n- Financial data: [CURRENT_ACTUALS]\n- Comparison basis: [COMPARISON_BASIS]\n- Business factors: [BUSINESS_FACTORS]\n- Industry benchmarks: [INDUSTRY_BENCHMARKS]\n\nTASK: Perform comprehensive variance analysis including:\n1. Identification of significant variances (>10% or $[AMOUNT])\n2. Root cause analysis for each major variance\n3. Distinction between temporary and ongoing factors\n4. Management action recommendations with priority ranking\n5. Impact assessment on future period projections\n\nFORMAT: Executive variance report suitable for management review with visual highlights and clear recommendations.",
+      "expectedOutputFormat": "variance-report",
+      "tags": ["variance-analysis", "financial-reporting", "management"]
+    },
+    {
+      "id": "workflow-optimization",
+      "title": "Workflow Optimization Assessment",
+      "category": "process-operations",
+      "description": "Conduct systematic workflow analysis with process mapping, bottleneck identification, and technology integration opportunities.",
+      "fields": [
+        {"name": "CURRENT_PROCESS", "type": "textarea", "label": "Detailed Workflow Description"},
+        {"name": "PAIN_POINTS", "type": "textarea", "label": "Specific Inefficiencies"},
+        {"name": "SOFTWARE_PLATFORMS", "type": "textarea", "label": "Software Platforms in Use"},
+        {"name": "STAFF_SKILLS", "type": "textarea", "label": "Staff Skill Levels"}
+      ],
+      "prompt": "You are a process improvement consultant specializing in accounting operations using practice management software.\n\nCONTEXT:\n- Current process: [CURRENT_PROCESS]\n- Pain points: [PAIN_POINTS]\n- Available technology: [SOFTWARE_PLATFORMS]\n- Team capabilities: [STAFF_SKILLS]\n\nTASK: Conduct systematic workflow analysis including:\n1. Process mapping with time and resource requirements\n2. Bottleneck identification with quantified impact\n3. Technology integration opportunities with ROI projections\n4. Implementation roadmap with resource requirements\n5. Success metrics and monitoring procedures\n\nPresent findings as business case with cost-benefit analysis and risk assessment.",
+      "expectedOutputFormat": "optimization-report",
+      "tags": ["process-improvement", "workflow", "efficiency"]
+    },
+    {
+      "id": "quality-control-framework",
+      "title": "Quality Control Framework",
+      "category": "process-operations",
+      "description": "Develop quality control framework with critical control points, standardized procedures, and continuous improvement mechanisms.",
+      "fields": [
+        {"name": "PROCESS_SCOPE", "type": "text", "label": "Specific Accounting Function"},
+        {"name": "RISK_FACTORS", "type": "textarea", "label": "Compliance Requirements/Error Sources"},
+        {"name": "CURRENT_CONTROLS", "type": "textarea", "label": "Existing Procedures"},
+        {"name": "STAFF_COUNT", "type": "number", "label": "Staff Count and Structure"}
+      ],
+      "prompt": "You are a quality assurance specialist designing control procedures for [PROCESS_SCOPE] in accounting firms.\n\nCONTEXT:\n- Process scope: [PROCESS_SCOPE]\n- Risk factors: [RISK_FACTORS]\n- Current controls: [CURRENT_CONTROLS]\n- Firm size: [STAFF_COUNT] staff\n\nTASK: Develop quality control framework including:\n1. Critical control points with risk ratings\n2. Standardized review procedures and checklists\n3. Error tracking and analysis methodology\n4. Staff training requirements with competency verification\n5. Continuous improvement mechanisms with feedback loops\n\nDesign system to be scalable and sustainable while maintaining professional standards and regulatory compliance.",
+      "expectedOutputFormat": "quality-framework",
+      "tags": ["quality-control", "compliance", "process-improvement"]
+    },
+    {
+      "id": "staff-training-program",
+      "title": "Staff Training Program Designer",
+      "category": "process-operations",
+      "description": "Create comprehensive training programs for accounting staff with multi-modal content delivery and competency verification.",
+      "fields": [
+        {"name": "TRAINING_TOPIC", "type": "text", "label": "Specific Skill/Software/Regulation"},
+        {"name": "AUDIENCE_LEVELS", "type": "textarea", "label": "Experience Levels and Roles"},
+        {"name": "TIMEFRAME", "type": "text", "label": "Available Timeframe"},
+        {"name": "LEARNING_OBJECTIVES", "type": "textarea", "label": "Specific Competencies"}
+      ],
+      "prompt": "You are a professional development specialist creating training programs for accounting staff.\n\nCONTEXT:\n- Training topic: [TRAINING_TOPIC]\n- Audience: [AUDIENCE_LEVELS]\n- Timeline: [TIMEFRAME]\n- Learning objectives: [LEARNING_OBJECTIVES]\n\nTASK: Create comprehensive training program including:\n1. Learning objectives with measurable outcomes\n2. Multi-modal content delivery methods accommodating different learning styles\n3. Practical exercises using real client scenarios\n4. Assessment criteria and competency verification methods\n5. Ongoing reinforcement and skill maintenance strategies\n\nInclude resource requirements, implementation timeline, and success measurement criteria.",
+      "expectedOutputFormat": "training-program",
+      "tags": ["training", "professional-development", "staff-management"]
+    },
+    {
+      "id": "client-intake-process",
+      "title": "Comprehensive Client Intake Process",
+      "category": "client-management",
+      "description": "Design efficient intake procedures for various service types with systematic data collection and quality checkpoints.",
+      "fields": [
+        {"name": "SERVICE_TYPE", "type": "select", "options": ["BOOKKEEPING", "TAX", "ADVISORY", "AUDIT"], "label": "Service Type"},
+        {"name": "CLIENT_PROFILE", "type": "textarea", "label": "Size/Industry/Complexity"},
+        {"name": "TECHNOLOGY_PLATFORM", "type": "text", "label": "Practice Management Software"}
+      ],
+      "prompt": "You are a client onboarding specialist designing efficient intake procedures for [SERVICE_TYPE].\n\nCONTEXT:\n- Service type: [SERVICE_TYPE]\n- Client profile: [CLIENT_PROFILE]\n- Technology platform: [TECHNOLOGY_PLATFORM]\n\nTASK: Develop systematic intake process including:\n1. Essential document and information requirements checklist\n2. Prioritized data collection sequence with dependencies\n3. Client preparation instructions with clear expectations\n4. Quality checkpoints throughout onboarding process\n5. Integration procedures with practice management systems\n\nFORMAT: Step-by-step guide ensuring consistent, professional client experience regardless of team member handling intake.",
+      "expectedOutputFormat": "intake-guide",
+      "tags": ["client-onboarding", "process-management", "client-experience"]
+    },
+    {
+      "id": "meeting-agenda-framework",
+      "title": "Meeting Agenda and Preparation Framework",
+      "category": "client-management",
+      "description": "Prepare comprehensive meeting packages with structured agendas, key questions, and follow-up templates.",
+      "fields": [
+        {"name": "MEETING_TYPE", "type": "select", "options": ["INITIAL_CONSULTATION", "QUARTERLY_REVIEW", "PLANNING"], "label": "Meeting Type"},
+        {"name": "CLIENT_BACKGROUND", "type": "textarea", "label": "Business Type/Relationship History"},
+        {"name": "MEETING_OBJECTIVES", "type": "textarea", "label": "Specific Goals"},
+        {"name": "MEETING_DURATION", "type": "text", "label": "Meeting Duration"}
+      ],
+      "prompt": "You are an executive assistant specializing in professional services meetings.\n\nCONTEXT:\n- Meeting type: [MEETING_TYPE]\n- Client background: [CLIENT_BACKGROUND]\n- Meeting objectives: [MEETING_OBJECTIVES]\n- Available time: [MEETING_DURATION]\n\nTASK: Prepare comprehensive meeting package including:\n1. Pre-meeting preparation checklist for staff\n2. Structured agenda with time allocations\n3. Key questions and discussion topics prioritized by importance\n4. Follow-up action items template\n5. Client preparation instructions to maximize meeting value\n\nEnsure materials promote productive, value-added discussions that strengthen client relationships.",
+      "expectedOutputFormat": "meeting-package",
+      "tags": ["meeting-management", "client-relations", "preparation"]
+    },
+    {
+      "id": "regulatory-compliance-monitor",
+      "title": "Regulatory Compliance Monitor",
+      "category": "tax-compliance",
+      "description": "Develop compliance monitoring framework with deadline tracking, change alerts, and staff notification procedures.",
+      "fields": [
+        {"name": "REGULATORY_AREAS", "type": "textarea", "label": "Tax Law/Accounting Standards/Professional Requirements"},
+        {"name": "FIRM_PROFILE", "type": "textarea", "label": "Size/Services/Jurisdictions"},
+        {"name": "COMPLIANCE_STATUS", "type": "textarea", "label": "Recent Audit Results/Issues"}
+      ],
+      "prompt": "You are a compliance specialist tracking regulatory requirements for accounting firms.\n\nCONTEXT:\n- Regulatory areas: [REGULATORY_AREAS]\n- Firm profile: [FIRM_PROFILE]\n- Current compliance status: [COMPLIANCE_STATUS]\n\nTASK: Develop compliance monitoring framework including:\n1. Critical compliance requirements with deadline tracking\n2. Change monitoring and alert systems for regulatory updates\n3. Staff notification and training procedures for new requirements\n4. Documentation and record-keeping requirements with retention schedules\n5. Regular review and update processes with responsibility assignments\n\nDesign proactive compliance management system that prevents violations and ensures current best practices.",
+      "expectedOutputFormat": "compliance-framework",
+      "tags": ["compliance", "regulatory", "risk-management"]
+    },
+    {
+      "id": "software-evaluation-selection",
+      "title": "Software Evaluation and Selection",
+      "category": "process-operations",
+      "description": "Conduct systematic software evaluation with requirements analysis, vendor comparison, and implementation planning.",
+      "fields": [
+        {"name": "CURRENT_SYSTEMS", "type": "textarea", "label": "Existing Software and Limitations"},
+        {"name": "REQUIREMENTS", "type": "textarea", "label": "Must-Have Features"},
+        {"name": "BUDGET_CONSTRAINTS", "type": "text", "label": "Investment Range"},
+        {"name": "GROWTH_PROJECTIONS", "type": "textarea", "label": "Expected Scaling Needs"}
+      ],
+      "prompt": "You are a technology consultant specializing in accounting software selection for [FIRM_SIZE] practices.\n\nCONTEXT:\n- Current systems: [CURRENT_SYSTEMS]\n- Requirements: [REQUIREMENTS]\n- Budget constraints: [BUDGET_CONSTRAINTS]\n- Growth projections: [GROWTH_PROJECTIONS]\n\nTASK: Conduct systematic software evaluation including:\n1. Detailed requirements analysis with priority weighting\n2. Vendor comparison using standardized scoring methodology\n3. Implementation complexity assessment with resource requirements\n4. Total cost of ownership analysis over 3-5 years\n5. Risk assessment and mitigation strategies for transition\n\nPresent findings as formal recommendation with decision support documentation and implementation roadmap.",
+      "expectedOutputFormat": "software-recommendation",
+      "tags": ["technology", "software-selection", "implementation"]
+    },
+    {
+      "id": "difficult-conversation-navigator",
+      "title": "Difficult Conversation Navigator",
+      "category": "content-communication",
+      "description": "Develop conversation strategies for challenging client discussions with key messages, anticipated concerns, and follow-up plans.",
+      "fields": [
+        {"name": "SITUATION", "type": "select", "options": ["FEE_INCREASE", "SERVICE_LIMITATION", "COMPLIANCE_ISSUE"], "label": "Situation Type"},
+        {"name": "CLIENT_RELATIONSHIP", "type": "textarea", "label": "History/Personality/Pressures"},
+        {"name": "DESIRED_OUTCOME", "type": "textarea", "label": "Specific Goals"},
+        {"name": "CONSTRAINTS", "type": "textarea", "label": "Budget/Timeline/Relationship Factors"}
+      ],
+      "prompt": "You are a communication specialist helping professionals handle challenging client discussions.\n\nCONTEXT:\n- Situation: [SITUATION]\n- Client relationship: [CLIENT_RELATIONSHIP]\n- Desired outcome: [DESIRED_OUTCOME]\n- Constraints: [CONSTRAINTS]\n\nTASK: Develop conversation strategy including:\n1. Key messages with supporting rationale and documentation\n2. Anticipated client concerns with prepared responses\n3. Alternative solutions and compromise options\n4. Conversation flow with transition strategies\n5. Follow-up plan and relationship repair tactics\n\nFocus on maintaining positive relationships while achieving necessary business outcomes and professional standards.",
+      "expectedOutputFormat": "conversation-strategy",
+      "tags": ["communication", "client-relations", "difficult-conversations"]
+    },
+    {
+      "id": "value-proposition-articulator",
+      "title": "Value Proposition Articulator",
+      "category": "content-communication",
+      "description": "Create persuasive value propositions with unique value statements, proof points, and competitive advantages.",
+      "fields": [
+        {"name": "FIRM_CAPABILITIES", "type": "textarea", "label": "Service Areas/Expertise/Advantages"},
+        {"name": "TARGET_PROSPECT", "type": "textarea", "label": "Type/Situation/Decision Criteria"},
+        {"name": "COMPETITIVE_LANDSCAPE", "type": "textarea", "label": "Alternatives/Differentiators"}
+      ],
+      "prompt": "You are a business development specialist crafting compelling value propositions for accounting services.\n\nCONTEXT:\n- Firm capabilities: [FIRM_CAPABILITIES]\n- Target prospect: [TARGET_PROSPECT]\n- Competitive landscape: [COMPETITIVE_LANDSCAPE]\n\nTASK: Create persuasive value proposition including:\n1. Clear statement of unique value delivered with quantifiable benefits\n2. Specific benefits relevant to prospect's current challenges\n3. Proof points and credibility indicators with client examples\n4. Competitive advantages with clear differentiation\n5. Call to action with next steps and timeline\n\nFORMAT: Multiple versions for different use cases (proposals, presentations, sales conversations) with supporting materials.",
+      "expectedOutputFormat": "value-proposition",
+      "tags": ["business-development", "sales", "marketing"]
+    },
+    {
+      "id": "business-valuation-preparation",
+      "title": "Business Valuation Preparation",
+      "category": "advisory-services",
+      "description": "Prepare comprehensive valuation analysis with multiple approaches, comparable analysis, and sensitivity analysis.",
+      "fields": [
+        {"name": "BUSINESS_PROFILE", "type": "textarea", "label": "Industry/Size/Characteristics"},
+        {"name": "VALUATION_PURPOSE", "type": "select", "options": ["SALE", "ACQUISITION", "ESTATE_PLANNING"], "label": "Valuation Purpose"},
+        {"name": "AVAILABLE_DATA", "type": "textarea", "label": "Financial Statements/Market Data"},
+        {"name": "TIMELINE", "type": "text", "label": "Completion Requirements"}
+      ],
+      "prompt": "You are a business valuation specialist preparing comprehensive valuation analysis.\n\nCONTEXT:\n- Business profile: [BUSINESS_PROFILE]\n- Valuation purpose: [VALUATION_PURPOSE]\n- Available data: [AVAILABLE_DATA]\n- Timeline: [TIMELINE]\n\nTASK: Prepare valuation analysis including:\n1. Multiple valuation approaches with methodology justification\n2. Comparable company and transaction analysis with adjustments\n3. Risk factor assessment with quantified impact on value\n4. Sensitivity analysis for key assumptions and variables\n5. Executive summary with valuation conclusion and support\n\nPresent findings in professional report format suitable for intended use with clear limitations and assumptions.",
+      "expectedOutputFormat": "valuation-report",
+      "tags": ["business-valuation", "advisory", "financial-analysis"]
+    },
+    {
+      "id": "succession-planning-framework",
+      "title": "Succession Planning Framework",
+      "category": "advisory-services",
+      "description": "Create comprehensive succession planning framework with transition options, tax optimization, and implementation timeline.",
+      "fields": [
+        {"name": "BUSINESS_SITUATION", "type": "textarea", "label": "Owner Age/Family Involvement/Characteristics"},
+        {"name": "OBJECTIVES", "type": "textarea", "label": "Financial Goals/Family Considerations"},
+        {"name": "CONSTRAINTS", "type": "textarea", "label": "Tax Implications/Cash Flow/Timeline"}
+      ],
+      "prompt": "You are a succession planning specialist helping business owners prepare for transition.\n\nCONTEXT:\n- Business situation: [BUSINESS_SITUATION]\n- Objectives: [OBJECTIVES]\n- Constraints: [CONSTRAINTS]\n\nTASK: Create comprehensive succession planning framework including:\n1. Transition option analysis with pros and cons\n2. Tax optimization strategies with quantified benefits\n3. Valuation and funding considerations with payment structures\n4. Family and management preparation requirements\n5. Implementation timeline with critical milestones and dependencies\n\nAddress both business and personal objectives while minimizing tax impact and ensuring business continuity.",
+      "expectedOutputFormat": "succession-plan",
+      "tags": ["succession-planning", "tax-optimization", "business-transition"]
+    },
+    {
+      "id": "engagement-letter-composer",
+      "title": "Engagement Letter Composer",
+      "category": "client-management",
+      "description": "Compose comprehensive engagement letters with clear scope definition, mutual responsibilities, and professional standards.",
+      "fields": [
+        {"name": "SERVICE_SCOPE", "type": "textarea", "label": "Specific Deliverables/Timeline"},
+        {"name": "CLIENT_CHARACTERISTICS", "type": "textarea", "label": "Size/Complexity/Risk Factors"},
+        {"name": "FEE_STRUCTURE", "type": "textarea", "label": "Billing Method/Rates/Terms"}
+      ],
+      "prompt": "You are a legal and business writing specialist creating professional engagement letters.\n\nCONTEXT:\n- Service scope: [SERVICE_SCOPE]\n- Client characteristics: [CLIENT_CHARACTERISTICS]\n- Fee structure: [FEE_STRUCTURE]\n\nTASK: Compose comprehensive engagement letter including:\n1. Clear scope definition with specific deliverable descriptions\n2. Mutual responsibilities and expectations with performance standards\n3. Fee structure and payment terms with change procedures\n4. Professional standards and limitation clauses with risk allocation\n5. Communication protocols and reporting schedules\n\nEnsure legal protection while maintaining client-friendly tone and fostering clear understanding of mutual obligations.",
+      "expectedOutputFormat": "engagement-letter",
+      "tags": ["legal-documents", "client-agreements", "professional-standards"]
+    },
+    {
+      "id": "budgeting-forecasting-framework",
+      "title": "Budgeting and Forecasting Framework",
+      "category": "performance-planning",
+      "description": "Develop comprehensive financial planning framework with revenue projections, expense planning, and scenario analysis.",
+      "fields": [
+        {"name": "BUSINESS_CONTEXT", "type": "textarea", "label": "Industry/Growth Stage/Planning Horizon"},
+        {"name": "HISTORICAL_DATA", "type": "textarea", "label": "Past Performance/Trends/Seasonality"},
+        {"name": "PLANNING_ASSUMPTIONS", "type": "textarea", "label": "Market Conditions/Initiatives"}
+      ],
+      "prompt": "You are a financial planning expert helping businesses develop robust budgets and forecasts.\n\nCONTEXT:\n- Business context: [BUSINESS_CONTEXT]\n- Historical data: [HISTORICAL_DATA]\n- Planning assumptions: [PLANNING_ASSUMPTIONS]\n\nTASK: Develop comprehensive financial planning framework including:\n1. Revenue projection methodologies with assumption documentation\n2. Expense planning with fixed and variable component analysis\n3. Cash flow forecasting with sensitivity analysis scenarios\n4. Scenario planning for different business conditions\n5. Monitoring and variance analysis procedures with action triggers\n\nProvide tools enabling ongoing planning refinement and strategic decision support with clear documentation.",
+      "expectedOutputFormat": "budgeting-framework",
+      "tags": ["budgeting", "forecasting", "financial-planning"]
+    },
+    {
+      "id": "kpi-dashboard-designer",
+      "title": "KPI Dashboard Designer",
+      "category": "performance-planning",
+      "description": "Create performance measurement framework with balanced scorecard, leading indicators, and benchmarking methodology.",
+      "fields": [
+        {"name": "BUSINESS_OBJECTIVES", "type": "textarea", "label": "Strategic Goals/Priorities"},
+        {"name": "INDUSTRY_CONTEXT", "type": "textarea", "label": "Sector Metrics/Benchmarks"},
+        {"name": "AVAILABLE_DATA", "type": "textarea", "label": "System Capabilities/Constraints"}
+      ],
+      "prompt": "You are a performance measurement specialist creating KPI frameworks for [BUSINESS_TYPE].\n\nCONTEXT:\n- Business objectives: [BUSINESS_OBJECTIVES]\n- Industry context: [INDUSTRY_CONTEXT]\n- Available data: [AVAILABLE_DATA]\n\nTASK: Create performance measurement framework including:\n1. Balanced scorecard with financial and operational metrics\n2. Leading and lagging indicator identification with relationships\n3. Benchmarking methodology with target-setting procedures\n4. Reporting formats with frequency recommendations\n5. Performance review and action planning processes\n\nEnsure metrics drive desired behaviors and support strategic goal achievement with clear accountability.",
+      "expectedOutputFormat": "kpi-framework",
+      "tags": ["kpi", "performance-measurement", "dashboard"]
+    },
+    {
+      "id": "crisis-response-coordinator",
+      "title": "Crisis Response Coordinator",
+      "category": "crisis-risk-management",
+      "description": "Create crisis response plan with immediate actions, stakeholder communication, and recovery planning.",
+      "fields": [
+        {"name": "CRISIS_SITUATION", "type": "select", "options": ["CASH_FLOW_EMERGENCY", "REGULATORY_ISSUE", "FRAUD"], "label": "Crisis Situation"},
+        {"name": "IMMEDIATE_CONSTRAINTS", "type": "textarea", "label": "Time/Resources/Stakeholders"},
+        {"name": "REQUIRED_OUTCOMES", "type": "textarea", "label": "Continuity/Protection/Compliance"}
+      ],
+      "prompt": "You are a crisis management specialist helping organizations navigate urgent financial challenges.\n\nCONTEXT:\n- Crisis situation: [CRISIS_SITUATION]\n- Immediate constraints: [IMMEDIATE_CONSTRAINTS]\n- Required outcomes: [REQUIRED_OUTCOMES]\n\nTASK: Create crisis response plan including:\n1. Immediate action priorities with resource mobilization\n2. Stakeholder communication strategies with messaging templates\n3. Operational continuity and risk mitigation measures\n4. Expert resource coordination and support requirements\n5. Recovery planning with lessons learned documentation\n\nEmphasize rapid response while maintaining professional standards and stakeholder confidence throughout the crisis.",
+      "expectedOutputFormat": "crisis-plan",
+      "tags": ["crisis-management", "emergency-response", "risk-management"]
+    },
+    {
+      "id": "technology-strategy-developer",
+      "title": "Technology Strategy Developer",
+      "category": "advisory-services",
+      "description": "Create technology strategy with digital transformation opportunities, implementation roadmap, and change management.",
+      "fields": [
+        {"name": "CURRENT_STATE", "type": "textarea", "label": "Existing Systems/Capabilities/Limitations"},
+        {"name": "BUSINESS_OBJECTIVES", "type": "textarea", "label": "Growth Goals/Efficiency Targets"},
+        {"name": "TECHNOLOGY_TRENDS", "type": "textarea", "label": "Emerging Tools/Industry Developments"}
+      ],
+      "prompt": "You are a technology strategist helping professional services firms embrace digital transformation.\n\nCONTEXT:\n- Current state: [CURRENT_STATE]\n- Business objectives: [BUSINESS_OBJECTIVES]\n- Technology trends: [TECHNOLOGY_TRENDS]\n\nTASK: Create technology strategy including:\n1. Digital transformation opportunity assessment with ROI projections\n2. Technology roadmap with implementation priorities and dependencies\n3. Change management and training requirements with timeline\n4. Investment planning with budget allocation recommendations\n5. Risk management and security considerations with mitigation strategies\n\nBalance innovation opportunities with practical implementation realities and available resources.",
+      "expectedOutputFormat": "technology-strategy",
+      "tags": ["technology", "digital-transformation", "strategy"]
+    },
+    {
+      "id": "investment-analysis-framework",
+      "title": "Investment Analysis Framework",
+      "category": "financial-analysis",
+      "description": "Conduct comprehensive investment analysis with financial modeling, risk assessment, and strategic value analysis.",
+      "fields": [
+        {"name": "INVESTMENT_TYPE", "type": "text", "label": "Investment Type"},
+        {"name": "INVESTMENT_AMOUNT", "type": "number", "label": "Investment Amount"},
+        {"name": "INVESTMENT_OPPORTUNITY", "type": "textarea", "label": "Description/Sector/Size"},
+        {"name": "FINANCIAL_PROJECTIONS", "type": "textarea", "label": "Revenue/Cost/Cash Flow Forecasts"},
+        {"name": "RISK_FACTORS", "type": "textarea", "label": "Market/Operational/Financial Risks"},
+        {"name": "STRATEGIC_FIT", "type": "textarea", "label": "Alignment with Business Objectives"}
+      ],
+      "prompt": "You are an investment analyst evaluating opportunities for [INVESTMENT_TYPE] with $[INVESTMENT_AMOUNT] budget.\n\nCONTEXT:\n- Investment opportunity: [INVESTMENT_OPPORTUNITY]\n- Financial projections: [FINANCIAL_PROJECTIONS]\n- Risk factors: [RISK_FACTORS]\n- Strategic fit: [STRATEGIC_FIT]\n\nTASK: Conduct comprehensive investment analysis including:\n1. Financial modeling with multiple scenarios and sensitivity analysis\n2. Risk assessment with probability-weighted outcomes\n3. Strategic value analysis beyond financial returns\n4. Implementation requirements with resource allocation\n5. Exit strategy considerations with timing analysis\n\nPresent recommendation with clear rationale and supporting documentation for decision-making.",
+      "expectedOutputFormat": "investment-analysis",
+      "tags": ["investment-analysis", "financial-modeling", "risk-assessment"]
+    },
+    {
+      "id": "competitive-intelligence-report",
+      "title": "Competitive Intelligence Report",
+      "category": "performance-planning",
+      "description": "Perform comprehensive market analysis with competitive landscape mapping, customer needs assessment, and strategic recommendations.",
+      "fields": [
+        {"name": "MARKET_SCOPE", "type": "textarea", "label": "Geographic/Customer Segments/Competitive Landscape"},
+        {"name": "ANALYSIS_PURPOSE", "type": "select", "options": ["STRATEGIC_PLANNING", "MARKET_ENTRY", "POSITIONING"], "label": "Analysis Purpose"},
+        {"name": "AVAILABLE_DATA", "type": "textarea", "label": "Market Research/Competitor Information"}
+      ],
+      "prompt": "You are a market research analyst providing competitive intelligence for strategic decision-making.\n\nCONTEXT:\n- Market scope: [MARKET_SCOPE]\n- Analysis purpose: [ANALYSIS_PURPOSE]\n- Available data: [AVAILABLE_DATA]\n\nTASK: Perform comprehensive market analysis including:\n1. Market size and growth trend analysis with opportunity quantification\n2. Competitive landscape mapping with positioning analysis\n3. Customer needs assessment with satisfaction factor evaluation\n4. Regulatory and environmental factor impact assessment\n5. Strategic recommendations with implementation considerations\n\nProvide actionable insights supporting informed business decision-making and competitive advantage development.",
+      "expectedOutputFormat": "market-analysis",
+      "tags": ["market-research", "competitive-analysis", "strategy"]
+    },
+    {
+      "id": "client-expansion-strategy",
+      "title": "Client Expansion Strategy",
+      "category": "client-management",
+      "description": "Develop client expansion strategies with service gap analysis, value propositions, and implementation roadmaps.",
+      "fields": [
+        {"name": "CLIENT_PROFILE", "type": "textarea", "label": "Size/Industry/Current Services"},
+        {"name": "RELATIONSHIP_HISTORY", "type": "textarea", "label": "Tenure/Satisfaction/Growth Potential"},
+        {"name": "AVAILABLE_SERVICES", "type": "textarea", "label": "Additional Offerings/Capabilities"},
+        {"name": "MARKET_OPPORTUNITIES", "type": "textarea", "label": "Industry Trends/Client Challenges"}
+      ],
+      "prompt": "You are a client success specialist developing expansion strategies for existing client relationships.\n\nCONTEXT:\n- Client profile: [CLIENT_PROFILE]\n- Relationship history: [RELATIONSHIP_HISTORY]\n- Available services: [AVAILABLE_SERVICES]\n- Market opportunities: [MARKET_OPPORTUNITIES]\n\nTASK: Develop client expansion strategy including:\n1. Service gap analysis with expansion opportunities\n2. Value proposition development for additional services\n3. Implementation roadmap with timeline and resource requirements\n4. Pricing strategy with investment justification\n5. Success metrics and monitoring procedures\n\nFocus on mutual value creation while strengthening client relationships and increasing engagement profitability.",
+      "expectedOutputFormat": "expansion-strategy",
+      "tags": ["client-growth", "service-expansion", "relationship-management"]
+    },
+    {
+      "id": "standard-operating-procedure",
+      "title": "Standard Operating Procedure Creator",
+      "category": "process-operations",
+      "description": "Create comprehensive SOP documentation with step-by-step procedures, quality control checkpoints, and training requirements.",
+      "fields": [
+        {"name": "PROCESS_SCOPE", "type": "textarea", "label": "Detailed Process Description"},
+        {"name": "CURRENT_CHALLENGES", "type": "textarea", "label": "Inefficiencies/Errors/Inconsistencies"},
+        {"name": "QUALITY_REQUIREMENTS", "type": "textarea", "label": "Standards/Compliance Needs"},
+        {"name": "TECHNOLOGY_INTEGRATION", "type": "textarea", "label": "Software Platforms/Automation"}
+      ],
+      "prompt": "You are a process documentation specialist creating SOPs for [SPECIFIC_PROCESS] in accounting firms.\n\nCONTEXT:\n- Process scope: [PROCESS_SCOPE]\n- Current challenges: [CURRENT_CHALLENGES]\n- Quality requirements: [QUALITY_REQUIREMENTS]\n- Technology integration: [TECHNOLOGY_INTEGRATION]\n\nTASK: Create comprehensive SOP documentation including:\n1. Step-by-step procedures with decision points and alternatives\n2. Quality control checkpoints with verification requirements\n3. Exception handling procedures with escalation protocols\n4. Training requirements with competency verification\n5. Continuous improvement mechanisms with feedback collection\n\nEnsure documentation supports consistent execution regardless of team member performing the process.",
+      "expectedOutputFormat": "sop-documentation",
+      "tags": ["process-documentation", "standardization", "quality-control"]
+    },
+    {
+      "id": "financial-literacy-program",
+      "title": "Financial Literacy Program Designer",
+      "category": "client-management",
+      "description": "Design comprehensive education programs with curriculum development, interactive exercises, and assessment methods.",
+      "fields": [
+        {"name": "AUDIENCE_PROFILE", "type": "textarea", "label": "Business Size/Industry/Sophistication Level"},
+        {"name": "LEARNING_OBJECTIVES", "type": "textarea", "label": "Specific Financial Concepts/Skills"},
+        {"name": "DELIVERY_CONSTRAINTS", "type": "textarea", "label": "Time/Format/Resources"}
+      ],
+      "prompt": "You are an education specialist creating financial literacy programs for business owners.\n\nCONTEXT:\n- Audience profile: [AUDIENCE_PROFILE]\n- Learning objectives: [LEARNING_OBJECTIVES]\n- Delivery constraints: [DELIVERY_CONSTRAINTS]\n\nTASK: Design comprehensive education program including:\n1. Curriculum development with progressive learning modules\n2. Interactive exercises using real business scenarios\n3. Assessment methods with knowledge verification\n4. Resource materials with ongoing reference value\n5. Implementation support with follow-up reinforcement\n\nCreate engaging educational experience that builds client capabilities while positioning firm as trusted advisor.",
+      "expectedOutputFormat": "education-program",
+      "tags": ["education", "financial-literacy", "client-development"]
+    },
+    {
+      "id": "business-model-innovation",
+      "title": "Business Model Innovation Framework",
+      "category": "advisory-services",
+      "description": "Develop business model evolution plan with service portfolio optimization, delivery modernization, and competitive differentiation.",
+      "fields": [
+        {"name": "CURRENT_BUSINESS_MODEL", "type": "textarea", "label": "Service Mix/Delivery Methods/Revenue Streams"},
+        {"name": "MARKET_CHANGES", "type": "textarea", "label": "Technology Disruption/Client Expectations/Competition"},
+        {"name": "STRATEGIC_OBJECTIVES", "type": "textarea", "label": "Growth Goals/Profitability Targets"}
+      ],
+      "prompt": "You are a strategic planning consultant helping professional services firms adapt to market changes.\n\nCONTEXT:\n- Current business model: [CURRENT_BUSINESS_MODEL]\n- Market changes: [MARKET_CHANGES]\n- Strategic objectives: [STRATEGIC_OBJECTIVES]\n\nTASK: Develop business model evolution plan including:\n1. Service portfolio optimization with innovation opportunities\n2. Delivery method modernization with efficiency improvements\n3. Revenue model diversification with recurring income development\n4. Competitive differentiation with value proposition enhancement\n5. Implementation roadmap with success metrics and milestone tracking\n\nCreate sustainable competitive advantages while maintaining core firm strengths and client relationships throughout the transformation process.",
+      "expectedOutputFormat": "business-model-plan",
+      "tags": ["business-model", "innovation", "strategic-planning"]
+    }
+  ],
+  "categories": [
+    {
+      "id": "financial-analysis",
+      "name": "Financial Analysis",
+      "description": "Comprehensive financial health assessments, cash flow optimization, and variance analysis",
+      "icon": "📊",
+      "color": "#3B82F6"
+    },
+    {
+      "id": "tax-compliance",
+      "name": "Tax & Compliance",
+      "description": "Strategic tax planning, regulatory compliance, and risk management",
+      "icon": "⚖️",
+      "color": "#10B981"
+    },
+    {
+      "id": "content-communication",
+      "name": "Content & Communication",
+      "description": "Educational content, newsletters, social media, and client communication",
+      "icon": "📝",
+      "color": "#8B5CF6"
+    },
+    {
+      "id": "process-operations",
+      "name": "Process & Operations",
+      "description": "Workflow optimization, quality control, and operational efficiency",
+      "icon": "⚙️",
+      "color": "#F59E0B"
+    },
+    {
+      "id": "advisory-services",
+      "name": "Advisory Services",
+      "description": "Business valuation, succession planning, and strategic consulting",
+      "icon": "💼",
+      "color": "#EF4444"
+    },
+    {
+      "id": "client-management",
+      "name": "Client Management",
+      "description": "Client onboarding, meeting preparation, and relationship management",
+      "icon": "🤝",
+      "color": "#06B6D4"
+    },
+    {
+      "id": "performance-planning",
+      "name": "Performance & Planning",
+      "description": "KPI dashboards, budgeting, forecasting, and strategic planning",
+      "icon": "📈",
+      "color": "#84CC16"
+    },
+    {
+      "id": "crisis-risk-management",
+      "name": "Crisis & Risk Management",
+      "description": "Crisis response, risk assessment, and business continuity planning",
+      "icon": "🚨",
+      "color": "#DC2626"
+    }
+  ]
+}

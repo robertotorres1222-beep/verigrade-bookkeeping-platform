@@ -1,0 +1,199 @@
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: verigrade-gateway
+  namespace: verigrade
+  labels:
+    app: verigrade
+    component: gateway
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - app.verigrade.com
+    - api.verigrade.com
+    tls:
+      httpsRedirect: true
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    hosts:
+    - app.verigrade.com
+    - api.verigrade.com
+    tls:
+      mode: SIMPLE
+      credentialName: verigrade-tls
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: verigrade-frontend
+  namespace: verigrade
+  labels:
+    app: verigrade
+    component: frontend
+spec:
+  hosts:
+  - app.verigrade.com
+  gateways:
+  - verigrade-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: verigrade-frontend
+        port:
+          number: 80
+    timeout: 30s
+    retries:
+      attempts: 3
+      perTryTimeout: 10s
+    fault:
+      delay:
+        percentage:
+          value: 0.1
+        fixedDelay: 5s
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: verigrade-backend
+  namespace: verigrade
+  labels:
+    app: verigrade
+    component: backend
+spec:
+  hosts:
+  - api.verigrade.com
+  gateways:
+  - verigrade-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: verigrade-backend
+        port:
+          number: 80
+    timeout: 30s
+    retries:
+      attempts: 3
+      perTryTimeout: 10s
+    fault:
+      delay:
+        percentage:
+          value: 0.1
+        fixedDelay: 5s
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: verigrade-backend
+  namespace: verigrade
+  labels:
+    app: verigrade
+    component: backend
+spec:
+  host: verigrade-backend
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        http1MaxPendingRequests: 50
+        maxRequestsPerConnection: 10
+        maxRetries: 3
+        consecutiveGatewayErrors: 5
+        interval: 30s
+        baseEjectionTime: 30s
+    circuitBreaker:
+      consecutiveErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+    outlierDetection:
+      consecutiveErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+    tls:
+      mode: ISTIO_MUTUAL
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: verigrade-frontend
+  namespace: verigrade
+  labels:
+    app: verigrade
+    component: frontend
+spec:
+  host: verigrade-frontend
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        http1MaxPendingRequests: 50
+        maxRequestsPerConnection: 10
+    tls:
+      mode: ISTIO_MUTUAL
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: verigrade
+spec:
+  mtls:
+    mode: STRICT
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: verigrade-backend
+  namespace: verigrade
+spec:
+  selector:
+    matchLabels:
+      app: verigrade-backend
+  rules:
+  - from:
+    - source:
+        principals: ["cluster.local/ns/verigrade/sa/verigrade-frontend"]
+    to:
+    - operation:
+        methods: ["GET", "POST", "PUT", "DELETE"]
+        paths: ["/api/*"]
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: verigrade-frontend
+  namespace: verigrade
+spec:
+  selector:
+    matchLabels:
+      app: verigrade-frontend
+  rules:
+  - from:
+    - source:
+        principals: ["cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account"]
+    to:
+    - operation:
+        methods: ["GET", "POST", "PUT", "DELETE"]
+        paths: ["/*"]
+
+
+
+
+

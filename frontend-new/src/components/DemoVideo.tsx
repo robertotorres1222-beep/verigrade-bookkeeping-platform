@@ -1,262 +1,296 @@
 'use client';
 
-import { useState } from 'react';
-import { PlayIcon, XMarkIcon, DocumentTextIcon, ChartBarIcon, BanknotesIcon, RocketLaunchIcon } from '@heroicons/react/24/outline';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  PlayIcon, 
+  XMarkIcon, 
+  ArrowRightIcon,
+  CheckIcon,
+  SparklesIcon,
+  ChartBarIcon,
+  DocumentTextIcon,
+  BanknotesIcon
+} from '@heroicons/react/24/outline';
+
+interface DemoStep {
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ComponentType<any>;
+  duration: number;
+  features: string[];
+}
+
+const demoSteps: DemoStep[] = [
+  {
+    id: 'dashboard',
+    title: 'Real-time Dashboard',
+    description: 'Get instant insights into your business performance',
+    icon: ChartBarIcon,
+    duration: 3,
+    features: ['Live financial metrics', 'Interactive charts', 'Quick actions', 'Smart notifications']
+  },
+  {
+    id: 'ai-categorization',
+    title: 'AI-Powered Categorization',
+    description: 'Watch our AI automatically categorize transactions with 99.9% accuracy',
+    icon: SparklesIcon,
+    duration: 4,
+    features: ['Smart categorization', 'Learning from corrections', 'Pattern recognition', 'Confidence scoring']
+  },
+  {
+    id: 'receipt-processing',
+    title: 'Receipt Processing',
+    description: 'Upload receipts and watch the magic happen',
+    icon: DocumentTextIcon,
+    duration: 3,
+    features: ['OCR text extraction', 'Automatic data entry', 'Expense categorization', 'Tax deduction tracking']
+  },
+  {
+    id: 'bank-integration',
+    title: 'Bank Integration',
+    description: 'Connect your bank accounts for seamless transaction sync',
+    icon: BanknotesIcon,
+    duration: 4,
+    features: ['Secure bank connection', 'Real-time sync', 'Transaction matching', 'Reconciliation tools']
+  }
+];
 
 export default function DemoVideo() {
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
 
-  const demoSteps = [
-    {
-      title: "AI Receipt Processing",
-      description: "Upload a receipt and watch our AI extract data automatically",
-      icon: DocumentTextIcon,
-      content: (
-        <div className="bg-white rounded-lg p-6 shadow-lg">
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="font-semibold text-gray-900">Receipt Upload</h4>
-            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-          </div>
-          <div className="space-y-3">
-            <div className="bg-gray-100 rounded-lg p-3">
-              <div className="flex items-center gap-3">
-                <DocumentTextIcon className="h-8 w-8 text-indigo-600" />
-                <div>
-                  <p className="font-medium text-gray-900">Office Supplies Receipt</p>
-                  <p className="text-sm text-gray-600">Uploaded 2 seconds ago</p>
-                </div>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                <p className="text-sm font-medium text-green-800">Amount: $245.67</p>
-              </div>
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                <p className="text-sm font-medium text-green-800">Vendor: Office Depot</p>
-              </div>
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                <p className="text-sm font-medium text-green-800">Category: Office Supplies</p>
-              </div>
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                <p className="text-sm font-medium text-green-800">Date: Jan 15, 2024</p>
-              </div>
-            </div>
-            <div className="text-center">
-              <span className="text-sm text-gray-600">✅ Processed in 2.3 seconds</span>
-            </div>
-          </div>
-        </div>
-      )
-    },
-    {
-      title: "Real-time Analytics",
-      description: "View your business performance with live insights",
-      icon: ChartBarIcon,
-      content: (
-        <div className="bg-white rounded-lg p-6 shadow-lg">
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="font-semibold text-gray-900">Business Analytics</h4>
-            <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
-          </div>
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="bg-blue-50 rounded-lg p-4">
-              <p className="text-2xl font-bold text-blue-600">$12,450</p>
-              <p className="text-sm text-gray-600">Monthly Revenue</p>
-            </div>
-            <div className="bg-green-50 rounded-lg p-4">
-              <p className="text-2xl font-bold text-green-600">$8,230</p>
-              <p className="text-sm text-gray-600">Net Profit</p>
-            </div>
-          </div>
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-700">Expense Categories</span>
-              <span className="text-sm text-gray-500">This Month</span>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Office Supplies</span>
-                <span className="text-sm font-medium text-gray-900">$1,245</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Marketing</span>
-                <span className="text-sm font-medium text-gray-900">$2,100</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Software</span>
-                <span className="text-sm font-medium text-gray-900">$450</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )
-    },
-    {
-      title: "Bank Reconciliation",
-      description: "Automatically match bank transactions with your records",
-      icon: BanknotesIcon,
-      content: (
-        <div className="bg-white rounded-lg p-6 shadow-lg">
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="font-semibold text-gray-900">Bank Reconciliation</h4>
-            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-          </div>
-          <div className="space-y-3">
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-green-800">✅ Matched Transactions</span>
-                <span className="text-sm text-green-600">23/25</span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                <span className="text-sm text-gray-700">Office Depot - $245.67</span>
-                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Matched</span>
-              </div>
-              <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                <span className="text-sm text-gray-700">Google Ads - $1,200.00</span>
-                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Matched</span>
-              </div>
-              <div className="flex items-center justify-between p-2 bg-yellow-50 rounded">
-                <span className="text-sm text-gray-700">Unknown Transaction - $89.99</span>
-                <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Review</span>
-              </div>
-            </div>
-            <div className="text-center">
-              <span className="text-sm text-gray-600">92% Auto-matched</span>
-            </div>
-          </div>
-        </div>
-      )
-    },
-    {
-      title: "Mobile App",
-      description: "Capture receipts on-the-go with our mobile app",
-      icon: RocketLaunchIcon,
-      content: (
-        <div className="bg-white rounded-lg p-6 shadow-lg">
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="font-semibold text-gray-900">Mobile Receipt Capture</h4>
-            <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
-          </div>
-          <div className="bg-gray-50 rounded-lg p-4 mb-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">VG</span>
-              </div>
-              <div>
-                <p className="font-medium text-gray-900">VeriGrade Mobile</p>
-                <p className="text-sm text-gray-600">Tap to capture receipt</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="bg-white rounded-lg p-3 border">
-                <p className="text-xs text-gray-600">Camera</p>
-                <p className="text-sm font-medium text-gray-900">📷</p>
-              </div>
-              <div className="bg-white rounded-lg p-3 border">
-                <p className="text-xs text-gray-600">Gallery</p>
-                <p className="text-sm font-medium text-gray-900">🖼️</p>
-              </div>
-            </div>
-          </div>
-          <div className="text-center">
-            <span className="text-sm text-gray-600">📱 Available on iOS & Android</span>
-          </div>
-        </div>
-      )
-    }
-  ];
-
-  const nextStep = () => {
-    setCurrentStep((prev) => (prev + 1) % demoSteps.length);
+  const handlePlay = () => {
+    setIsOpen(true);
+    setIsPlaying(true);
+    startDemo();
   };
 
-  const prevStep = () => {
-    setCurrentStep((prev) => (prev - 1 + demoSteps.length) % demoSteps.length);
+  const startDemo = () => {
+    let stepIndex = 0;
+    const interval = setInterval(() => {
+      if (stepIndex < demoSteps.length - 1) {
+        stepIndex++;
+        setCurrentStep(stepIndex);
+      } else {
+        clearInterval(interval);
+        setIsPlaying(false);
+      }
+    }, demoSteps[stepIndex]?.duration * 1000 || 3000);
   };
 
   return (
     <>
-      {/* Demo Video Button */}
-      <button
-        onClick={() => setIsOpen(true)}
-        className="bg-white text-indigo-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors flex items-center gap-2"
+      {/* Demo Trigger Button */}
+      <motion.button
+        onClick={handlePlay}
+        className="group relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 p-8 text-white shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105"
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
       >
-        <PlayIcon className="h-5 w-5" />
-        Watch Demo
-      </button>
-
-      {/* Video Modal */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
-          <div className="bg-white rounded-lg p-6 max-w-5xl w-full mx-4 relative">
-            <button
-              onClick={() => setIsOpen(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 z-10"
-            >
-              <XMarkIcon className="h-6 w-6" />
-            </button>
-            
-            <div className="mb-6">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                VeriGrade Service Demo
-              </h3>
-              <p className="text-gray-600">
-                See how VeriGrade transforms your bookkeeping workflow in real-time
-              </p>
-            </div>
-
-            <div className="aspect-video bg-gradient-to-br from-indigo-50 to-blue-50 rounded-lg p-6 flex items-center justify-center">
-              <div className="w-full max-w-4xl">
-                {demoSteps[currentStep].content}
-              </div>
-            </div>
-
-            <div className="mt-6 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={prevStep}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
-                >
-                  Previous
-                </button>
-                <button
-                  onClick={nextStep}
-                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors"
-                >
-                  Next
-                </button>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                {demoSteps.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentStep(index)}
-                    className={`w-3 h-3 rounded-full transition-colors ${
-                      index === currentStep ? 'bg-indigo-600' : 'bg-gray-300'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-4 text-center">
-              <p className="text-sm text-gray-600 mb-4">
-                {demoSteps[currentStep].title}: {demoSteps[currentStep].description}
-              </p>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition-colors"
-              >
-                Try Live Demo
-              </button>
-            </div>
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="relative z-10">
+          <div className="flex items-center justify-center w-20 h-20 bg-white/20 rounded-full mb-4 mx-auto group-hover:bg-white/30 transition-colors duration-300">
+            <PlayIcon className="w-10 h-10 text-white" />
+          </div>
+          <h3 className="text-2xl font-bold mb-2">Watch VeriGrade in Action</h3>
+          <p className="text-blue-100 mb-4">
+            See how our AI-powered platform transforms your bookkeeping in minutes
+          </p>
+          <div className="flex items-center justify-center text-sm font-semibold">
+            <PlayIcon className="w-4 h-4 mr-2" />
+            Play Interactive Demo
+            <ArrowRightIcon className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
           </div>
         </div>
-      )}
+      </motion.button>
+
+      {/* Demo Modal */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+            onClick={() => setIsOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative w-full max-w-6xl mx-auto bg-white rounded-2xl overflow-hidden shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">VeriGrade Interactive Demo</h2>
+                  <p className="text-gray-600">Experience our AI-powered bookkeeping platform</p>
+                </div>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <XMarkIcon className="w-6 h-6 text-gray-500" />
+                </button>
+              </div>
+
+              {/* Demo Content */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
+                {/* Left Side - Demo Steps */}
+                <div className="p-8 bg-gray-50">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-6">Demo Steps</h3>
+                  <div className="space-y-4">
+                    {demoSteps.map((step, index) => (
+                      <motion.div
+                        key={step.id}
+                        className={`p-4 rounded-lg border-2 transition-all duration-300 ${
+                          index === currentStep
+                            ? 'border-blue-500 bg-blue-50'
+                            : index < currentStep
+                            ? 'border-green-500 bg-green-50'
+                            : 'border-gray-200 bg-white'
+                        }`}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.1 }}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                            index < currentStep
+                              ? 'bg-green-500 text-white'
+                              : index === currentStep
+                              ? 'bg-blue-500 text-white'
+                              : 'bg-gray-300 text-gray-600'
+                          }`}>
+                            {index < currentStep ? (
+                              <CheckIcon className="w-5 h-5" />
+                            ) : (
+                              <span className="text-sm font-semibold">{index + 1}</span>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-2 mb-2">
+                              <step.icon className="w-5 h-5 text-gray-600" />
+                              <h4 className="font-semibold text-gray-900">{step.title}</h4>
+                            </div>
+                            <p className="text-sm text-gray-600 mb-2">{step.description}</p>
+                            <div className="flex flex-wrap gap-1">
+                              {step.features.map((feature, featureIndex) => (
+                                <span
+                                  key={featureIndex}
+                                  className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded"
+                                >
+                                  {feature}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Right Side - Demo Visualization */}
+                <div className="p-8 bg-white">
+                  <div className="aspect-video bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl flex items-center justify-center relative overflow-hidden">
+                    {isPlaying ? (
+                      <motion.div
+                        key={currentStep}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        className="text-center"
+                      >
+                        <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                          {demoSteps[currentStep] && React.createElement(demoSteps[currentStep].icon, { className: "w-12 h-12 text-white" })}
+                        </div>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                          {demoSteps[currentStep]?.title}
+                        </h3>
+                        <p className="text-gray-600 mb-6">
+                          {demoSteps[currentStep]?.description}
+                        </p>
+                        <div className="flex justify-center space-x-2">
+                          {demoSteps[currentStep]?.features.map((feature, index) => (
+                            <motion.span
+                              key={index}
+                              className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: index * 0.1 }}
+                            >
+                              {feature}
+                            </motion.span>
+                          ))}
+                        </div>
+                      </motion.div>
+                    ) : (
+                      <div className="text-center">
+                        <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                          <PlayIcon className="w-12 h-12 text-white" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                          Ready to Start?
+                        </h3>
+                        <p className="text-gray-600 mb-6">
+                          Click play to see VeriGrade in action
+                        </p>
+                        <button
+                          onClick={startDemo}
+                          className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                        >
+                          Start Demo
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="mt-6">
+                    <div className="flex justify-between text-sm text-gray-600 mb-2">
+                      <span>Progress</span>
+                      <span>{currentStep + 1} of {demoSteps.length}</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <motion.div
+                        className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${((currentStep + 1) / demoSteps.length) * 100}%` }}
+                        transition={{ duration: 0.5 }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="p-6 border-t border-gray-200 bg-gray-50">
+                <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
+                  <div className="text-sm text-gray-600">
+                    <strong>Ready to try VeriGrade?</strong> Start your free trial today
+                  </div>
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={() => setIsOpen(false)}
+                      className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      Close Demo
+                    </button>
+                    <button className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                      Start Free Trial
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

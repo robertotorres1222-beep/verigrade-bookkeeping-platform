@@ -1,0 +1,47 @@
+{
+  "name": "verigrade-backend",
+  "version": "1.0.0",
+  "description": "VeriGrade Backend API",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js",
+    "build": "echo 'No build step needed'",
+    "test": "echo 'No tests configured'"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "dotenv": "^16.3.1",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.0.3",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.9.7",
+    "stripe": "^14.9.0",
+    "twilio": "^4.19.0",
+    "aws-sdk": "^2.1490.0",
+    "sharp": "^0.32.6",
+    "pdf-parse": "^1.1.1",
+    "tesseract.js": "^5.0.2",
+    "node-cron": "^3.0.3",
+    "winston": "^3.11.0",
+    "compression": "^1.7.4",
+    "rate-limiter-flexible": "^3.0.8",
+    "express-validator": "^7.0.1",
+    "swagger-ui-express": "^5.0.0",
+    "swagger-jsdoc": "^6.2.8"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "bookkeeping",
+    "accounting",
+    "api",
+    "backend"
+  ],
+  "author": "VeriGrade",
+  "license": "MIT"
+}

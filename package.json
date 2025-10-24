@@ -2,11 +2,11 @@
   "name": "verigrade-backend",
   "version": "1.0.0",
   "description": "VeriGrade Backend API",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node index.js",
-    "build": "echo 'No build step needed for backend'",
-    "dev": "node index.js"
+    "start": "node server.js",
+    "build": "echo 'No build step needed'",
+    "dev": "node server.js"
   },
   "dependencies": {
     "express": "^4.18.2",

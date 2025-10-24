@@ -1,0 +1,9 @@
+# Vercel Environment Variables Setup
+# Add these variables to your Vercel project
+
+NEXT_PUBLIC_SUPABASE_URL=https://krdwxeeaxldgnhymukyb.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+NEXT_PUBLIC_API_URL=https://verigrade-backend-production.up.railway.app
+
+# Optional Stripe Configuration
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...

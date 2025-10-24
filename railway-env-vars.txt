@@ -1,0 +1,15 @@
+# Railway Environment Variables Setup
+# Add these variables to your Railway project
+
+SUPABASE_URL=https://krdwxeeaxldgnhymukyb.supabase.co
+SUPABASE_ANON_KEY=your-anon-key-here
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+DATABASE_URL=postgresql://postgres:[YOUR_PASSWORD]@db.krdwxeeaxldgnhymukyb.supabase.co:5432/postgres
+JWT_SECRET=your-super-secret-jwt-key-here
+
+# Optional Email Configuration
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+FROM_EMAIL=noreply@verigrade.com

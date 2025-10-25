@@ -1,0 +1,16 @@
+# Vercel Environment Variables for VeriGrade Frontend
+# Copy these variables to your Vercel project
+
+# Supabase Configuration (Frontend)
+NEXT_PUBLIC_SUPABASE_URL=https://krdwxeeaxldgnhymukyb.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtyZHd4ZWVheGxkZ25oeW11a3liIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1NTUwOTYsImV4cCI6MjA3NTEzMTA5Nn0.yYj9Fvi4THZC0KBk_EdoUMLm27C_rs3B8c2PeOX6EXI
+
+# Backend API Configuration
+NEXT_PUBLIC_API_URL=https://verigrade-backend-production.up.railway.app
+
+# Optional Stripe Configuration
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+
+# Optional App Configuration
+NEXT_PUBLIC_APP_URL=https://your-vercel-url.vercel.app
+NEXT_PUBLIC_APP_NAME=VeriGrade

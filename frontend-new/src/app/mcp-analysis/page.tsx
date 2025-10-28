@@ -103,7 +103,7 @@ export default function MCPAnalysisPage() {
     try {
       // Use localhost backend for development, or demo mode for production
       const isDevelopment = typeof window !== 'undefined' && window.location.hostname === 'localhost';
-      const apiUrl = isDevelopment ? 'http://localhost:3001/api/mcp/analysis' : 'https://backend-lspqvhnjp-robertotos-projects.vercel.app/api/mcp/analysis';
+      const apiUrl = isDevelopment ? 'http://localhost:3001/api/mcp/analysis' : 'https://verigradebackend-production.up.railway.app/api/mcp/analysis';
       
       const response = await fetch(apiUrl, {
         method: 'POST',

@@ -67,7 +67,7 @@ export default function RegisterPage() {
       }
     } catch (error) {
       console.error('❌ Error during registration:', error);
-      alert('Cannot connect to backend server. Please make sure it\'s running on port 3001.');
+      alert('Cannot connect to backend server. Please check your connection.');
     }
   };
 

@@ -11,7 +11,7 @@ const getApiUrl = () => {
   }
   
   // Production fallback
-  return 'https://backend-lspqvhnjp-robertotos-projects.vercel.app';
+  return 'https://verigradebackend-production.up.railway.app';
 };
 
 export const API_BASE_URL = getApiUrl();

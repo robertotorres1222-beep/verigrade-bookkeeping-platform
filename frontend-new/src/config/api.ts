@@ -10,7 +10,7 @@ const getBackendURL = () => {
   }
   // Production fallback to deployed backend
   if (isProduction) {
-    return 'https://backend-lspqvhnjp-robertotos-projects.vercel.app';
+    return 'https://verigradebackend-production.up.railway.app';
   }
   // Development fallback
   return 'http://localhost:3001';

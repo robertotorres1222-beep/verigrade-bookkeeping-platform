@@ -51,7 +51,7 @@ export default function MCPIntegration() {
             });
             
             // Try n8n workflow trigger
-            const n8nResponse = await fetch('https://backend-lspqvhnjp-robertotos-projects.vercel.app/api/n8n/trigger/verigrade-mcp-integration', {
+            const n8nResponse = await fetch('https://verigradebackend-production.up.railway.app/api/n8n/trigger/verigrade-mcp-integration', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',

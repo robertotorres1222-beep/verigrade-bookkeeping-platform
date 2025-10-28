@@ -76,6 +76,6 @@
   ],
   "author": "VeriGrade Team",
   "engines": {
-    "node": "18.19.0"
+    "node": "22.x"
   }
 }

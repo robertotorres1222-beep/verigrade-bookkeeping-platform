@@ -8,3 +8,8 @@ railway.json
 supabase/
 *.sql
 test-*.js
+
+# Ignore the old frontend-new directory since we moved files to root
+frontend-new/
+frontend/
+mobile-app/

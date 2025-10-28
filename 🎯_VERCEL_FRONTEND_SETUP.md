@@ -173,3 +173,6 @@ After successful Vercel setup:
 - **Deployment URL**: https://your-vercel-url.vercel.app
 - **Environment Variables**: Add the variables above
 - **Redeploy**: After adding variables
+
+
+

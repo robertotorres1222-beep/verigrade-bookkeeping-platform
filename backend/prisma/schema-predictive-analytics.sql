@@ -270,3 +270,6 @@ GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO verigrade_app;
 
 
 
+
+
+

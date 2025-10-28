@@ -1,0 +1,10 @@
+# Ignore backend files from Vercel builds
+backend/
+server.js
+package-lock.json
+nixpacks.toml
+railway.json
+.railwayignore
+supabase/
+*.sql
+test-*.js

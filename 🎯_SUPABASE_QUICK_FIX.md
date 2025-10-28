@@ -187,3 +187,6 @@ Once tables are created:
 **Your Supabase Project:**
 - **Table Editor:** https://supabase.com/dashboard/project/krdwxeeaxldgnhymukyb/editor
 - **SQL Editor:** https://supabase.com/dashboard/project/krdwxeeaxldgnhymukyb/sql
+
+
+

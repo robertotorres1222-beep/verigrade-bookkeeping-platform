@@ -141,3 +141,6 @@ console.log('API URL:', process.env.NEXT_PUBLIC_API_URL)
 ---
 
 **Next Steps:** After environment variables are set, test the full integration and configure N8N automation.
+
+
+

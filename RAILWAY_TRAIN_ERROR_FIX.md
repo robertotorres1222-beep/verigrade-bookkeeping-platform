@@ -58,3 +58,6 @@ JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
 
 **This error means the app isn't running yet - let's check the logs!** 🔧
 
+
+
+

@@ -14,3 +14,6 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
 # Optional App Configuration
 NEXT_PUBLIC_APP_URL=https://your-vercel-url.vercel.app
 NEXT_PUBLIC_APP_NAME=VeriGrade
+
+
+

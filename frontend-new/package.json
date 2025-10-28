@@ -75,5 +75,6 @@
     "typescript"
   ],
   "author": "VeriGrade Team",
-  "license": "MIT"
-}
+  "engines": {
+    "node": "18.19.0"
+  },

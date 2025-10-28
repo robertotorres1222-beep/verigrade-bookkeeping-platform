@@ -154,3 +154,6 @@ Once your database is verified:
 - **Dashboard:** https://supabase.com/dashboard/project/krdwxeeaxldgnhymukyb
 - **Table Editor:** https://supabase.com/dashboard/project/krdwxeeaxldgnhymukyb/editor
 - **SQL Editor:** https://supabase.com/dashboard/project/krdwxeeaxldgnhymukyb/sql
+
+
+

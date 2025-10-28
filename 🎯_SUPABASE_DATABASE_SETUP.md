@@ -293,3 +293,6 @@ After successful database setup:
 - **Dashboard:** https://supabase.com/dashboard/project/krdwxeeaxldgnhymukyb
 - **SQL Editor:** https://supabase.com/dashboard/project/krdwxeeaxldgnhymukyb/sql
 - **API URL:** https://krdwxeeaxldgnhymukyb.supabase.co
+
+
+

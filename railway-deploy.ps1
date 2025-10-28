@@ -25,3 +25,6 @@ Write-Host "JWT_SECRET=your-super-secret-jwt-key-change-this-in-production" -For
 
 Write-Host "🎉 Ready to deploy!" -ForegroundColor Green
 
+
+
+

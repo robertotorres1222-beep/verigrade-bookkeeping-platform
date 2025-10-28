@@ -66,3 +66,6 @@ cmd = "cd backend && node production-start.js"
 
 **This should force Railway to use Nixpacks and fix all build issues!** 🎉
 
+
+
+

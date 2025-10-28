@@ -334,3 +334,6 @@ CREATE INDEX idx_seasonal_patterns_company_id ON seasonal_patterns(company_id);
 
 
 
+
+
+

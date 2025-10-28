@@ -209,3 +209,6 @@ export const updateUserProfile = async (userId: string, updates: Partial<Profile
 }
 
 export default supabase
+
+
+

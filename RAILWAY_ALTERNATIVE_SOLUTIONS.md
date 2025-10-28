@@ -65,3 +65,6 @@ JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
 
 **Render.com should work immediately without caching issues!** 🚀
 
+
+
+

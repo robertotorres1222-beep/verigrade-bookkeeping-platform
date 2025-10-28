@@ -283,3 +283,6 @@ Once your database is working:
 - **Table Editor:** https://supabase.com/dashboard/project/krdwxeeaxldgnhymukyb/editor
 - **SQL Editor:** https://supabase.com/dashboard/project/krdwxeeaxldgnhymukyb/sql
 - **Edge Functions:** https://supabase.com/dashboard/project/krdwxeeaxldgnhymukyb/functions
+
+
+

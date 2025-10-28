@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://backend-lspqvhnjp-robertotos-projects.vercel.app/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://verigradebackend-production.up.railway.app/api';
 
 class ApiService {
   private token: string | null = null;

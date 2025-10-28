@@ -1,5 +1,5 @@
--- VeriGrade Clean Database Setup
--- Safe to run multiple times - handles existing objects gracefully
+-- Supabase Migration Script - Fix Type Mismatches
+-- This script fixes the foreign key constraint error by dropping and recreating tables with correct UUID types
 
 -- Drop tables in correct order (respecting foreign key dependencies)
 DROP TABLE IF EXISTS public.invoice_lines CASCADE;
@@ -17,6 +17,7 @@ DROP TYPE IF EXISTS invoice_status CASCADE;
 DROP TYPE IF EXISTS transaction_type CASCADE;
 DROP TYPE IF EXISTS user_role CASCADE;
 
+-- Now recreate everything with correct types
 -- Enable necessary extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
@@ -41,7 +42,7 @@ EXCEPTION
 END $$;
 
 -- Companies table
-CREATE TABLE IF NOT EXISTS public.companies (
+CREATE TABLE public.companies (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     name TEXT NOT NULL,
     description TEXT,
@@ -55,7 +56,7 @@ CREATE TABLE IF NOT EXISTS public.companies (
 );
 
 -- Profiles table (extends Supabase auth.users)
-CREATE TABLE IF NOT EXISTS public.profiles (
+CREATE TABLE public.profiles (
     id UUID REFERENCES auth.users(id) PRIMARY KEY,
     email TEXT UNIQUE NOT NULL,
     full_name TEXT,
@@ -66,7 +67,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 );
 
 -- Chart of Accounts
-CREATE TABLE IF NOT EXISTS public.chart_of_accounts (
+CREATE TABLE public.chart_of_accounts (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     company_id UUID REFERENCES public.companies(id) ON DELETE CASCADE,
     account_code TEXT NOT NULL,
@@ -80,7 +81,7 @@ CREATE TABLE IF NOT EXISTS public.chart_of_accounts (
 );
 
 -- Transactions
-CREATE TABLE IF NOT EXISTS public.transactions (
+CREATE TABLE public.transactions (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     company_id UUID REFERENCES public.companies(id) ON DELETE CASCADE,
     transaction_date DATE NOT NULL,
@@ -94,7 +95,7 @@ CREATE TABLE IF NOT EXISTS public.transactions (
 );
 
 -- Transaction Lines (double-entry bookkeeping)
-CREATE TABLE IF NOT EXISTS public.transaction_lines (
+CREATE TABLE public.transaction_lines (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     transaction_id UUID REFERENCES public.transactions(id) ON DELETE CASCADE,
     account_id UUID REFERENCES public.chart_of_accounts(id),
@@ -105,7 +106,7 @@ CREATE TABLE IF NOT EXISTS public.transaction_lines (
 );
 
 -- Customers
-CREATE TABLE IF NOT EXISTS public.customers (
+CREATE TABLE public.customers (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     company_id UUID REFERENCES public.companies(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
@@ -120,7 +121,7 @@ CREATE TABLE IF NOT EXISTS public.customers (
 );
 
 -- Vendors
-CREATE TABLE IF NOT EXISTS public.vendors (
+CREATE TABLE public.vendors (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     company_id UUID REFERENCES public.companies(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
@@ -135,7 +136,7 @@ CREATE TABLE IF NOT EXISTS public.vendors (
 );
 
 -- Invoices
-CREATE TABLE IF NOT EXISTS public.invoices (
+CREATE TABLE public.invoices (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     company_id UUID REFERENCES public.companies(id) ON DELETE CASCADE,
     customer_id UUID REFERENCES public.customers(id),
@@ -153,8 +154,8 @@ CREATE TABLE IF NOT EXISTS public.invoices (
     UNIQUE(company_id, invoice_number)
 );
 
--- Invoice Lines
-CREATE TABLE IF NOT EXISTS public.invoice_lines (
+-- Invoice Lines (now with correct UUID type)
+CREATE TABLE public.invoice_lines (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     invoice_id UUID REFERENCES public.invoices(id) ON DELETE CASCADE,
     description TEXT NOT NULL,
@@ -205,9 +206,7 @@ CREATE INDEX IF NOT EXISTS idx_customers_company ON public.customers(company_id)
 CREATE INDEX IF NOT EXISTS idx_vendors_company ON public.vendors(company_id);
 CREATE INDEX IF NOT EXISTS idx_chart_of_accounts_company ON public.chart_of_accounts(company_id);
 
--- VeriGrade Sample Data
--- Safe to run multiple times - uses ON CONFLICT DO NOTHING
-
+-- Insert sample data
 -- Insert sample company
 INSERT INTO public.companies (name, description, email, website)
 VALUES (
@@ -215,7 +214,7 @@ VALUES (
     'Sample company for testing the VeriGrade platform',
     'demo@verigrade.com',
     'https://verigrade.com'
-) ON CONFLICT DO NOTHING;
+);
 
 -- Insert basic chart of accounts
 INSERT INTO public.chart_of_accounts (company_id, account_code, account_name, account_type)
@@ -239,8 +238,7 @@ VALUES
     ((SELECT id FROM companies WHERE name = 'VeriGrade Demo Company'), '5200', 'Marketing Expenses', 'expense'),
     ((SELECT id FROM companies WHERE name = 'VeriGrade Demo Company'), '5300', 'Office Supplies', 'expense'),
     ((SELECT id FROM companies WHERE name = 'VeriGrade Demo Company'), '5400', 'Utilities', 'expense'),
-    ((SELECT id FROM companies WHERE name = 'VeriGrade Demo Company'), '5500', 'Professional Services', 'expense')
-ON CONFLICT (company_id, account_code) DO NOTHING;
+    ((SELECT id FROM companies WHERE name = 'VeriGrade Demo Company'), '5500', 'Professional Services', 'expense');
 
 -- Insert sample customers
 INSERT INTO public.customers (company_id, name, email, phone, address, credit_limit)
@@ -249,8 +247,7 @@ VALUES
     ((SELECT id FROM companies WHERE name = 'VeriGrade Demo Company'), 'TechStart Inc', 'info@techstart.com', '+1-555-0102', '{"street": "456 Innovation Ave", "city": "San Francisco", "state": "CA", "zip": "94105", "country": "USA"}', 5000.00),
     ((SELECT id FROM companies WHERE name = 'VeriGrade Demo Company'), 'Global Solutions Ltd', 'sales@global.com', '+1-555-0103', '{"street": "789 Enterprise Blvd", "city": "Chicago", "state": "IL", "zip": "60601", "country": "USA"}', 25000.00),
     ((SELECT id FROM companies WHERE name = 'VeriGrade Demo Company'), 'Digital Dynamics', 'orders@digital.com', '+1-555-0104', '{"street": "321 Tech Plaza", "city": "Austin", "state": "TX", "zip": "73301", "country": "USA"}', 15000.00),
-    ((SELECT id FROM companies WHERE name = 'VeriGrade Demo Company'), 'Future Systems', 'billing@future.com', '+1-555-0105', '{"street": "654 Progress Dr", "city": "Seattle", "state": "WA", "zip": "98101", "country": "USA"}', 20000.00)
-ON CONFLICT DO NOTHING;
+    ((SELECT id FROM companies WHERE name = 'VeriGrade Demo Company'), 'Future Systems', 'billing@future.com', '+1-555-0105', '{"street": "654 Progress Dr", "city": "Seattle", "state": "WA", "zip": "98101", "country": "USA"}', 20000.00);
 
 -- Insert sample vendors
 INSERT INTO public.vendors (company_id, name, email, phone, address, payment_terms)
@@ -259,8 +256,7 @@ VALUES
     ((SELECT id FROM companies WHERE name = 'VeriGrade Demo Company'), 'Software Solutions', 'billing@software.com', '+1-555-0202', '{"street": "200 Tech Park", "city": "Austin", "state": "TX", "zip": "73301", "country": "USA"}', 15),
     ((SELECT id FROM companies WHERE name = 'VeriGrade Demo Company'), 'Marketing Agency', 'accounts@marketing.com', '+1-555-0203', '{"street": "300 Creative Ave", "city": "Los Angeles", "state": "CA", "zip": "90210", "country": "USA"}', 45),
     ((SELECT id FROM companies WHERE name = 'VeriGrade Demo Company'), 'Cloud Services Inc', 'support@cloud.com', '+1-555-0204', '{"street": "400 Data Center Blvd", "city": "Phoenix", "state": "AZ", "zip": "85001", "country": "USA"}', 30),
-    ((SELECT id FROM companies WHERE name = 'VeriGrade Demo Company'), 'Legal Partners LLC', 'billing@legal.com', '+1-555-0205', '{"street": "500 Law St", "city": "Boston", "state": "MA", "zip": "02101", "country": "USA"}', 60)
-ON CONFLICT DO NOTHING;
+    ((SELECT id FROM companies WHERE name = 'VeriGrade Demo Company'), 'Legal Partners LLC', 'billing@legal.com', '+1-555-0205', '{"street": "500 Law St", "city": "Boston", "state": "MA", "zip": "02101", "country": "USA"}', 60);
 
 -- Insert sample transactions
 INSERT INTO public.transactions (company_id, transaction_date, description, reference, transaction_type, total_amount)
@@ -269,16 +265,14 @@ VALUES
     ((SELECT id FROM companies WHERE name = 'VeriGrade Demo Company'), '2025-01-02', 'Office rent payment', 'RENT-001', 'expense'::transaction_type, 2500.00),
     ((SELECT id FROM companies WHERE name = 'VeriGrade Demo Company'), '2025-01-03', 'Software subscription', 'SW-001', 'expense'::transaction_type, 299.00),
     ((SELECT id FROM companies WHERE name = 'VeriGrade Demo Company'), '2025-01-04', 'Client payment received', 'PAY-001', 'income'::transaction_type, 5000.00),
-    ((SELECT id FROM companies WHERE name = 'VeriGrade Demo Company'), '2025-01-05', 'Office supplies purchase', 'SUP-001', 'expense'::transaction_type, 150.00)
-ON CONFLICT DO NOTHING;
+    ((SELECT id FROM companies WHERE name = 'VeriGrade Demo Company'), '2025-01-05', 'Office supplies purchase', 'SUP-001', 'expense'::transaction_type, 150.00);
 
 -- Insert sample invoice
 INSERT INTO public.invoices (company_id, customer_id, invoice_number, invoice_date, due_date, status, subtotal, tax_amount, total_amount, notes)
 VALUES 
     ((SELECT id FROM companies WHERE name = 'VeriGrade Demo Company'), 
      (SELECT id FROM customers WHERE name = 'Acme Corporation'), 
-     'INV-2025-001', '2025-01-01', '2025-01-31', 'sent'::invoice_status, 2500.00, 200.00, 2700.00, 'Monthly consulting services')
-ON CONFLICT (company_id, invoice_number) DO NOTHING;
+     'INV-2025-001', '2025-01-01', '2025-01-31', 'sent'::invoice_status, 2500.00, 200.00, 2700.00, 'Monthly consulting services');
 
 -- Insert invoice lines
 INSERT INTO public.invoice_lines (invoice_id, description, quantity, unit_price, line_total)
@@ -286,7 +280,4 @@ VALUES
     ((SELECT i.id FROM invoices i JOIN companies c ON i.company_id = c.id WHERE c.name = 'VeriGrade Demo Company' AND i.invoice_number = 'INV-2025-001'), 
      'Consulting Services - 20 hours', 20.00, 100.00, 2000.00),
     ((SELECT i.id FROM invoices i JOIN companies c ON i.company_id = c.id WHERE c.name = 'VeriGrade Demo Company' AND i.invoice_number = 'INV-2025-001'), 
-     'Project Management - 5 hours', 5.00, 100.00, 500.00)
-ON CONFLICT DO NOTHING;
-
-
+     'Project Management - 5 hours', 5.00, 100.00, 500.00);

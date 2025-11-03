@@ -1,0 +1,40 @@
+# Ignore backend files
+../backend
+../verigrade-backend
+../api
+../cli
+../mobile-app
+../data-warehouse
+../docker
+../helm
+../k8s
+../kubernetes
+../ml
+../monitoring
+../n8n
+../perplexity-mcp
+../scripts
+../shared
+../supabase
+../src
+../docs
+../tests
+
+# Ignore root files
+../*.js
+../*.md
+../*.txt
+../*.html
+../*.bat
+../*.ps1
+../*.sh
+../*.yml
+../*.yaml
+../*.json
+../*.sql
+../*.env*
+../*.log
+
+# Ignore node_modules everywhere
+**/node_modules
+

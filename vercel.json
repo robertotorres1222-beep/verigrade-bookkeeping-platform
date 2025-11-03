@@ -1,18 +1,4 @@
 {
   "version": 2,
-  "buildCommand": "node build.js",
-  "outputDirectory": ".next",
-  "installCommand": "npm install",
-  "framework": "nextjs",
-  "env": {
-    "NEXT_PUBLIC_API_URL": "https://verigradebackend-production.up.railway.app",
-    "NEXT_PUBLIC_SUPABASE_URL": "https://krdwxeeaxldgnhymukyb.supabase.co",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtyZHd4ZWVheGxkZ25oeW11a3liIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1NTUwOTYsImV4cCI6MjA3NTEzMTA5Nn0.yYj9Fvi4THZC0KBk_EdoUMLm27C_rs3B8c2PeOX6EXI"
-  },
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "https://verigradebackend-production.up.railway.app/api/$1"
-    }
-  ]
+  "rootDirectory": "frontend-new"
 }

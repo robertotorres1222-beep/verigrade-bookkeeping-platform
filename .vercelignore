@@ -1,5 +1,6 @@
 # Ignore backend files from Vercel builds
 backend/
+verigrade-backend/
 server.js
 package-lock.json
 nixpacks.toml
@@ -8,8 +9,36 @@ railway.json
 supabase/
 *.sql
 test-*.js
+build.js
 
-# Ignore the old frontend-new directory since we moved files to root
-frontend-new/
+# Ignore other app directories
 frontend/
 mobile-app/
+api/
+cli/
+data-warehouse/
+docker/
+helm/
+k8s/
+kubernetes/
+ml/
+monitoring/
+n8n/
+perplexity-mcp/
+scripts/
+shared/
+src/
+
+# Ignore documentation and config files
+*.md
+*.txt
+*.html
+*.bat
+*.ps1
+*.sh
+*.yml
+*.yaml
+*.json
+!frontend-new/package.json
+!frontend-new/tsconfig.json
+!frontend-new/next.config.ts

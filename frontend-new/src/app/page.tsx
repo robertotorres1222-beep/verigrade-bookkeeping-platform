@@ -40,6 +40,9 @@ import {
   ArrowTrendingUpIcon,
   GlobeAltIcon
 } from '@heroicons/react/24/outline';
+import { ModernButton } from '../components/ui/ModernButton';
+import { FeatureCard } from '../components/ui/FeatureCard';
+import { EnhancedCard } from '../components/ui/EnhancedCard';
 
 export default function ModernStartupLanding() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -274,12 +277,15 @@ export default function ModernStartupLanding() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.4 }}
               >
-                <Link
-                  href="/register"
-                  className="rounded-md bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:from-blue-700 hover:to-purple-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition-all transform hover:scale-105"
+                <ModernButton
+                  asChild
+                  variant="gradient"
+                  size="lg"
                 >
-                  Start Free Trial
-                </Link>
+                  <Link href="/register">
+                    Start Free Trial
+                  </Link>
+                </ModernButton>
                 <DemoVideo />
               </motion.div>
 
@@ -393,33 +399,25 @@ export default function ModernStartupLanding() {
             </p>
           </div>
           <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
-            <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
+            <div className="grid max-w-xl grid-cols-1 gap-8 lg:max-w-none lg:grid-cols-3">
               {features.map((feature, index) => (
                 <motion.div
                   key={feature.name}
-                  className="flex flex-col group"
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
                   viewport={{ once: true }}
                 >
-                  <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
-                    <div className={`h-10 w-10 flex items-center justify-center rounded-lg bg-gradient-to-r ${feature.gradient} group-hover:scale-110 transition-transform duration-300`}>
-                      <feature.icon className="h-6 w-6 text-white" aria-hidden="true" />
-                    </div>
-                    {feature.name}
-                  </dt>
-                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
-                    <p className="flex-auto">{feature.description}</p>
-                    <p className="mt-6">
-                      <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium bg-gradient-to-r ${feature.gradient} text-white`}>
-                        {feature.stats}
-                      </span>
-                    </p>
-                  </dd>
+                  <FeatureCard
+                    title={feature.name}
+                    description={feature.description}
+                    icon={<feature.icon className="h-6 w-6" />}
+                    gradient
+                    variant="hover-lift"
+                  />
                 </motion.div>
               ))}
-            </dl>
+            </div>
           </div>
         </div>
       </section>
@@ -456,49 +454,55 @@ export default function ModernStartupLanding() {
               Simple, transparent pricing
             </p>
           </div>
-          <div className="isolate mx-auto mt-16 grid max-w-md grid-cols-1 gap-y-8 sm:mt-20 lg:mx-0 lg:max-w-none lg:grid-cols-3 lg:gap-x-8 xl:gap-x-12">
+          <div className="isolate mx-auto mt-16 grid max-w-md grid-cols-1 gap-8 sm:mt-20 lg:mx-0 lg:max-w-none lg:grid-cols-3">
             {pricingPlans.map((plan, index) => (
               <motion.div
                 key={plan.name}
-                className={`rounded-3xl p-8 ring-1 ring-gray-200 xl:p-10 ${
-                  plan.popular ? 'ring-2 ring-blue-600 bg-blue-50' : 'bg-white'
-                }`}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 viewport={{ once: true }}
               >
-                {plan.popular && (
-                  <div className="flex items-center justify-between gap-x-4">
-                    <h3 className="text-lg/6 font-semibold leading-7 text-blue-600">Most popular</h3>
-                    <p className="rounded-full bg-blue-600/10 px-2.5 py-1 text-xs font-semibold leading-5 text-blue-600">
-                      Best value
-                    </p>
-                  </div>
-                )}
-                <p className="mt-4 flex items-baseline gap-x-2">
-                  <span className="text-5xl font-bold tracking-tight text-gray-900">{plan.price}</span>
-                  <span className="text-base font-semibold leading-7 text-gray-600">{plan.period}</span>
-                </p>
-                <p className="mt-6 text-base leading-7 text-gray-600">{plan.description}</p>
-                <ul role="list" className="mt-8 space-y-3 text-sm leading-6 text-gray-600">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex gap-x-3">
-                      <CheckIcon className="h-6 w-5 flex-none text-blue-600" aria-hidden="true" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href={plan.name === 'Enterprise' ? '/contact' : '/register'}
-                  className={`mt-8 block rounded-md px-3 py-2 text-center text-sm font-semibold leading-6 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 transition-all transform hover:scale-105 ${
-                    plan.popular
-                      ? 'bg-blue-600 text-white shadow-sm hover:bg-blue-500 focus-visible:outline-blue-600'
-                      : 'bg-gray-900 text-white shadow-sm hover:bg-gray-700 focus-visible:outline-gray-900'
-                  }`}
+                <EnhancedCard
+                  variant={plan.popular ? 'gradient' : 'elevated'}
+                  padding="lg"
+                  className={plan.popular ? 'border-primary-600 bg-gradient-to-br from-primary-50 to-secondary-50' : ''}
                 >
-                  {plan.cta}
-                </Link>
+                  {plan.popular && (
+                    <div className="flex items-center justify-between gap-x-4 mb-4">
+                      <span className="text-sm font-semibold text-primary-700">Most popular</span>
+                      <span className="rounded-full bg-primary-600/10 px-2.5 py-1 text-xs font-semibold text-primary-600">
+                        Best value
+                      </span>
+                    </div>
+                  )}
+                  <h3 className="text-2xl font-bold text-neutral-900 mb-2">{plan.name}</h3>
+                  <div className="mb-6">
+                    <p className="flex items-baseline gap-x-2">
+                      <span className="text-5xl font-bold tracking-tight text-neutral-900">{plan.price}</span>
+                      <span className="text-lg font-semibold text-neutral-600">{plan.period}</span>
+                    </p>
+                    <p className="mt-2 text-base text-neutral-600">{plan.description}</p>
+                  </div>
+                  <ul className="space-y-3 mb-8">
+                    {plan.features.map((feature) => (
+                      <li key={feature} className="flex items-start gap-x-3">
+                        <CheckIcon className="h-5 w-5 flex-none text-primary-600 mt-0.5" aria-hidden="true" />
+                        <span className="text-sm text-neutral-700">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <ModernButton
+                    asChild
+                    variant={plan.popular ? 'gradient' : 'default'}
+                    fullWidth
+                    size="lg"
+                  >
+                    <Link href={plan.name === 'Enterprise' ? '/contact' : '/register'}>
+                      {plan.cta}
+                    </Link>
+                  </ModernButton>
+                </EnhancedCard>
               </motion.div>
             ))}
           </div>
@@ -516,15 +520,25 @@ export default function ModernStartupLanding() {
               Join thousands of businesses already using VeriGrade to automate their financial management.
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
-              <Link
-                href="/register"
-                className="rounded-md bg-white px-6 py-3 text-sm font-semibold text-blue-600 shadow-sm hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white transition-all transform hover:scale-105"
+              <ModernButton
+                asChild
+                variant="glass"
+                size="lg"
               >
-                Start Free Trial
-              </Link>
-              <Link href="/contact" className="text-sm font-semibold leading-6 text-white hover:text-blue-100 transition-colors">
-                Contact Sales <span aria-hidden="true">→</span>
-              </Link>
+                <Link href="/register">
+                  Start Free Trial
+                </Link>
+              </ModernButton>
+              <ModernButton
+                asChild
+                variant="ghost"
+                size="lg"
+                className="text-white hover:text-white hover:bg-white/10"
+              >
+                <Link href="/contact">
+                  Contact Sales <ArrowRightIcon className="inline h-4 w-4 ml-1" />
+                </Link>
+              </ModernButton>
             </div>
           </div>
         </div>

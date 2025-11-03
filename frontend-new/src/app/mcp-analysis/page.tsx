@@ -89,7 +89,8 @@ export default function MCPAnalysisPage() {
           setPrompts(data.data.prompts);
         }
       } catch (error) {
-        console.error('Error fetching prompts:', error);
+        // Silently fail - prompts are optional
+        // Could add user notification here if needed
       }
     };
 

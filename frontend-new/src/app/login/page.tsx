@@ -3,36 +3,19 @@
 import { useState } from 'react';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { Chrome, Building2, Key } from 'lucide-react';
-import { API_ENDPOINTS } from '../../config/api';
+import { API_ENDPOINTS } from '../../lib/apiConfig';
 import { trackAuthEvent, trackEvent } from '../../lib/posthog';
 import MFALoginVerification from '../../components/Security/MFALoginVerification';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    email: 'robertotorres1222@gmail.com',
+    email: '',
     password: '',
   });
   const [mfaRequired, setMfaRequired] = useState(false);
   const [mfaMethods, setMfaMethods] = useState<any[]>([]);
   const [tempToken, setTempToken] = useState<string | null>(null);
-
-  // Enhanced analytics tracking
-  const trackEvent = async (eventName: string, properties?: any) => {
-    try {
-      // Try PostHog first, fallback to local analytics
-      try {
-        const { trackEvent: trackPostHog } = await import('../../lib/posthog');
-        trackPostHog(eventName, properties);
-      } catch (error) {
-        // PostHog not available, use local analytics
-        const localAnalytics = await import('../../lib/localAnalytics');
-        localAnalytics.default.track(eventName, properties);
-      }
-    } catch (error) {
-      console.error('Error tracking event:', error);
-    }
-  };
 
   const handleLogout = () => {
     // Track logout event
@@ -70,8 +53,6 @@ export default function LoginPage() {
     }
     
     try {
-      console.log('🔍 Attempting login with:', { email: formData.email, endpoint: API_ENDPOINTS.auth.login });
-      
       // Real authentication with backend
       const response = await fetch(API_ENDPOINTS.auth.login, {
         method: 'POST',
@@ -84,9 +65,12 @@ export default function LoginPage() {
         }),
       });
 
-      console.log('📡 Response status:', response.status);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Login failed. Please try again.' }));
+        throw new Error(errorData.message || 'Login failed. Please try again.');
+      }
+
       const data = await response.json();
-      console.log('📊 Response data:', data);
 
       if (response.ok && data.success) {
         // Check if MFA is required
@@ -104,8 +88,6 @@ export default function LoginPage() {
         
         // Also set cookie for middleware authentication
         document.cookie = `authToken=${data.data.token}; path=/; max-age=604800`; // 7 days
-        
-        console.log('✅ Login successful:', data);
         
         // Track successful login
         trackAuthEvent('login_success', {
@@ -135,12 +117,22 @@ export default function LoginPage() {
           window.location.href = '/dashboard';
         }, 1000);
       } else {
-        console.error('❌ Login failed:', data.message);
-        alert(data.message || 'Login failed. Please check your credentials.');
+        const errorMessage = data.message || 'Login failed. Please check your credentials.';
+        trackAuthEvent('login_failed', {
+          email: formData.email,
+          reason: errorMessage,
+          timestamp: new Date().toISOString()
+        });
+        alert(errorMessage);
       }
     } catch (error) {
-      console.error('❌ Error during login:', error);
-      alert(`Login error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      trackAuthEvent('login_error', {
+        email: formData.email,
+        error: errorMessage,
+        timestamp: new Date().toISOString()
+      });
+      alert(`Login error: ${errorMessage}`);
     } finally {
       // Restore button state
       if (submitButton) {
@@ -190,7 +182,10 @@ export default function LoginPage() {
         throw new Error('Failed to resend code');
       }
     } catch (error) {
-      console.error('Failed to resend MFA code:', error);
+      trackAuthEvent('mfa_resend_failed', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      });
       throw error;
     }
   };
@@ -206,7 +201,11 @@ export default function LoginPage() {
       // Redirect to SSO provider
       window.location.href = `/api/sso/initiate/${provider}`;
     } catch (error) {
-      console.error('SSO login error:', error);
+      trackAuthEvent('sso_login_error', {
+        provider,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      });
       alert('SSO login failed. Please try again.');
     }
   };

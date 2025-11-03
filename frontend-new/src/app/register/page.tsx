@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
-import { API_ENDPOINTS } from '../../config/api';
+import { API_ENDPOINTS } from '../../lib/apiConfig';
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -48,26 +48,30 @@ export default function RegisterPage() {
         }),
       });
 
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Registration failed. Please try again.' }));
+        throw new Error(errorData.message || 'Registration failed. Please try again.');
+      }
+
       const data = await response.json();
 
-      if (response.ok && data.success) {
+      if (data.success) {
         // Store authentication token
         localStorage.setItem('authToken', data.data.token);
         localStorage.setItem('user', JSON.stringify(data.data.user));
         localStorage.setItem('organization', JSON.stringify(data.data.user.organization));
         
-        console.log('✅ Registration successful:', data);
         alert('Registration successful! Welcome to VeriGrade!');
         
         // Redirect to dashboard
         window.location.href = '/dashboard';
       } else {
-        console.error('❌ Registration failed:', data.message);
-        alert(data.message || 'Registration failed. Please try again.');
+        const errorMessage = data.message || 'Registration failed. Please try again.';
+        alert(errorMessage);
       }
     } catch (error) {
-      console.error('❌ Error during registration:', error);
-      alert('Cannot connect to backend server. Please check your connection.');
+      const errorMessage = error instanceof Error ? error.message : 'Cannot connect to backend server. Please check your connection.';
+      alert(errorMessage);
     }
   };
 

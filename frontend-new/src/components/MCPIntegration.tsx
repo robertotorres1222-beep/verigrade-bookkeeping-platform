@@ -75,12 +75,13 @@ export default function MCPIntegration() {
       } catch (n8nError) {
         // Track n8n fallback
         trackN8nEvent('workflow_fallback_used', {
+          workflow_id: 'verigrade-mcp-integration',
           error: n8nError instanceof Error ? n8nError.message : 'Unknown error',
-          fallback_mode: 'direct_mcp'
+          fallback_mode: 'direct_mcp',
+          timestamp: new Date().toISOString()
         });
         
         // Fallback to direct MCP analysis
-        console.log('n8n not available, using direct MCP analysis');
         result = { success: true, data: { mode: 'direct' } };
       }
 

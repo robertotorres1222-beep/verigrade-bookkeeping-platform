@@ -103,11 +103,17 @@ export default function AIResearchAssistant() {
         body: JSON.stringify(body),
       });
 
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Request failed' }));
+        throw new Error(errorData.message || `Request failed with status ${response.status}`);
+      }
+
       const data = await response.json();
       setResult(data);
     } catch (error) {
-      setError('Failed to get AI response. Please try again.');
-      console.error('AI Research error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      setError(errorMessage);
+      setResult(null);
     } finally {
       setLoading(false);
     }

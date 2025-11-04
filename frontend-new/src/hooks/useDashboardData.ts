@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { API_ENDPOINTS } from '@/config/api'
+import { API_ENDPOINTS } from '@/lib/apiConfig'
 
 export const useDashboardData = () => {
   return useQuery({

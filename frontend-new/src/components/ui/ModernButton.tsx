@@ -2,6 +2,7 @@
 
 import { ButtonHTMLAttributes, forwardRef } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
+import { Slot } from '@radix-ui/react-slot';
 import { cn } from '@/lib/utils';
 
 const modernButtonVariants = cva(
@@ -51,7 +52,8 @@ export interface ModernButtonProps
 }
 
 const ModernButton = forwardRef<HTMLButtonElement, ModernButtonProps>(
-  ({ className, variant, size, fullWidth, loading, icon, iconPosition = 'left', children, disabled, ...props }, ref) => {
+  ({ className, variant, size, fullWidth, loading, icon, iconPosition = 'left', asChild, children, disabled, ...props }, ref) => {
+    const Comp = asChild ? Slot : 'button';
     const iconElement = icon && !loading && (
       <span className={cn(
         iconPosition === 'left' ? 'mr-2' : 'ml-2',
@@ -61,8 +63,22 @@ const ModernButton = forwardRef<HTMLButtonElement, ModernButtonProps>(
       </span>
     );
 
+    // When asChild is true, we must pass through only the child (Slot requirement)
+    if (asChild) {
+      return (
+        <Comp
+          className={cn(modernButtonVariants({ variant, size, fullWidth, className }))}
+          ref={ref}
+          disabled={disabled || loading}
+          {...props}
+        >
+          {children}
+        </Comp>
+      );
+    }
+
     return (
-      <button
+      <Comp
         className={cn(modernButtonVariants({ variant, size, fullWidth, className }))}
         ref={ref}
         disabled={disabled || loading}
@@ -96,7 +112,7 @@ const ModernButton = forwardRef<HTMLButtonElement, ModernButtonProps>(
         {iconPosition === 'left' && iconElement}
         <span className="relative z-10">{children}</span>
         {iconPosition === 'right' && iconElement}
-      </button>
+      </Comp>
     );
   }
 );

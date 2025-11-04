@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { MagnifyingGlassIcon, LightBulbIcon, DocumentTextIcon, ChartBarIcon, BuildingOfficeIcon, CurrencyDollarIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 interface SearchResult {
@@ -214,10 +214,10 @@ export default function AIResearchAssistant() {
             <input
               type="text"
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)}
               placeholder={getPlaceholderText()}
               className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              onKeyPress={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && handleSearch()}
             />
             <button
               onClick={handleSearch}

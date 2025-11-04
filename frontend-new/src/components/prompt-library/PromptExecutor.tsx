@@ -36,7 +36,7 @@ export default function PromptExecutor({ prompt, isOpen, onClose }: PromptExecut
       const fetchPopulatedData = async () => {
         setIsLoadingData(true);
         try {
-          const response = await fetch(API_ENDPOINTS.promptById(prompt.id), {
+          const response = await fetch(API_ENDPOINTS.prompts.byId(prompt.id), {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
@@ -98,7 +98,7 @@ export default function PromptExecutor({ prompt, isOpen, onClose }: PromptExecut
 
     try {
       // Use absolute URL for API calls
-      const response = await fetch(API_ENDPOINTS.executePrompt(prompt.id), {
+      const response = await fetch(API_ENDPOINTS.prompts.execute(prompt.id), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { API_ENDPOINTS } from '../../lib/apiConfig';
 
@@ -16,6 +16,15 @@ export default function RegisterPage() {
     confirmPassword: '',
     agreeToTerms: false,
   });
+
+  const handleSsoLogin = async (provider: 'google' | 'github') => {
+    try {
+      // Redirect to SSO provider
+      window.location.href = `/api/sso/initiate/${provider}`;
+    } catch (error) {
+      alert('SSO login failed. Please try again.');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,9 +116,9 @@ export default function RegisterPage() {
                     type="text"
                     autoComplete="given-name"
                     required
-                    className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                    className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm text-gray-900 bg-white"
                     value={formData.firstName}
-                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, firstName: e.target.value })}
                   />
                 </div>
               </div>
@@ -125,9 +134,9 @@ export default function RegisterPage() {
                     type="text"
                     autoComplete="family-name"
                     required
-                    className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                    className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm text-gray-900 bg-white"
                     value={formData.lastName}
-                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, lastName: e.target.value })}
                   />
                 </div>
               </div>
@@ -144,9 +153,9 @@ export default function RegisterPage() {
                   type="email"
                   autoComplete="email"
                   required
-                  className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm text-gray-900 bg-white"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, email: e.target.value })}
                 />
               </div>
             </div>
@@ -161,9 +170,9 @@ export default function RegisterPage() {
                   name="company"
                   type="text"
                   autoComplete="organization"
-                  className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm text-gray-900 bg-white"
                   value={formData.company}
-                  onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, company: e.target.value })}
                 />
               </div>
             </div>
@@ -179,9 +188,9 @@ export default function RegisterPage() {
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="new-password"
                   required
-                  className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 pr-10 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 pr-10 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm text-gray-900 bg-white"
                   value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, password: e.target.value })}
                 />
                 <button
                   type="button"
@@ -208,9 +217,9 @@ export default function RegisterPage() {
                   type={showConfirmPassword ? 'text' : 'password'}
                   autoComplete="new-password"
                   required
-                  className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 pr-10 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 pr-10 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm text-gray-900 bg-white"
                   value={formData.confirmPassword}
-                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, confirmPassword: e.target.value })}
                 />
                 <button
                   type="button"
@@ -234,7 +243,7 @@ export default function RegisterPage() {
                 required
                 className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                 checked={formData.agreeToTerms}
-                onChange={(e) => setFormData({ ...formData, agreeToTerms: e.target.checked })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, agreeToTerms: e.target.checked })}
               />
               <label htmlFor="agreeToTerms" className="ml-2 block text-sm text-gray-900">
                 I agree to the{' '}
@@ -271,6 +280,7 @@ export default function RegisterPage() {
             <div className="mt-6 grid grid-cols-2 gap-3">
               <button
                 type="button"
+                onClick={() => handleSsoLogin('google')}
                 className="inline-flex w-full justify-center rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-500 shadow-sm hover:bg-gray-50"
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -296,6 +306,7 @@ export default function RegisterPage() {
 
               <button
                 type="button"
+                onClick={() => handleSsoLogin('github')}
                 className="inline-flex w-full justify-center rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-500 shadow-sm hover:bg-gray-50"
               >
                 <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">

@@ -90,6 +90,8 @@ const nextConfig: NextConfig = {
   
   // Experimental features
   output: 'standalone',
+  // Skip static generation for dynamic pages
+  skipTrailingSlashRedirect: true,
   experimental: {
     optimizePackageImports: [
       '@heroicons/react',

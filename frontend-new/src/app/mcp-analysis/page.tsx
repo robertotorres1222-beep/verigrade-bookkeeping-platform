@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   CpuChipIcon,
@@ -265,7 +265,7 @@ export default function MCPAnalysisPage() {
 
           {showPromptTemplates && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-              {prompts.slice(0, 6).map((prompt) => (
+              {prompts.slice(0, 6).map((prompt: Prompt) => (
                 <motion.button
                   key={prompt.id}
                   onClick={() => {
@@ -318,7 +318,7 @@ export default function MCPAnalysisPage() {
           <textarea
             id="query"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setQuery(e.target.value)}
             placeholder={selectedPrompt 
               ? `Using ${selectedPrompt.title} template...`
               : `Enter a specific question about your ${selectedAnalysisType?.name.toLowerCase()}...`

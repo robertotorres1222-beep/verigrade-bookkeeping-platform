@@ -1,5 +1,9 @@
 'use client';
 
+// Force dynamic rendering to avoid static generation issues
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -191,7 +195,9 @@ export default function ModernStartupLanding() {
           <div className="flex lg:flex-1">
             <Link href="/" className="-m-1.5 p-1.5">
               <span className="sr-only">VeriGrade</span>
-              <VeriGradeLogo size="md" variant="full" />
+              <span aria-hidden="true">
+                <VeriGradeLogo size="md" variant="full" />
+              </span>
             </Link>
           </div>
           <div className="flex lg:hidden">
@@ -213,7 +219,7 @@ export default function ModernStartupLanding() {
             </div>
           <div className="hidden lg:flex lg:flex-1 lg:justify-end">
             <Link href="/login" className="text-sm font-semibold leading-6 text-gray-900 hover:text-blue-600 transition-colors">
-              Log in <span aria-hidden="true">&rarr;</span>
+              <span>Log in <span aria-hidden="true">&rarr;</span></span>
             </Link>
           </div>
         </nav>
@@ -240,9 +246,11 @@ export default function ModernStartupLanding() {
                   <span className="inline-flex items-center gap-2">
                     <SparklesIcon className="h-4 w-4 text-blue-600" />
                     AI-powered bookkeeping platform
-                    <Link href="/register" className="font-semibold text-blue-600">
+                    <Link href="/register" className="font-semibold text-blue-600 relative">
                       <span className="absolute inset-0" aria-hidden="true" />
-                      Get started <ArrowRightIcon className="inline h-4 w-4 ml-1" />
+                      <span className="relative">
+                        Get started <ArrowRightIcon className="inline h-4 w-4 ml-1" />
+                      </span>
                     </Link>
                   </span>
                 </div>
@@ -536,7 +544,7 @@ export default function ModernStartupLanding() {
                 className="text-white hover:text-white hover:bg-white/10"
               >
                 <Link href="/contact">
-                  Contact Sales <ArrowRightIcon className="inline h-4 w-4 ml-1" />
+                  <span>Contact Sales <ArrowRightIcon className="inline h-4 w-4 ml-1" /></span>
                 </Link>
               </ModernButton>
             </div>
@@ -717,14 +725,14 @@ export default function ModernStartupLanding() {
               <div className="flex items-center justify-between">
                 <Link href="/" className="-m-1.5 p-1.5">
                   <span className="sr-only">VeriGrade</span>
-                  <div className="flex items-center space-x-2">
+                  <span className="flex items-center space-x-2">
                     <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
                       <span className="text-white font-bold text-sm">V</span>
                     </div>
                     <span className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
                       VeriGrade
                     </span>
-                  </div>
+                  </span>
                 </Link>
                 <button
                   type="button"

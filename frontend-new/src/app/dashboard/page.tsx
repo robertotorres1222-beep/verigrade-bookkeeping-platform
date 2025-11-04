@@ -153,7 +153,7 @@ export default function DashboardPage() {
               trend="up"
               icon={<ArrowTrendingUpIcon className="w-6 h-6" />}
               color="success"
-              variant="elevated"
+              variant="gradient"
             />
           </motion.div>
           <motion.div
@@ -168,7 +168,7 @@ export default function DashboardPage() {
               trend="down"
               icon={<ArrowTrendingDownIcon className="w-6 h-6" />}
               color="error"
-              variant="elevated"
+              variant="gradient"
             />
           </motion.div>
           <motion.div
@@ -183,7 +183,7 @@ export default function DashboardPage() {
               trend="up"
               icon={<CurrencyDollarIcon className="w-6 h-6" />}
               color="primary"
-              variant="elevated"
+              variant="gradient"
             />
           </motion.div>
           <motion.div
@@ -198,7 +198,7 @@ export default function DashboardPage() {
               trend="up"
               icon={<UserGroupIcon className="w-6 h-6" />}
               color="secondary"
-              variant="elevated"
+              variant="gradient"
             />
           </motion.div>
         </div>

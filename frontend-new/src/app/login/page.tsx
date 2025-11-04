@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
-import { Chrome, Building2, Key } from 'lucide-react';
+import { Chrome, Building2 } from 'lucide-react';
 import { API_ENDPOINTS } from '../../lib/apiConfig';
-import { trackAuthEvent, trackEvent } from '../../lib/posthog';
+import { trackAuthEvent } from '../../lib/posthog';
 import MFALoginVerification from '../../components/Security/MFALoginVerification';
+
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -16,24 +17,6 @@ export default function LoginPage() {
   const [mfaRequired, setMfaRequired] = useState(false);
   const [mfaMethods, setMfaMethods] = useState<any[]>([]);
   const [tempToken, setTempToken] = useState<string | null>(null);
-
-  const handleLogout = () => {
-    // Track logout event
-    trackAuthEvent('logout', {
-      timestamp: new Date().toISOString()
-    });
-    
-    // Clear localStorage
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
-    localStorage.removeItem('organization');
-    
-    // Clear cookie
-    document.cookie = 'authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-    
-    // Redirect to login
-    window.location.href = '/login';
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -256,7 +239,7 @@ export default function LoginPage() {
                   required
                   className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm text-gray-900 bg-white"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, email: e.target.value })}
                 />
               </div>
             </div>
@@ -274,7 +257,7 @@ export default function LoginPage() {
                   required
                   className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 pr-10 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm text-gray-900 bg-white"
                   value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, password: e.target.value })}
                 />
                 <button
                   type="button"
